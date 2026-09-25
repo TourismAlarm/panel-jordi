@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabaseServidor } from "@/lib/supabase/server";
-import { estadoClase, estadoTexto, haceCuanto } from "@/lib/formato";
+import { dia, estadoCorto, haceCuanto } from "@/lib/formato";
 import Registro from "@/app/registro";
 import Pregunta from "./pregunta";
 
@@ -35,8 +35,12 @@ export default async function Video({ params }: PageProps<"/videos/[id]">) {
       <p className="codigo">{video.id}</p>
       <h1>{video.titulo}</h1>
       <p className="fila">
-        <span className={`badge ${estadoClase(video.estado)}`}>{estadoTexto(video.estado)}</span>
-        <span className="apagado pequeno">actualizado {haceCuanto(video.actualizado_en)}</span>
+        <span className={`chip ${estadoCorto(video.estado).tono}`}>
+          <i />
+          {estadoCorto(video.estado).texto}
+        </span>
+        {video.fecha_trabajo && <span className="apagado pequeno">Trabajo: {dia(video.fecha_trabajo)}</span>}
+        <span className="apagado pequeno">· actualizado {haceCuanto(video.actualizado_en)}</span>
       </p>
       {video.siguiente_paso && (
         <div className={`tarjeta siguiente ${video.por_revisar ? "destacado" : ""}`}>

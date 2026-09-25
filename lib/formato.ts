@@ -15,6 +15,26 @@ export function estadoClase(estado: string) {
 
 export const CERRADOS = /publicado|aprobado|exportado|archivado/;
 
+// Estado en palabras de Jordi, como en el panel del ordenador. tono: bien | ojo | info | neutro
+export function estadoCorto(estado: string): { texto: string; tono: "bien" | "ojo" | "info" | "neutro" } {
+  if (estado === "revision_jordi") return { texto: "Te toca revisar", tono: "ojo" };
+  if (/respuestas|pregunt/.test(estado)) return { texto: "Faltan tus respuestas", tono: "ojo" };
+  if (/guion_listo/.test(estado) && /material/.test(estado)) return { texto: "Guion listo · falta grabar", tono: "info" };
+  if (/material|grab/.test(estado)) return { texto: "Falta grabar", tono: "neutro" };
+  if (/publicado/.test(estado)) return { texto: "Publicado", tono: "bien" };
+  if (/aprobado|exportado/.test(estado)) return { texto: "Aprobado", tono: "bien" };
+  if (/archivado/.test(estado)) return { texto: "Archivado", tono: "neutro" };
+  if (/mont|observ|archiv|invent|render/.test(estado)) return { texto: "Montando", tono: "info" };
+  return { texto: estadoTexto(estado), tono: "neutro" };
+}
+
+export function dia(fechaISO: string | null) {
+  if (!fechaISO) return "";
+  return new Intl.DateTimeFormat("es-ES", { timeZone: zona, weekday: "short", day: "numeric", month: "short" })
+    .format(new Date(`${fechaISO}T12:00:00Z`))
+    .replace(".", "");
+}
+
 const zona = "Europe/Madrid";
 
 export function haceCuanto(iso: string | null) {
