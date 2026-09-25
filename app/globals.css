@@ -9,6 +9,7 @@
   --ok: #1f7a3d;
   --espera: #9a6a00;
   --error: #b3261e;
+  --azul: #2458b3;
   color-scheme: light dark;
 }
 
@@ -24,6 +25,7 @@
     --ok: #5cc07f;
     --espera: #e3b341;
     --error: #ff8a80;
+    --azul: #7aa7ff;
   }
 }
 
@@ -117,6 +119,76 @@ button.secundario {
   width: 100%;
   margin-top: 24px;
 }
+
+/* Menú fijo arriba */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--fondo) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--borde);
+}
+.nav a {
+  flex: 1;
+  max-width: 200px;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  color: var(--apagado);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.nav a.activo { background: var(--tarjeta); color: var(--texto); border: 1px solid var(--borde); }
+.nav ~ main { padding-top: 16px; }
+
+.pequeno { font-size: 0.85rem; }
+.fila { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.derecha { margin-left: auto; }
+.cta { color: var(--acento); font-weight: 600; }
+.vacio { text-align: center; padding: 28px 16px; }
+.destacado { border-color: var(--acento); border-width: 2px; }
+.siguiente { gap: 2px; }
+.aviso {
+  background: color-mix(in srgb, var(--espera) 15%, var(--tarjeta));
+  border: 1px solid color-mix(in srgb, var(--espera) 45%, transparent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+.lista-preguntas { margin: 0; padding-left: 1.1em; color: var(--apagado); font-size: 0.92rem; }
+.lista-preguntas li { margin-bottom: 4px; }
+
+/* Colores de estado */
+.b-ok { color: var(--ok); border-color: currentColor; }
+.b-acento { color: var(--acento); border-color: currentColor; }
+.b-espera { color: var(--espera); border-color: currentColor; }
+.b-azul { color: var(--azul); border-color: currentColor; }
+.b-gris { color: var(--apagado); }
+
+details.cerrados { margin-top: 18px; }
+details > summary { cursor: pointer; list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details.cerrados > summary { color: var(--apagado); font-weight: 600; padding: 8px 0 14px; }
+.guion summary h2 { display: inline; }
+.guion summary::after { content: " ▾"; color: var(--apagado); }
+.guion details[open] summary::after { content: " ▴"; }
+
+/* Registro de agentes */
+.registro { list-style: none; margin: 0; padding: 0; }
+.registro li { padding: 12px 0; border-bottom: 1px solid var(--borde); }
+.registro .resumen { margin: 4px 0 0 20px; color: var(--apagado); font-size: 0.9rem; overflow-wrap: anywhere; }
+.registro a.codigo { text-decoration: none; }
+.punto { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--apagado); }
+.r-ok { background: var(--ok); }
+.r-mal { background: var(--error); }
+.r-espera { background: var(--espera); }
 
 .guion { overflow-wrap: anywhere; }
 .guion h1 { font-size: 1.3rem; margin-top: 1.4em; }

@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabaseServidor } from "@/lib/supabase/server";
+import { estadoClase, estadoTexto, haceCuanto } from "@/lib/formato";
+import Registro from "@/app/registro";
 import Pregunta from "./pregunta";
 
 // El guion lleva un bloque YAML arriba (datos internos); en el móvil se enseña solo el texto.
@@ -13,25 +14,36 @@ function sinFrontmatter(md: string) {
 export default async function Video({ params }: PageProps<"/videos/[id]">) {
   const { id } = await params;
   const supabase = await supabaseServidor();
-  const [{ data: video }, { data: preguntas }] = await Promise.all([
+  const [{ data: video }, { data: preguntas }, { data: actividad }] = await Promise.all([
     supabase.from("videos").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("preguntas")
       .select("id, clave, orden, texto, respuesta, respondida_en, recogida_en")
       .eq("video_id", id)
       .order("orden"),
+    supabase
+      .from("ejecuciones_agentes")
+      .select("id, agente, video_id, fin, resultado, resumen")
+      .eq("video_id", id)
+      .order("fin", { ascending: false })
+      .limit(15),
   ]);
   if (!video) notFound();
 
   return (
     <main>
-      <Link href="/" className="volver">← Vídeos</Link>
       <p className="codigo">{video.id}</p>
       <h1>{video.titulo}</h1>
-      <p>
-        <span className="badge">{video.estado.replaceAll("_", " ")}</span>
+      <p className="fila">
+        <span className={`badge ${estadoClase(video.estado)}`}>{estadoTexto(video.estado)}</span>
+        <span className="apagado pequeno">actualizado {haceCuanto(video.actualizado_en)}</span>
       </p>
-      {video.siguiente_paso && <p className="apagado">{video.siguiente_paso}</p>}
+      {video.siguiente_paso && (
+        <div className={`tarjeta siguiente ${video.por_revisar ? "destacado" : ""}`}>
+          <span className="codigo">Siguiente paso</span>
+          <span>{video.siguiente_paso}</span>
+        </div>
+      )}
 
       {!!preguntas?.length && (
         <section>
@@ -43,12 +55,21 @@ export default async function Video({ params }: PageProps<"/videos/[id]">) {
       )}
 
       <section className="guion">
-        <h2>Guion</h2>
-        {video.guion_md ? (
-          <Markdown remarkPlugins={[remarkGfm]}>{sinFrontmatter(video.guion_md)}</Markdown>
-        ) : (
-          <p className="apagado">Todavía no hay guion.</p>
-        )}
+        <details open={!preguntas?.length}>
+          <summary>
+            <h2>Guion</h2>
+          </summary>
+          {video.guion_md ? (
+            <Markdown remarkPlugins={[remarkGfm]}>{sinFrontmatter(video.guion_md)}</Markdown>
+          ) : (
+            <p className="apagado">Todavía no hay guion.</p>
+          )}
+        </details>
+      </section>
+
+      <section>
+        <h2>Actividad</h2>
+        <Registro filas={actividad ?? []} />
       </section>
     </main>
   );
