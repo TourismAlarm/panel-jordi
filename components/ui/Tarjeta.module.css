@@ -1,0 +1,46 @@
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  color: var(--texto);
+}
+
+.conTono {
+  border-left: 5px solid var(--t);
+}
+
+.destacada {
+  border: 2px solid var(--acento);
+}
+
+.pulsable {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: transform var(--rapido), background var(--rapido);
+}
+
+.pulsable:active {
+  transform: scale(0.985);
+  background: var(--superficie-2);
+}
+
+.contenido {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flecha {
+  flex: none;
+  color: var(--texto-suave);
+  opacity: 0.7;
+}

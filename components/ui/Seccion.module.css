@@ -1,0 +1,44 @@
+.seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  scroll-margin-top: 16px;
+}
+
+.seccion:first-child {
+  margin-top: 0;
+}
+
+.cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cabecera h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cuenta {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--acento-texto);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.extra {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}

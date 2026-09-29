@@ -1,27 +1,24 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import Nav from "./nav";
 
 export const metadata: Metadata = {
-  title: "Panel ELSA",
+  title: { default: "Panel ELSA", template: "%s · Panel ELSA" },
   description: "Preguntas y guiones de los vídeos de ELSA",
   appleWebApp: { capable: true, title: "Panel ELSA", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
+  viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f5f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f3ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#121212" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es">
-      <body>
-        <Nav />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

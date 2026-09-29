@@ -1,0 +1,73 @@
+.guion {
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.guion > :first-child {
+  margin-top: 0;
+}
+
+.guion h1 {
+  font-size: 1.25rem;
+  margin: 1.4em 0 0.4em;
+}
+
+.guion h2 {
+  font-size: 1.1rem;
+  margin: 1.3em 0 0.4em;
+}
+
+.guion h3 {
+  font-size: 1rem;
+  margin: 1.2em 0 0.3em;
+}
+
+.guion p,
+.guion ul,
+.guion ol {
+  margin: 0 0 0.8em;
+}
+
+.guion ul,
+.guion ol {
+  padding-left: 1.2em;
+}
+
+.guion blockquote {
+  margin: 0 0 0.8em;
+  padding-left: 12px;
+  border-left: 3px solid var(--acento);
+  color: var(--texto-suave);
+}
+
+.guion table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 1em;
+}
+
+.guion td,
+.guion th {
+  border: 1px solid var(--borde);
+  padding: 6px 8px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.guion th {
+  background: var(--superficie-2);
+}
+
+.guion pre,
+.guion code {
+  white-space: pre-wrap;
+  font-size: 0.9em;
+}
+
+.guion hr {
+  border: 0;
+  border-top: 1px solid var(--borde);
+  margin: 1.4em 0;
+}

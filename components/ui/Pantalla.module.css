@@ -1,0 +1,50 @@
+.pantalla {
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) var(--hueco) 32px;
+  animation: aparecer 220ms ease-out;
+}
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 40px;
+  margin: -6px 0 2px -6px;
+  padding-right: 8px;
+  color: var(--acento);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+.accion {
+  flex: none;
+  padding-top: 2px;
+}
+
+.cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

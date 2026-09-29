@@ -1,8 +1,11 @@
 "use server";
 
+// Todo lo que la app escribe pasa por aquí: los formularios llaman a estas funciones.
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseServidor } from "@/lib/supabase/server";
+import { guardarRespuesta } from "@/lib/datos/preguntas";
 
 export type Resultado = { error?: string; ok?: boolean } | null;
 
@@ -28,16 +31,11 @@ export async function responder(_prev: Resultado, form: FormData): Promise<Resul
   const respuesta = String(form.get("respuesta") ?? "").trim();
   if (!respuesta) return { error: "Escribe algo antes de enviar." };
 
-  const supabase = await supabaseServidor();
-  // RLS: solo pasa si eres un usuario permitido y la respuesta aún no la ha recogido el sync.
-  const { data, error } = await supabase
-    .from("preguntas")
-    .update({ respuesta, respondida_en: new Date().toISOString() })
-    .eq("id", id)
-    .select("id");
-  if (error) return { error: "No se ha podido guardar. Prueba otra vez." };
-  if (!data?.length) return { error: "Esta respuesta ya está recogida en preguntas.md y no se puede cambiar." };
+  const r = await guardarRespuesta(id, respuesta);
+  if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
+  if (r === "recogida") return { error: "El PC ya ha recogido esta respuesta y no se puede cambiar." };
 
   revalidatePath(`/videos/${videoId}`);
+  revalidatePath("/");
   return { ok: true };
 }
