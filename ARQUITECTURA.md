@@ -29,7 +29,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | Archivo        | Funciones |
 | -------------- | --------- |
 | `videos.ts`    | `listarProyectos()` (vídeo + ficha sacada del guion), `listarVideos()`, `obtenerVideo(id)`, `ultimaSincronizacion(videos)` |
-| `preguntas.ts` | `preguntasPendientes()`, `preguntasDeVideo(id)`, `contarEnviadas()`, `guardarRespuesta(id, texto)` |
+| `preguntas.ts` | `resumenPreguntas()` (por proyecto: total, sin contestar, enviadas), `resumir(filas)`, `preguntasDeVideo(id)`, `contarEnviadas()`, `guardarRespuesta(id, texto)` |
 | `actividad.ts` | `actividadReciente()`, `actividadDeVideo(id)`, `estadoAgentes()` |
 | `sesion.ts`    | `usuarioActual()` |
 
@@ -42,6 +42,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | Archivo       | Qué hace |
 | ------------- | -------- |
 | `estados.ts`  | Traduce estados técnicos a palabras y a un **tono** de color: `estadoVideo`, `estadoPregunta`, `estadoResultado`, `videoCerrado`, y la **fase** del proyecto (`faseVideo`: grabar · guion · montaje · hecho), que decide en qué bloque de la portada sale. Es el único sitio donde se decide qué significa cada estado. |
+| `pasos.ts`    | **Los pasos de cada proyecto en orden** (guion → preguntas → grabar/subir → montaje → revisar → publicar), calculados con los datos reales. Cada paso dice de quién es (`tuyo` · `sistema` · `pendiente` · `hecho`) y, si es tuyo, qué tocar (`accion`). No usa el texto «siguiente paso» del PC porque a veces se queda viejo. |
 | `guion.ts`    | Lee el guion: la cabecera YAML (`fichaDeGuion`: hora, lugar, camión, trabajo, datos por confirmar) y las secciones `# …` (`seccionesDeGuion`, `buscarSeccion`). |
 | `formato.ts`  | Fechas en hora de Madrid (`dia`, `diaCercano` «Hoy/Mañana», `fecha`, `hora`, `haceCuanto`, `diaRelativo`, `hoy`, `hoyLargo`), `plural` y `agruparPor`. |
 | `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`. |
@@ -64,6 +65,8 @@ Se ven todas, con ejemplos, en la app: **Más → Piezas de la app** (`/piezas`)
 | `Vacio` | Mensaje cuando no hay nada. |
 | `Desplegable` | Contenido que se abre al tocar. |
 | `Boton`, `BotonEnlace`, `BotonEnviar`, `Campo`, `Entrada`, `AreaTexto`, `ErrorCampo` | Botones (`compacto` para dentro de tarjetas) y formularios. |
+| `Progreso` | Barra partida en trozos, uno por paso, cada uno con su color. |
+| `Rotulo` | Rótulo pequeño en mayúsculas para separar bloques (días). |
 | `Segmentos` | Cambiar de vista dentro de una pantalla (Guion · Con indicaciones · Notas). |
 | `Esqueleto`, `EsqueletoPantalla` | Lo que se ve mientras cargan los datos. |
 | `Icono` | Iconos de trazo. Para uno nuevo, se añade a `TRAZOS`. |
@@ -74,7 +77,8 @@ Los colores y medidas están en `app/globals.css` (modo claro y oscuro). Cada pi
 
 ### `components/proyectos/`, `videos/`, `preguntas/`, `actividad/` — piezas del panel
 
-Combinan piezas de `ui/` con datos reales: `TarjetaProyecto` (cuándo, dónde, camión, qué falta y botón Guion),
+Combinan piezas de `ui/` con datos reales: `TarjetaProyecto` (cuándo, dónde, camión, barra de pasos, lo que falta en orden y botón del paso tuyo),
+`ListaPasos` (todos los pasos en la ficha), `LoQueFalta`, `MarcaPaso`,
 `Guion` (markdown; `lectura` para letra grande y bloques A CÁMARA / VOZ EN OFF marcados), `FormPregunta`,
 `Registro`, `ListaAgentes`.
 
@@ -92,7 +96,7 @@ app/
     layout.tsx            MarcoApp
     loading.tsx           esqueleto mientras carga
     error.tsx             «Algo ha fallado» + Reintentar
-    page.tsx              Proyectos: por fases (próximos, falta material, guion, montaje, hechos)
+    page.tsx              Proyectos: todos por fecha, con rótulo por día; filtro «Me toca» (?ver=mios)
     videos/[id]/          ficha del proyecto (/videos/GE_008)
     videos/[id]/guion/    modo lectura del guion (?ver=lectura|indicaciones|notas)
     actividad/            agentes y registro
@@ -134,7 +138,7 @@ Una pantalla solo hace tres cosas: **pide datos** a `lib/datos`, **decide** con 
 
 ### Un estado nuevo del vídeo
 
-Solo `lib/estados.ts` → `estadoVideo`. Todas las pantallas lo recogen solas.
+`lib/estados.ts` (`estadoVideo`, `faseVideo`) y, si cambia qué falta, `lib/pasos.ts`. Todas las pantallas lo recogen solas.
 
 ## Comprobar antes de subir
 

@@ -7,7 +7,7 @@ export function dia(fechaISO: string | null) {
   if (!fechaISO) return "";
   return new Intl.DateTimeFormat("es-ES", { timeZone: zona, weekday: "short", day: "numeric", month: "short" })
     .format(new Date(`${fechaISO}T12:00:00Z`))
-    .replace(".", "");
+    .replace(/[.,]/g, "");
 }
 
 // «2 oct, 17:05» — para momentos exactos.
@@ -90,6 +90,6 @@ export function diaCercano(fechaISO: string | null) {
 export function hoyLargo() {
   const t = new Intl.DateTimeFormat("es-ES", { timeZone: zona, weekday: "long", day: "numeric", month: "long" })
     .format(new Date())
-    .replace(",", "");
+    .replace(/[.,]/g, "");
   return t.charAt(0).toUpperCase() + t.slice(1);
 }

@@ -16,7 +16,9 @@ import {
   Icono,
   Lista,
   Pantalla,
+  Progreso,
   Punto,
+  Rotulo,
   Seccion,
   Segmentos,
   Tarjeta,
@@ -26,7 +28,9 @@ import {
 } from "@/components/ui";
 import { Registro } from "@/components/actividad/Registro";
 import { ListaAgentes } from "@/components/actividad/ListaAgentes";
+import { ListaPasos } from "@/components/proyectos/ListaPasos";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
+import { pasosDe } from "@/lib/pasos";
 import { Guion } from "@/components/videos/Guion";
 
 export const metadata: Metadata = { title: "Piezas" };
@@ -55,6 +59,26 @@ const ICONOS: NombreIcono[] = [
   "calendario",
   "info",
 ];
+
+const EJEMPLO = {
+  id: "GE_000",
+  titulo: "Proyecto de ejemplo",
+  estado: "esperando_respuestas_y_material",
+  fecha_trabajo: null,
+  por_revisar: false,
+  tieneGuion: true,
+  ficha: {
+    hora: "08:00",
+    franja: null,
+    lugar: "Mataró",
+    camion: "23 + 24",
+    trabajo: null,
+    version: "v0001",
+    estadoGuion: "borrador",
+    porConfirmar: [],
+  },
+};
+const PASOS_EJEMPLO = pasosDe(EJEMPLO, { total: 2, sinContestar: 2, enviadas: 0 });
 
 const hace = (min: number) => new Date(Date.now() - min * 60000).toISOString();
 
@@ -188,6 +212,15 @@ export default function Piezas() {
         />
       </Pieza>
 
+      <Pieza nombre="Progreso" uso="Barra partida en trozos, uno por paso, con el color de cada estado.">
+        <Progreso partes={["bien", "bien", "ojo", "info", "neutro", "neutro"]} etiqueta="2 de 6" />
+      </Pieza>
+
+      <Pieza nombre="Rotulo" uso="Separa bloques de una lista («HOY», «MIÉ 23 SEP»).">
+        <Rotulo acento>Hoy</Rotulo>
+        <Rotulo>jue 2 oct</Rotulo>
+      </Pieza>
+
       <Pieza nombre="Esqueleto" uso="Lo que se ve mientras cargan los datos.">
         <Tarjeta>
           <Esqueleto alto={12} ancho="25%" />
@@ -212,19 +245,12 @@ export default function Piezas() {
       <h2 style={{ marginTop: 24 }}>Del panel</h2>
       <p className="suave pequeno">Piezas que ya saben qué es un vídeo, una pregunta o un agente.</p>
 
-      <Pieza nombre="TarjetaProyecto" uso="Un proyecto en la portada. Borde naranja si es hoy o mañana.">
-        <TarjetaProyecto
-          p={{
-            id: "GE_000",
-            titulo: "Proyecto de ejemplo",
-            estado: "guion_listo_esperando_material",
-            fecha_trabajo: null,
-            por_revisar: false,
-            tieneGuion: true,
-            ficha: { hora: "08:00", franja: null, lugar: "Mataró", camion: "23 + 24", trabajo: null, version: "v0002", porConfirmar: [] },
-          }}
-          preguntas={2}
-        />
+      <Pieza nombre="TarjetaProyecto" uso="Un proyecto: barra de pasos, lo que falta en orden y el botón de lo que te toca. Borde naranja si es hoy o mañana.">
+        <TarjetaProyecto p={EJEMPLO} pasos={PASOS_EJEMPLO} />
+      </Pieza>
+
+      <Pieza nombre="ListaPasos" uso="Todos los pasos del proyecto en orden, con quién los hace. En la ficha.">
+        <ListaPasos pasos={PASOS_EJEMPLO} />
       </Pieza>
 
       <Pieza nombre="Guion (modo lectura)" uso="Texto del guion con los bloques marcados: quién habla en cada momento.">

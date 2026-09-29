@@ -1,0 +1,15 @@
+.progreso {
+  display: flex;
+  gap: 3px;
+}
+
+.progreso i {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--t);
+}
+
+.progreso i[data-tono="neutro"] {
+  background: var(--superficie-2);
+}

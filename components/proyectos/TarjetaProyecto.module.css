@@ -70,24 +70,31 @@
   gap: 5px;
 }
 
-.pie {
+.avance {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   margin-top: 4px;
 }
 
-.etiquetas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
+.avance > :first-child {
+  flex: 1;
 }
 
-/* El botón queda por encima del enlace de la tarjeta */
-.accion {
+.cuenta {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los botones quedan por encima del enlace de la tarjeta */
+.botones {
   position: relative;
   z-index: 1;
-  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }

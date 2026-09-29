@@ -10,12 +10,22 @@ export type Ficha = {
   camion: string | null;
   trabajo: string | null;
   version: string | null;
+  estadoGuion: string | null; // «listo» o «borrador», según el guionista
   porConfirmar: string[];
 };
 
 export type SeccionGuion = { titulo: string; clave: string; md: string };
 
-const VACIA: Ficha = { hora: null, franja: null, lugar: null, camion: null, trabajo: null, version: null, porConfirmar: [] };
+const VACIA: Ficha = {
+  hora: null,
+  franja: null,
+  lugar: null,
+  camion: null,
+  trabajo: null,
+  version: null,
+  estadoGuion: null,
+  porConfirmar: [],
+};
 
 function separar(md: string) {
   const m = md.match(/^---\n([\s\S]*?)\n---\n?/);
@@ -49,6 +59,7 @@ export function fichaDeGuion(md: string | null): Ficha {
     camion: limpiar(d.camion),
     trabajo: limpiar(d.trabajo),
     version: limpiar(d.version),
+    estadoGuion: limpiar(d.estado),
     porConfirmar: lista.map((x) => String(x).replace(/^\[|\]$/g, "")),
   };
 }

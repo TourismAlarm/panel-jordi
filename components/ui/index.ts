@@ -13,6 +13,8 @@ export { Etiqueta, Punto } from "./Etiqueta";
 export { Icono, type NombreIcono } from "./Icono";
 export { Fila, Lista } from "./Lista";
 export { Pantalla } from "./Pantalla";
+export { Progreso } from "./Progreso";
+export { Rotulo } from "./Rotulo";
 export { Seccion } from "./Seccion";
 export { Segmentos } from "./Segmentos";
 export { Tarjeta } from "./Tarjeta";

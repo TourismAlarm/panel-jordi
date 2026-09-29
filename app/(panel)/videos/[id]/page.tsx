@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BotonEnlace, Desplegable, Etiqueta, Fila, Icono, Lista, Pantalla, Seccion, Tarjeta } from "@/components/ui";
+import { BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Seccion, Tarjeta } from "@/components/ui";
 import { Registro } from "@/components/actividad/Registro";
 import { FormPregunta } from "@/components/preguntas/FormPregunta";
+import { ListaPasos } from "@/components/proyectos/ListaPasos";
 import { Guion } from "@/components/videos/Guion";
 import { actividadDeVideo } from "@/lib/datos/actividad";
-import { preguntasDeVideo } from "@/lib/datos/preguntas";
+import { preguntasDeVideo, resumir } from "@/lib/datos/preguntas";
 import { obtenerVideo } from "@/lib/datos/videos";
-import { estadoVideo, faseVideo, fasePregunta } from "@/lib/estados";
+import { faseVideo } from "@/lib/estados";
 import { buscarSeccion, esSeccionPropia, fichaDeGuion, SECCION, seccionesDeGuion } from "@/lib/guion";
 import { diaCercano, haceCuanto, plural } from "@/lib/formato";
+import { pasosDe } from "@/lib/pasos";
 
 export async function generateMetadata({ params }: PageProps<"/videos/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -17,19 +19,20 @@ export async function generateMetadata({ params }: PageProps<"/videos/[id]">): P
   return { title: video?.titulo ?? id };
 }
 
-// Ficha de un proyecto: lo esencial arriba (guion, cuándo, dónde, qué falta) y el resto plegado.
+// Ficha de un proyecto: guion, cuándo y dónde, los pasos en orden (con botón en los tuyos),
+// las preguntas y, plegado, el resto del guion y la actividad.
 export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
   const { id } = await params;
   const [video, preguntas, actividad] = await Promise.all([obtenerVideo(id), preguntasDeVideo(id), actividadDeVideo(id)]);
   if (!video) notFound();
 
-  const e = estadoVideo(video.estado);
   const fase = faseVideo(video.estado);
   const ficha = fichaDeGuion(video.guion_md);
+  const resumen = resumir(preguntas);
+  const pasos = pasosDe({ ...video, ficha, tieneGuion: !!video.guion_md }, resumen);
   const secciones = seccionesDeGuion(video.guion_md);
   const notas = buscarSeccion(secciones, SECCION.notas);
   const otras = secciones.filter((s) => !esSeccionPropia(s));
-  const pendientes = preguntas.filter((p) => fasePregunta(p) === "pendiente").length;
 
   return (
     <Pantalla
@@ -38,8 +41,6 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
       titulo={video.titulo ?? video.id}
       subtitulo={`Actualizado ${haceCuanto(video.actualizado_en)}${ficha.version ? ` · guion ${ficha.version}` : ""}`}
     >
-      <Etiqueta tono={e.tono}>{e.texto}</Etiqueta>
-
       {video.guion_md ? (
         <BotonEnlace href={`/videos/${video.id}/guion`}>
           <Icono nombre="guion" />
@@ -62,15 +63,17 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
         {ficha.trabajo && <Fila inicio={<Icono nombre="info" />} titulo="El trabajo" detalle={ficha.trabajo} />}
       </Lista>
 
-      {video.siguiente_paso && (
-        <Tarjeta destacada={video.por_revisar} tono={video.por_revisar ? undefined : "info"}>
-          <span className="codigo">SIGUIENTE PASO</span>
-          <span>{video.siguiente_paso}</span>
-        </Tarjeta>
-      )}
+      <Seccion titulo="Pasos">
+        <ListaPasos pasos={pasos} />
+        {video.siguiente_paso && (
+          <p className="suave pequeno">
+            <strong>Nota del PC:</strong> {video.siguiente_paso}
+          </p>
+        )}
+      </Seccion>
 
       {!!preguntas.length && (
-        <Seccion titulo="Preguntas" id="preguntas" cuenta={pendientes}>
+        <Seccion titulo="Preguntas" id="preguntas" cuenta={resumen.sinContestar}>
           {preguntas.map((p) => (
             <FormPregunta key={p.id} videoId={video.id} p={p} />
           ))}

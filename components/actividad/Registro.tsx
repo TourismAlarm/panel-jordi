@@ -1,4 +1,4 @@
-import { Fila, Lista, Punto, Vacio } from "@/components/ui";
+import { Fila, Lista, Punto, Rotulo, Vacio } from "@/components/ui";
 import type { Ejecucion } from "@/lib/datos/actividad";
 import { estadoResultado } from "@/lib/estados";
 import { agruparPor, diaRelativo, hora } from "@/lib/formato";
@@ -14,7 +14,7 @@ export function Registro({ filas, conVideo = false }: { filas: Ejecucion[]; conV
     <div className={s.registro}>
       {agruparPor(filas, (f) => diaRelativo(f.fin)).map((g) => (
         <div key={g.etiqueta} className={s.dia}>
-          <h3 className={s.etiqueta}>{g.etiqueta}</h3>
+          <Rotulo>{g.etiqueta}</Rotulo>
           <Lista>
             {g.items.map((f) => {
               const r = estadoResultado(f.resultado);

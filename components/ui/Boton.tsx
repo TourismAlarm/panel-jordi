@@ -15,18 +15,27 @@ export function Boton({ variante = "principal", compacto, className, ...resto }:
   return <button className={clases(variante, compacto, className)} {...resto} />;
 }
 
-// Igual que Boton pero lleva a otra pantalla («Leer guion»).
+// Igual que Boton pero lleva a otra pantalla («Leer guion»). externo: abre fuera de la app (Gmail…).
 export function BotonEnlace({
   href,
   variante = "principal",
   compacto,
+  externo,
   children,
 }: {
   href: string;
   variante?: Variante;
   compacto?: boolean;
+  externo?: boolean;
   children: ReactNode;
 }) {
+  if (externo) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={clases(variante, compacto)}>
+        {children}
+      </a>
+    );
+  }
   return (
     <Link href={href} className={clases(variante, compacto)}>
       {children}
