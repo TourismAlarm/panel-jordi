@@ -70,6 +70,39 @@ export type Database = {
         }
         Relationships: []
       }
+      peticiones: {
+        Row: {
+          creada_en: string
+          fecha_trabajo: string | null
+          id: string
+          motivo: string | null
+          recogida_en: string | null
+          texto: string | null
+          tipo: string
+          video_id: string | null
+        }
+        Insert: {
+          creada_en?: string
+          fecha_trabajo?: string | null
+          id?: string
+          motivo?: string | null
+          recogida_en?: string | null
+          texto?: string | null
+          tipo: string
+          video_id?: string | null
+        }
+        Update: {
+          creada_en?: string
+          fecha_trabajo?: string | null
+          id?: string
+          motivo?: string | null
+          recogida_en?: string | null
+          texto?: string | null
+          tipo?: string
+          video_id?: string | null
+        }
+        Relationships: []
+      }
       preguntas: {
         Row: {
           clave: string

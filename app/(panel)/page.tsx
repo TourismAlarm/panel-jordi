@@ -1,30 +1,50 @@
-import { Aviso, Desplegable, Pantalla, Rotulo, Segmentos, Vacio } from "@/components/ui";
+import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Rotulo, Seccion, Segmentos, Vacio } from "@/components/ui";
+import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
+import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
 import { listarProyectos, ultimaSincronizacion } from "@/lib/datos/videos";
-import { faseVideo } from "@/lib/estados";
-import { agruparPor, diaCercano, haceCuanto, hoyLargo, plural } from "@/lib/formato";
+import { faseVideo, textoMotivo } from "@/lib/estados";
+import { agruparPor, dia, diaCercano, haceCuanto, hoyLargo, plural } from "@/lib/formato";
 import { pasosDe, teToca } from "@/lib/pasos";
 
 // Portada: todos los proyectos abiertos en orden de fecha, cada uno con sus pasos.
-// «Me toca» deja solo los que tienen algo tuyo pendiente. Los hechos, plegados al final.
+// «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, los guiones que has pedido;
+// al final, plegados, los hechos y los que has descartado.
 export default async function Proyectos({ searchParams }: PageProps<"/">) {
-  const [{ ver }, proyectos, preguntas, enviadas] = await Promise.all([
+  const [{ ver }, proyectos, preguntas, enviadas, peticiones] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
     contarEnviadas(),
+    listarPeticiones(),
   ]);
 
+  const descartes = descartesPorVideo(peticiones);
+  const pedidos = peticiones.filter((x) => x.tipo === "nuevo" && !x.recogida_en);
   const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe(p, preguntas.get(p.id)) }));
-  const abiertos = conPasos.filter(({ p }) => faseVideo(p.estado) !== "hecho");
+  const vivos = conPasos.filter(({ p }) => !descartes.has(p.id));
+  const descartados = conPasos.filter(({ p }) => descartes.has(p.id));
+  const abiertos = vivos.filter(({ p }) => faseVideo(p.estado) !== "hecho");
   const mios = abiertos.filter(({ pasos }) => teToca(pasos));
-  const hechos = conPasos.filter(({ p }) => faseVideo(p.estado) === "hecho").reverse();
+  const hechos = vivos.filter(({ p }) => faseVideo(p.estado) === "hecho").reverse();
   const soloMios = ver === "mios";
   const lista = soloMios ? mios : abiertos;
 
   return (
-    <Pantalla titulo="Proyectos" subtitulo={`${hoyLargo()} · datos del PC ${haceCuanto(ultimaSincronizacion(proyectos)) || "sin sincronizar"}`}>
+    <Pantalla
+      titulo="Proyectos"
+      subtitulo={`${hoyLargo()} · datos del PC ${haceCuanto(ultimaSincronizacion(proyectos)) || "sin sincronizar"}`}
+      accion={
+        <>
+          <BotonEnlace href="/nuevo" variante="secundario" compacto>
+            <Icono nombre="anadir" tamano={18} />
+            Guion
+          </BotonEnlace>
+          <BotonActualizar />
+        </>
+      }
+    >
       <Segmentos
         opciones={[
           { href: "/", texto: `Todos (${abiertos.length})`, activo: !soloMios },
@@ -36,6 +56,22 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
         <Aviso tono="info">
           {plural(enviadas, "respuesta enviada", "respuestas enviadas")}. El PC las recoge en menos de 15 min.
         </Aviso>
+      )}
+
+      {!!pedidos.length && (
+        <Seccion titulo="Guiones que has pedido">
+          <Lista>
+            {pedidos.map((x) => (
+              <Fila
+                key={x.id}
+                inicio={<Icono nombre="reloj" />}
+                titulo={x.texto}
+                detalle={`${x.fecha_trabajo ? `Para el ${dia(x.fecha_trabajo)} · ` : ""}esperando a que el PC lo recoja`}
+                fin={<BotonDeshacer id={x.id} />}
+              />
+            ))}
+          </Lista>
+        </Seccion>
       )}
 
       {!lista.length &&
@@ -59,6 +95,24 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
           {hechos.map(({ p, pasos }) => (
             <TarjetaProyecto key={p.id} p={p} pasos={pasos} />
           ))}
+        </Desplegable>
+      )}
+
+      {!soloMios && !!descartados.length && (
+        <Desplegable titulo={`Descartados (${descartados.length})`}>
+          <Lista>
+            {descartados.map(({ p }) => {
+              const d = descartes.get(p.id)!;
+              return (
+                <Fila
+                  key={p.id}
+                  href={`/videos/${p.id}`}
+                  titulo={p.titulo ?? p.id}
+                  detalle={`${textoMotivo(d.motivo)} · ${d.recogida_en ? "el PC ya lo sabe" : "esperando al PC"}`}
+                />
+              );
+            })}
+          </Lista>
         </Desplegable>
       )}
     </Pantalla>

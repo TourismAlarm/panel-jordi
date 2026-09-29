@@ -31,6 +31,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `videos.ts`    | `listarProyectos()` (vídeo + ficha sacada del guion), `listarVideos()`, `obtenerVideo(id)`, `ultimaSincronizacion(videos)` |
 | `preguntas.ts` | `resumenPreguntas()` (por proyecto: total, sin contestar, enviadas), `resumir(filas)`, `preguntasDeVideo(id)`, `contarEnviadas()`, `guardarRespuesta(id, texto)` |
 | `actividad.ts` | `actividadReciente()`, `actividadDeVideo(id)`, `estadoAgentes()` |
+| `peticiones.ts` | `listarPeticiones()`, `descartesPorVideo()`, `descartarProyecto()`, `pedirGuionNuevo()`, `borrarPeticion()` (deshacer). Lo que pides al PC; él lo recoge (ver `docs/pc-peticiones.md`). |
 | `sesion.ts`    | `usuarioActual()` |
 
 - Si Supabase falla, se lanza un error y sale la pantalla «Algo ha fallado» con **Reintentar**
@@ -45,7 +46,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `pasos.ts`    | **Los pasos de cada proyecto en orden** (guion → preguntas → grabar/subir → montaje → revisar → publicar), calculados con los datos reales. Cada paso dice de quién es (`tuyo` · `sistema` · `pendiente` · `hecho`) y, si es tuyo, qué tocar (`accion`). No usa el texto «siguiente paso» del PC porque a veces se queda viejo. |
 | `guion.ts`    | Lee el guion: la cabecera YAML (`fichaDeGuion`: hora, lugar, camión, trabajo, datos por confirmar) y las secciones `# …` (`seccionesDeGuion`, `buscarSeccion`). |
 | `formato.ts`  | Fechas en hora de Madrid (`dia`, `diaCercano` «Hoy/Mañana», `fecha`, `hora`, `haceCuanto`, `diaRelativo`, `hoy`, `hoyLargo`), `plural` y `agruparPor`. |
-| `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`. |
+| `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`, `descartar`, `pedirGuion`, `deshacer`. |
 
 ## 3 · Piezas — `components/`
 
@@ -67,6 +68,7 @@ Se ven todas, con ejemplos, en la app: **Más → Piezas de la app** (`/piezas`)
 | `Boton`, `BotonEnlace`, `BotonEnviar`, `Campo`, `Entrada`, `AreaTexto`, `ErrorCampo` | Botones (`compacto` para dentro de tarjetas) y formularios. |
 | `Progreso` | Barra partida en trozos, uno por paso, cada uno con su color. |
 | `Rotulo` | Rótulo pequeño en mayúsculas para separar bloques (días). |
+| `Opciones` | Elegir una cosa de una lista corta tocando (radio con forma de pastilla). |
 | `Segmentos` | Cambiar de vista dentro de una pantalla (Guion · Con indicaciones · Notas). |
 | `Esqueleto`, `EsqueletoPantalla` | Lo que se ve mientras cargan los datos. |
 | `Icono` | Iconos de trazo. Para uno nuevo, se añade a `TRAZOS`. |
@@ -78,7 +80,8 @@ Los colores y medidas están en `app/globals.css` (modo claro y oscuro). Cada pi
 ### `components/proyectos/`, `videos/`, `preguntas/`, `actividad/` — piezas del panel
 
 Combinan piezas de `ui/` con datos reales: `TarjetaProyecto` (cuándo, dónde, camión, barra de pasos, lo que falta en orden y botón del paso tuyo),
-`ListaPasos` (todos los pasos en la ficha), `LoQueFalta`, `MarcaPaso`,
+`ListaPasos` (todos los pasos en la ficha), `LoQueFalta`, `MarcaPaso`, `FormDescartar`, `AvisoDescartado`,
+`FormPedirGuion`, `BotonDeshacer`,
 `Guion` (markdown; `lectura` para letra grande y bloques A CÁMARA / VOZ EN OFF marcados), `FormPregunta`,
 `Registro`, `ListaAgentes`.
 
@@ -99,6 +102,7 @@ app/
     page.tsx              Proyectos: todos por fecha, con rótulo por día; filtro «Me toca» (?ver=mios)
     videos/[id]/          ficha del proyecto (/videos/GE_008)
     videos/[id]/guion/    modo lectura del guion (?ver=lectura|indicaciones|notas)
+    nuevo/                pedir guion para otro trabajo
     actividad/            agentes y registro
     mas/                  sincronización, cuenta, salir
     piezas/               catálogo de la base

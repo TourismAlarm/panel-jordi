@@ -1,0 +1,28 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cabecera > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.motivo {
+  font-size: 1.02rem;
+}
+
+.enlace {
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+}

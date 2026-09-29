@@ -79,6 +79,13 @@ const TRAZOS = {
       <path d="M12 11v5M12 8v.3" />
     </>
   ),
+  anadir: <path d="M12 5v14M5 12h14" />,
+  papelera: (
+    <>
+      <path d="M4 7h16M9.5 7V4.5h5V7" />
+      <path d="M6 7l1 13h10l1-13M10 11v5M14 11v5" />
+    </>
+  ),
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

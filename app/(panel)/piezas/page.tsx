@@ -15,6 +15,7 @@ import {
   Fila,
   Icono,
   Lista,
+  Opciones,
   Pantalla,
   Progreso,
   Punto,
@@ -187,6 +188,19 @@ export default function Piezas() {
         <Boton type="button" variante="peligro">
           Peligro
         </Boton>
+      </Pieza>
+
+      <Pieza nombre="Opciones" uso="Elegir una cosa de una lista corta tocando (el motivo de descartar, por ejemplo).">
+        <form>
+          <Opciones
+            nombre="ejemplo"
+            defecto="a"
+            opciones={[
+              { valor: "a", texto: "No hice yo el trabajo" },
+              { valor: "b", texto: "No me gusta cómo está planteado" },
+            ]}
+          />
+        </form>
       </Pieza>
 
       <Pieza nombre="BotonEnlace" uso="Como un botón, pero lleva a otra pantalla. «compacto» para dentro de tarjetas.">

@@ -12,6 +12,7 @@ export { Esqueleto, EsqueletoPantalla } from "./Esqueleto";
 export { Etiqueta, Punto } from "./Etiqueta";
 export { Icono, type NombreIcono } from "./Icono";
 export { Fila, Lista } from "./Lista";
+export { Opciones } from "./Opciones";
 export { Pantalla } from "./Pantalla";
 export { Progreso } from "./Progreso";
 export { Rotulo } from "./Rotulo";

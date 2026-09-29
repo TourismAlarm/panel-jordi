@@ -71,3 +71,22 @@ export function estadoResultado(resultado: string | null): Estado {
   if (resultado === "correccion") return { texto: "Corrigiendo", tono: "ojo" };
   return { texto: resultado ? textoCrudo(resultado) : "Sin resultado", tono: "neutro" };
 }
+
+// ── Descartar un proyecto ─────────────────────────────────
+
+export const MOTIVOS = {
+  no_lo_hice: "No hice yo el trabajo",
+  no_me_gusta: "No me gusta cómo está planteado",
+  no_sirve: "Ya no me sirve",
+  otro: "Otro motivo",
+} as const;
+
+export type Motivo = keyof typeof MOTIVOS;
+
+export function esMotivo(m: string): m is Motivo {
+  return Object.hasOwn(MOTIVOS, m);
+}
+
+export function textoMotivo(m: string | null) {
+  return m && esMotivo(m) ? MOTIVOS[m] : "Descartado";
+}

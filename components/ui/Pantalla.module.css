@@ -40,6 +40,9 @@
 
 .accion {
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding-top: 2px;
 }
 
