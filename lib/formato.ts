@@ -69,3 +69,27 @@ export function agruparPor<T>(lista: T[], etiqueta: (x: T) => string) {
   }
   return grupos;
 }
+
+// Día de hoy en Madrid, «2026-09-29». Sirve para comparar con fecha_trabajo.
+export function hoy() {
+  return claveDia(new Date());
+}
+
+// Para fechas de trabajo (columna date): «Hoy», «Mañana», «Ayer» o «jue 2 oct».
+export function diaCercano(fechaISO: string | null) {
+  if (!fechaISO) return "Sin fecha";
+  const h = hoy();
+  if (fechaISO === h) return "Hoy";
+  const dt = (n: number) => claveDia(new Date(Date.now() + n * 864e5));
+  if (fechaISO === dt(1)) return "Mañana";
+  if (fechaISO === dt(-1)) return "Ayer";
+  return dia(fechaISO);
+}
+
+// «Martes 29 de septiembre»
+export function hoyLargo() {
+  const t = new Intl.DateTimeFormat("es-ES", { timeZone: zona, weekday: "long", day: "numeric", month: "long" })
+    .format(new Date())
+    .replace(",", "");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}

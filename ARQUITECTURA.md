@@ -28,7 +28,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 
 | Archivo        | Funciones |
 | -------------- | --------- |
-| `videos.ts`    | `listarVideos()`, `obtenerVideo(id)`, `ultimaSincronizacion(videos)` |
+| `videos.ts`    | `listarProyectos()` (vídeo + ficha sacada del guion), `listarVideos()`, `obtenerVideo(id)`, `ultimaSincronizacion(videos)` |
 | `preguntas.ts` | `preguntasPendientes()`, `preguntasDeVideo(id)`, `contarEnviadas()`, `guardarRespuesta(id, texto)` |
 | `actividad.ts` | `actividadReciente()`, `actividadDeVideo(id)`, `estadoAgentes()` |
 | `sesion.ts`    | `usuarioActual()` |
@@ -41,8 +41,9 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 
 | Archivo       | Qué hace |
 | ------------- | -------- |
-| `estados.ts`  | Traduce estados técnicos a palabras y a un **tono** de color: `estadoVideo`, `estadoPregunta`, `estadoResultado`, `videoCerrado`. Es el único sitio donde se decide qué significa cada estado. |
-| `formato.ts`  | Fechas en hora de Madrid (`dia`, `fecha`, `hora`, `haceCuanto`, `diaRelativo`), `plural` y `agruparPor`. |
+| `estados.ts`  | Traduce estados técnicos a palabras y a un **tono** de color: `estadoVideo`, `estadoPregunta`, `estadoResultado`, `videoCerrado`, y la **fase** del proyecto (`faseVideo`: grabar · guion · montaje · hecho), que decide en qué bloque de la portada sale. Es el único sitio donde se decide qué significa cada estado. |
+| `guion.ts`    | Lee el guion: la cabecera YAML (`fichaDeGuion`: hora, lugar, camión, trabajo, datos por confirmar) y las secciones `# …` (`seccionesDeGuion`, `buscarSeccion`). |
+| `formato.ts`  | Fechas en hora de Madrid (`dia`, `diaCercano` «Hoy/Mañana», `fecha`, `hora`, `haceCuanto`, `diaRelativo`, `hoy`, `hoyLargo`), `plural` y `agruparPor`. |
 | `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`. |
 
 ## 3 · Piezas — `components/`
@@ -62,7 +63,8 @@ Se ven todas, con ejemplos, en la app: **Más → Piezas de la app** (`/piezas`)
 | `Aviso` | Franja para avisar sin cortar el paso. |
 | `Vacio` | Mensaje cuando no hay nada. |
 | `Desplegable` | Contenido que se abre al tocar. |
-| `Boton`, `BotonEnviar`, `Campo`, `Entrada`, `AreaTexto`, `ErrorCampo` | Formularios. |
+| `Boton`, `BotonEnlace`, `BotonEnviar`, `Campo`, `Entrada`, `AreaTexto`, `ErrorCampo` | Botones (`compacto` para dentro de tarjetas) y formularios. |
+| `Segmentos` | Cambiar de vista dentro de una pantalla (Guion · Con indicaciones · Notas). |
 | `Esqueleto`, `EsqueletoPantalla` | Lo que se ve mientras cargan los datos. |
 | `Icono` | Iconos de trazo. Para uno nuevo, se añade a `TRAZOS`. |
 | `BotonActualizar` | Vuelve a pedir los datos (en la app instalada no hay «tirar para refrescar»). |
@@ -70,10 +72,11 @@ Se ven todas, con ejemplos, en la app: **Más → Piezas de la app** (`/piezas`)
 **Tonos**: `bien` (verde) · `ojo` (ámbar, te toca) · `mal` (rojo) · `info` (azul, en marcha) · `neutro` (gris).
 Los colores y medidas están en `app/globals.css` (modo claro y oscuro). Cada pieza tiene su `.module.css` al lado.
 
-### `components/videos/`, `preguntas/`, `actividad/` — piezas del panel
+### `components/proyectos/`, `videos/`, `preguntas/`, `actividad/` — piezas del panel
 
-Combinan piezas de `ui/` con datos reales: `TarjetaVideo`, `FilaVideo`, `Guion`, `FormPregunta`,
-`TarjetaPendientes`, `Registro`, `ListaAgentes`.
+Combinan piezas de `ui/` con datos reales: `TarjetaProyecto` (cuándo, dónde, camión, qué falta y botón Guion),
+`Guion` (markdown; `lectura` para letra grande y bloques A CÁMARA / VOZ EN OFF marcados), `FormPregunta`,
+`Registro`, `ListaAgentes`.
 
 ### `components/app/` — el armazón
 
@@ -89,8 +92,9 @@ app/
     layout.tsx            MarcoApp
     loading.tsx           esqueleto mientras carga
     error.tsx             «Algo ha fallado» + Reintentar
-    page.tsx              Inicio
-    videos/               lista y detalle (/videos/E012)
+    page.tsx              Proyectos: por fases (próximos, falta material, guion, montaje, hechos)
+    videos/[id]/          ficha del proyecto (/videos/GE_008)
+    videos/[id]/guion/    modo lectura del guion (?ver=lectura|indicaciones|notas)
     actividad/            agentes y registro
     mas/                  sincronización, cuenta, salir
     piezas/               catálogo de la base

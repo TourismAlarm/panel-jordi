@@ -53,6 +53,32 @@ const TRAZOS = {
       <path d="M14 3.5v4h4M9 12h6M9 16h6" />
     </>
   ),
+  lugar: (
+    <>
+      <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </>
+  ),
+  camion: (
+    <>
+      <path d="M2.5 6h11v10.5h-11z" />
+      <path d="M13.5 9.5h4l3 3.5v3.5h-7" />
+      <circle cx="7" cy="17.5" r="1.8" />
+      <circle cx="17" cy="17.5" r="1.8" />
+    </>
+  ),
+  calendario: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5M12 8v.3" />
+    </>
+  ),
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

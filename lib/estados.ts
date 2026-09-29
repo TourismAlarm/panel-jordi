@@ -31,6 +31,18 @@ export function estadoVideo(estado: string): Estado {
   return { texto: textoCrudo(estado), tono: "neutro" };
 }
 
+// En qué fase está el proyecto. Decide en qué bloque de la portada sale.
+// grabar → hay que ir a grabarlo o subir lo grabado · guion → el guionista aún lo prepara
+// montaje → ya hay material, se está montando o revisando · hecho → publicado/aprobado/archivado
+export type Fase = "grabar" | "guion" | "montaje" | "hecho";
+
+export function faseVideo(estado: string): Fase {
+  if (videoCerrado(estado)) return "hecho";
+  if (/material|grab/.test(estado)) return "grabar";
+  if (/revision|mont|observ|archiv|invent|render|export/.test(estado)) return "montaje";
+  return "guion";
+}
+
 // ── Preguntas ─────────────────────────────────────────────
 
 type PreguntaEstado = Pick<Fila<"preguntas">, "respondida_en" | "recogida_en">;

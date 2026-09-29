@@ -2,7 +2,7 @@
 // Catálogo visual de todas ellas en /piezas.
 
 export { Aviso } from "./Aviso";
-export { Boton } from "./Boton";
+export { Boton, BotonEnlace } from "./Boton";
 export { BotonActualizar } from "./BotonActualizar";
 export { BotonEnviar } from "./BotonEnviar";
 export { AreaTexto, Campo, Entrada, ErrorCampo } from "./Campo";
@@ -14,6 +14,7 @@ export { Icono, type NombreIcono } from "./Icono";
 export { Fila, Lista } from "./Lista";
 export { Pantalla } from "./Pantalla";
 export { Seccion } from "./Seccion";
+export { Segmentos } from "./Segmentos";
 export { Tarjeta } from "./Tarjeta";
 export type { Tono } from "./tono";
 export { Vacio } from "./Vacio";

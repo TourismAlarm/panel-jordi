@@ -1,5 +1,5 @@
 import { EsqueletoPantalla } from "@/components/ui";
 
 export default function Cargando() {
-  return <EsqueletoPantalla cifras />;
+  return <EsqueletoPantalla tarjetas={4} />;
 }

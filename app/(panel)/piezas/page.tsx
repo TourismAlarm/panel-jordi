@@ -4,6 +4,7 @@ import {
   AreaTexto,
   Aviso,
   Boton,
+  BotonEnlace,
   Campo,
   Cifra,
   Cifras,
@@ -17,6 +18,7 @@ import {
   Pantalla,
   Punto,
   Seccion,
+  Segmentos,
   Tarjeta,
   Vacio,
   type NombreIcono,
@@ -24,9 +26,8 @@ import {
 } from "@/components/ui";
 import { Registro } from "@/components/actividad/Registro";
 import { ListaAgentes } from "@/components/actividad/ListaAgentes";
-import { TarjetaPendientes } from "@/components/preguntas/TarjetaPendientes";
-import { FilaVideo } from "@/components/videos/FilaVideo";
-import { TarjetaVideo } from "@/components/videos/TarjetaVideo";
+import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
+import { Guion } from "@/components/videos/Guion";
 
 export const metadata: Metadata = { title: "Piezas" };
 
@@ -49,6 +50,10 @@ const ICONOS: NombreIcono[] = [
   "salir",
   "piezas",
   "guion",
+  "lugar",
+  "camion",
+  "calendario",
+  "info",
 ];
 
 const hace = (min: number) => new Date(Date.now() - min * 60000).toISOString();
@@ -160,6 +165,29 @@ export default function Piezas() {
         </Boton>
       </Pieza>
 
+      <Pieza nombre="BotonEnlace" uso="Como un botón, pero lleva a otra pantalla. «compacto» para dentro de tarjetas.">
+        <BotonEnlace href="#">
+          <Icono nombre="guion" />
+          Leer el guion
+        </BotonEnlace>
+        <div>
+          <BotonEnlace href="#" variante="secundario" compacto>
+            <Icono nombre="guion" tamano={18} />
+            Guion
+          </BotonEnlace>
+        </div>
+      </Pieza>
+
+      <Pieza nombre="Segmentos" uso="Cambiar de vista dentro de la misma pantalla.">
+        <Segmentos
+          opciones={[
+            { href: "/piezas", texto: "Guion", activo: true },
+            { href: "/piezas?b", texto: "Con indicaciones", activo: false },
+            { href: "/piezas?c", texto: "Notas", activo: false },
+          ]}
+        />
+      </Pieza>
+
       <Pieza nombre="Esqueleto" uso="Lo que se ve mientras cargan los datos.">
         <Tarjeta>
           <Esqueleto alto={12} ancho="25%" />
@@ -184,27 +212,28 @@ export default function Piezas() {
       <h2 style={{ marginTop: 24 }}>Del panel</h2>
       <p className="suave pequeno">Piezas que ya saben qué es un vídeo, una pregunta o un agente.</p>
 
-      <Pieza nombre="TarjetaVideo" uso="Un vídeo en la pantalla Vídeos.">
-        <TarjetaVideo
-          v={{
-            id: "E000",
-            titulo: "Vídeo de ejemplo",
+      <Pieza nombre="TarjetaProyecto" uso="Un proyecto en la portada. Borde naranja si es hoy o mañana.">
+        <TarjetaProyecto
+          p={{
+            id: "GE_000",
+            titulo: "Proyecto de ejemplo",
             estado: "guion_listo_esperando_material",
-            fecha_trabajo: "2026-10-02",
-            siguiente_paso: "Grabar el material en el taller.",
+            fecha_trabajo: null,
             por_revisar: false,
+            tieneGuion: true,
+            ficha: { hora: "08:00", franja: null, lugar: "Mataró", camion: "23 + 24", trabajo: null, version: "v0002", porConfirmar: [] },
           }}
+          preguntas={2}
         />
       </Pieza>
 
-      <Pieza nombre="FilaVideo" uso="Un vídeo en versión compacta (portada).">
-        <Lista>
-          <FilaVideo v={{ id: "E000", titulo: "Vídeo de ejemplo", estado: "montaje", fecha_trabajo: "2026-10-02" }} />
-        </Lista>
-      </Pieza>
-
-      <Pieza nombre="TarjetaPendientes" uso="Preguntas sin contestar de un vídeo (portada).">
-        <TarjetaPendientes videoId="E000" titulo="Vídeo de ejemplo" textos={["¿Qué grúa sale en el plano del puerto?", "Otra"]} />
+      <Pieza nombre="Guion (modo lectura)" uso="Texto del guion con los bloques marcados: quién habla en cada momento.">
+        <Tarjeta>
+          <Guion
+            lectura
+            md={"**A CÁMARA · GANCHO** *(ya grabado)*\n\nEsta máquina no tiene ruedas.\n\n**VOZ EN OFF**\n\nSe las ponemos.\nTanquetas.\n\n**CIERRE · VOZ EN OFF**\n\nCargada y amarrada."}
+          />
+        </Tarjeta>
       </Pieza>
 
       <Pieza nombre="ListaAgentes" uso="Cada agente con su último resultado.">

@@ -1,0 +1,93 @@
+.tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  transition: transform var(--rapido), background var(--rapido);
+}
+
+.tarjeta:has(.titulo:active) {
+  transform: scale(0.985);
+  background: var(--superficie-2);
+}
+
+/* Hoy o mañana: borde de marca, que salte a la vista */
+.tarjeta[data-pronto] {
+  border: 2px solid var(--acento);
+}
+
+.arriba {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cuando {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.tarjeta[data-pronto] .cuando {
+  color: var(--acento);
+}
+
+.titulo {
+  color: var(--texto);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+/* Toda la tarjeta se puede pulsar para abrir la ficha */
+.titulo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+}
+
+.datos span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* El botón queda por encima del enlace de la tarjeta */
+.accion {
+  position: relative;
+  z-index: 1;
+  flex: none;
+}

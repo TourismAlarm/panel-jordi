@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { supabaseServidor } from "@/lib/supabase/server";
 import type { Fila } from "@/lib/supabase/tipos";
+import { fichaDeGuion, type Ficha } from "@/lib/guion";
 import { comprobar } from "./comun";
 
 export type Video = Fila<"videos">;
@@ -15,6 +16,23 @@ export const listarVideos = cache(async (): Promise<VideoResumen[]> => {
     .select("id, titulo, estado, siguiente_paso, por_revisar, fecha_trabajo, actualizado_en")
     .order("fecha_trabajo", { ascending: true, nullsFirst: false });
   return comprobar(r, "los vídeos");
+});
+
+// Un proyecto = un vídeo + la ficha del trabajo (hora, lugar, camión…) sacada de su guion.
+// El guion entero se queda en el servidor: a la pantalla solo llega la ficha.
+export type Proyecto = VideoResumen & { ficha: Ficha; tieneGuion: boolean };
+
+export const listarProyectos = cache(async (): Promise<Proyecto[]> => {
+  const supabase = await supabaseServidor();
+  const r = await supabase
+    .from("videos")
+    .select("id, titulo, estado, siguiente_paso, por_revisar, fecha_trabajo, actualizado_en, guion_md")
+    .order("fecha_trabajo", { ascending: true, nullsFirst: false });
+  return comprobar(r, "los proyectos").map(({ guion_md, ...v }) => ({
+    ...v,
+    ficha: fichaDeGuion(guion_md),
+    tieneGuion: !!guion_md,
+  }));
 });
 
 export const obtenerVideo = cache(async (id: string): Promise<Video | null> => {

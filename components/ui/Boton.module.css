@@ -42,3 +42,16 @@
   color: var(--mal);
   border-color: color-mix(in srgb, var(--mal) 40%, transparent);
 }
+
+/* Más pequeño y a su medida, para dentro de tarjetas */
+.compacto {
+  width: auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border-radius: 999px;
+}
+
+a.boton {
+  text-decoration: none;
+}
