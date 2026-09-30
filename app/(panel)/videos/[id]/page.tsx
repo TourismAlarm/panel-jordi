@@ -12,6 +12,7 @@ import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { preguntasDeVideo, resumir } from "@/lib/datos/preguntas";
 import { obtenerVideo } from "@/lib/datos/videos";
 import { faseVideo } from "@/lib/estados";
+import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 import { buscarSeccion, esSeccionPropia, fichaDeGuion, SECCION, seccionesDeGuion } from "@/lib/guion";
 import { diaCercano, haceCuanto, plural } from "@/lib/formato";
 import { pasosDe } from "@/lib/pasos";
@@ -30,7 +31,7 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
     obtenerVideo(id),
     preguntasDeVideo(id),
     actividadDeVideo(id),
-    listarPeticiones(),
+    PETICIONES_ACTIVAS ? listarPeticiones() : Promise.resolve([]),
   ]);
   if (!video) notFound();
 
@@ -85,7 +86,7 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
         </Seccion>
       )}
 
-      {!descarte && fase !== "hecho" && (
+      {PETICIONES_ACTIVAS && !descarte && fase !== "hecho" && (
         <Seccion titulo="¿Este no?">
           <p className="suave pequeno">Si no lo hiciste tú, no te gusta el planteamiento o ya no sirve, descártalo y el PC deja de trabajar en él.</p>
           <FormDescartar videoId={video.id} />

@@ -8,6 +8,7 @@ import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
 import { borrarPeticion, descartarProyecto, pedirGuionNuevo } from "@/lib/datos/peticiones";
 import { esMotivo } from "@/lib/estados";
+import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 
 export type Resultado = { error?: string; ok?: boolean } | null;
 
@@ -44,6 +45,7 @@ export async function responder(_prev: Resultado, form: FormData): Promise<Resul
 
 // «Este proyecto no»: queda apuntado para el PC y sale de tu lista al momento.
 export async function descartar(_prev: Resultado, form: FormData): Promise<Resultado> {
+  if (!PETICIONES_ACTIVAS) return { error: "Todavía no está disponible." };
   const videoId = String(form.get("video_id") ?? "");
   const motivo = String(form.get("motivo") ?? "");
   const texto = String(form.get("texto") ?? "").trim() || null;
@@ -59,6 +61,7 @@ export async function descartar(_prev: Resultado, form: FormData): Promise<Resul
 
 // Guion para otro trabajo: el PC se lo pasa al guionista.
 export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resultado> {
+  if (!PETICIONES_ACTIVAS) return { error: "Todavía no está disponible." };
   const texto = String(form.get("texto") ?? "").trim();
   const fecha = String(form.get("fecha") ?? "").trim() || null;
   if (!texto) return { error: "Cuenta qué trabajo es." };

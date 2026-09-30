@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Pantalla } from "@/components/ui";
 import { FormPedirGuion } from "@/components/proyectos/FormPedirGuion";
+import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 
 export const metadata: Metadata = { title: "Pedir guion" };
 
 export default function Nuevo() {
+  if (!PETICIONES_ACTIVAS) notFound();
   return (
     <Pantalla
       volver={{ href: "/", texto: "Proyectos" }}

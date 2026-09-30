@@ -5,6 +5,7 @@ import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
 import { listarProyectos, ultimaSincronizacion } from "@/lib/datos/videos";
 import { faseVideo, textoMotivo } from "@/lib/estados";
+import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 import { agruparPor, dia, diaCercano, haceCuanto, hoyLargo, plural } from "@/lib/formato";
 import { pasosDe, teToca } from "@/lib/pasos";
 
@@ -17,7 +18,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
     listarProyectos(),
     resumenPreguntas(),
     contarEnviadas(),
-    listarPeticiones(),
+    PETICIONES_ACTIVAS ? listarPeticiones() : Promise.resolve([]),
   ]);
 
   const descartes = descartesPorVideo(peticiones);
@@ -37,10 +38,12 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
       subtitulo={`${hoyLargo()} · datos del PC ${haceCuanto(ultimaSincronizacion(proyectos)) || "sin sincronizar"}`}
       accion={
         <>
-          <BotonEnlace href="/nuevo" variante="secundario" compacto>
-            <Icono nombre="anadir" tamano={18} />
-            Guion
-          </BotonEnlace>
+          {PETICIONES_ACTIVAS && (
+            <BotonEnlace href="/nuevo" variante="secundario" compacto>
+              <Icono nombre="anadir" tamano={18} />
+              Guion
+            </BotonEnlace>
+          )}
           <BotonActualizar />
         </>
       }
