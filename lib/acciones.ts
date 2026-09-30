@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
-import { borrarPeticion, descartarProyecto, pedirGuionNuevo } from "@/lib/datos/peticiones";
+import { borrarPeticion, descartarProyecto, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { esMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 
@@ -70,6 +70,23 @@ export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resu
   if (!(await pedirGuionNuevo(texto, fecha))) return { error: "No se ha podido guardar. Prueba otra vez." };
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+// Revisar el montaje sin salir del panel: aprobar, o pedir cambios con el texto de qué cambiar.
+export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const videoId = String(form.get("video_id") ?? "");
+  const tipo = String(form.get("tipo") ?? "");
+  const texto = String(form.get("texto") ?? "").trim();
+  if (!videoId) return { error: "Falta el proyecto." };
+  if (tipo !== "aprobar" && tipo !== "cambios") return { error: "Acción no válida." };
+  if (tipo === "cambios" && !texto) return { error: "Escribe qué quieres cambiar." };
+
+  if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null))) {
+    return { error: "No se ha podido guardar. Prueba otra vez." };
+  }
+  revalidatePath(`/videos/${videoId}`);
+  revalidatePath("/");
+  return { ok: true };
 }
 
 // Deshacer un descarte o una petición, mientras el PC no la haya recogido.

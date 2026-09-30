@@ -50,6 +50,18 @@ export async function pedirGuionNuevo(texto: string, fecha: string | null) {
   return !error;
 }
 
+// Revisión del montaje: aprobar o pedir cambios. El PC lo recoge y actúa (aprobar → aprobado; cambios → al montador).
+export async function pedirRevision(videoId: string, tipo: "aprobar" | "cambios", texto: string | null) {
+  const supabase = await supabaseServidor();
+  const { error } = await supabase.from("peticiones").insert({ tipo, video_id: videoId, texto });
+  return !error;
+}
+
+// La última petición de revisión de un vídeo (la lista viene de más nueva a más vieja), para saber si está en manos del PC.
+export function revisionDeVideo(peticiones: Peticion[], videoId: string) {
+  return peticiones.find((p) => p.video_id === videoId && (p.tipo === "aprobar" || p.tipo === "cambios"));
+}
+
 // Deshacer: RLS solo deja borrar si el PC aún no la ha recogido.
 export async function borrarPeticion(id: string): Promise<"ok" | "recogida" | "error"> {
   const supabase = await supabaseServidor();

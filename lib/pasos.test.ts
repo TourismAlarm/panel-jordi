@@ -50,6 +50,12 @@ describe("pasosDe", () => {
     expect(por(pasosDe(video("revision_jordi"), preguntas(0, 0, 0)), "revisar")?.estado).toBe("tuyo");
   });
 
+  it("revision_jordi: el botón lleva a revisar dentro del panel, no a Gmail", () => {
+    const accion = por(pasosDe(video("revision_jordi"), preguntas(0, 0, 0)), "revisar")?.accion;
+    expect(accion?.href).toBe("/videos/GE_001#montaje");
+    expect(accion?.externo).toBeUndefined();
+  });
+
   it("publicado: todo hecho", () => {
     const pasos = pasosDe(video("publicado"), preguntas(0, 0, 2));
     expect(pasos.every((x) => x.estado === "hecho")).toBe(true);

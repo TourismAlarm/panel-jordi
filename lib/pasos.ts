@@ -25,11 +25,6 @@ type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" 
 
 const SIN_PREGUNTAS: ResumenPreguntas = { total: 0, sinContestar: 0, enviadas: 0 };
 
-// El correo «montaje listo» de este vídeo, buscado en Gmail.
-function correoMontaje(id: string) {
-  return `https://mail.google.com/mail/#search/${encodeURIComponent(`"montaje listo" ${id}`)}`;
-}
-
 export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[] {
   // Archivado o descartado: no hay nada que hacer y no se inventa ningún paso.
   if (p.descartado || /archivado/.test(p.estado)) {
@@ -95,7 +90,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
     pasos.push({ clave: "montaje", titulo: "Montaje", estado: "pendiente" });
   }
 
-  // 5 · Revisar el montaje (por correo)
+  // 5 · Revisar el montaje (en la ficha: ver, aprobar o pedir cambios)
   if (fase === "hecho") {
     pasos.push({ clave: "revisar", titulo: "Montaje revisado", estado: "hecho" });
   } else if (p.por_revisar || p.estado === "revision_jordi") {
@@ -103,8 +98,8 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       clave: "revisar",
       titulo: "Revisar el montaje",
       estado: "tuyo",
-      detalle: "Se hace por correo: abre «montaje listo» y contesta en el mismo hilo",
-      accion: { texto: "Abrir correo", href: correoMontaje(p.id), externo: true },
+      detalle: "Míralo, y aprueba o pide cambios aquí mismo",
+      accion: { texto: "Revisar", href: `/videos/${p.id}#montaje` },
     });
   } else {
     pasos.push({ clave: "revisar", titulo: "Revisar el montaje", estado: "pendiente" });

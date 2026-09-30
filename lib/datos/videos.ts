@@ -13,7 +13,7 @@ export const listarVideos = cache(async (): Promise<VideoResumen[]> => {
   const supabase = await supabaseServidor();
   const r = await supabase
     .from("videos")
-    .select("id, titulo, estado, siguiente_paso, por_revisar, fecha_trabajo, actualizado_en")
+    .select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, actualizado_en")
     .order("fecha_trabajo", { ascending: true, nullsFirst: false });
   return comprobar(r, "los vídeos");
 });
@@ -26,7 +26,7 @@ export const listarProyectos = cache(async (): Promise<Proyecto[]> => {
   const supabase = await supabaseServidor();
   const r = await supabase
     .from("videos")
-    .select("id, titulo, estado, siguiente_paso, por_revisar, fecha_trabajo, actualizado_en, guion_md")
+    .select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, actualizado_en, guion_md")
     .order("fecha_trabajo", { ascending: true, nullsFirst: false });
   return comprobar(r, "los proyectos").map(({ guion_md, ...v }) => ({
     ...v,

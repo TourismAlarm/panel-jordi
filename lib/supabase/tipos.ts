@@ -187,6 +187,7 @@ export type Database = {
           fecha_trabajo: string | null
           guion_md: string | null
           id: string
+          montaje_url: string | null
           por_revisar: boolean
           siguiente_paso: string | null
           titulo: string | null
@@ -197,6 +198,7 @@ export type Database = {
           fecha_trabajo?: string | null
           guion_md?: string | null
           id: string
+          montaje_url?: string | null
           por_revisar?: boolean
           siguiente_paso?: string | null
           titulo?: string | null
@@ -207,6 +209,7 @@ export type Database = {
           fecha_trabajo?: string | null
           guion_md?: string | null
           id?: string
+          montaje_url?: string | null
           por_revisar?: boolean
           siguiente_paso?: string | null
           titulo?: string | null
