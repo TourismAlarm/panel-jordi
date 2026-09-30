@@ -38,7 +38,7 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
   const descarte = descartesPorVideo(peticiones).get(video.id);
   const ficha = fichaDeGuion(video.guion_md);
   const resumen = resumir(preguntas);
-  const pasos = pasosDe({ ...video, ficha, tieneGuion: !!video.guion_md }, resumen);
+  const pasos = pasosDe({ ...video, ficha, tieneGuion: !!video.guion_md, descartado: !!descarte }, resumen);
   const secciones = seccionesDeGuion(video.guion_md);
   const notas = buscarSeccion(secciones, SECCION.notas);
   const otras = secciones.filter((s) => !esSeccionPropia(s));

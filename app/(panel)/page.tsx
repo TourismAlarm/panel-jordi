@@ -22,7 +22,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
 
   const descartes = descartesPorVideo(peticiones);
   const pedidos = peticiones.filter((x) => x.tipo === "nuevo" && !x.recogida_en);
-  const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe(p, preguntas.get(p.id)) }));
+  const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe({ ...p, descartado: descartes.has(p.id) }, preguntas.get(p.id)) }));
   const vivos = conPasos.filter(({ p }) => !descartes.has(p.id));
   const descartados = conPasos.filter(({ p }) => descartes.has(p.id));
   const abiertos = vivos.filter(({ p }) => faseVideo(p.estado) !== "hecho");

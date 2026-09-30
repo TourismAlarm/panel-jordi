@@ -21,7 +21,7 @@ export type Paso = {
 
 export const TONO_PASO: Record<EstadoPaso, Tono> = { hecho: "bien", tuyo: "ojo", sistema: "info", pendiente: "neutro" };
 
-type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" | "tieneGuion" | "ficha">;
+type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" | "tieneGuion" | "ficha"> & { descartado?: boolean };
 
 const SIN_PREGUNTAS: ResumenPreguntas = { total: 0, sinContestar: 0, enviadas: 0 };
 
@@ -31,6 +31,11 @@ function correoMontaje(id: string) {
 }
 
 export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[] {
+  // Archivado o descartado: no hay nada que hacer y no se inventa ningún paso.
+  if (p.descartado || /archivado/.test(p.estado)) {
+    return [{ clave: "archivado", titulo: "Archivado", estado: "hecho" }];
+  }
+
   const fase = faseVideo(p.estado);
   const yaGrabado = fase === "montaje" || fase === "hecho";
   const pasos: Paso[] = [];
@@ -38,10 +43,10 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   // 1 · Guion
   if (!p.tieneGuion) {
     pasos.push({ clave: "guion", titulo: "Guion", estado: "sistema", detalle: "Lo está preparando el guionista" });
-  } else if (p.ficha.estadoGuion === "borrador" && q.sinContestar) {
-    pasos.push({ clave: "guion", titulo: "Guion en borrador", estado: "sistema", detalle: "Se cierra con tus respuestas" });
-  } else {
+  } else if (p.ficha.estadoGuion === "listo") {
     pasos.push({ clave: "guion", titulo: "Guion listo", estado: "hecho", detalle: p.ficha.version ?? undefined });
+  } else {
+    pasos.push({ clave: "guion", titulo: "Guion en borrador · lo cierra el guionista", estado: "sistema" });
   }
 
   // 2 · Preguntas (solo si el guionista ha preguntado algo)
@@ -54,7 +59,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       accion: { texto: "Contestar", href: `/videos/${p.id}#preguntas` },
     });
   } else if (q.enviadas) {
-    pasos.push({ clave: "preguntas", titulo: "Respuestas enviadas", estado: "sistema", detalle: "El PC las recoge en menos de 15 min" });
+    pasos.push({ clave: "preguntas", titulo: "Enviadas · esperando al PC", estado: "sistema" });
   } else if (q.total) {
     pasos.push({ clave: "preguntas", titulo: "Preguntas contestadas", estado: "hecho" });
   }
@@ -107,7 +112,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
 
   // 6 · Publicar
   if (/publicado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicado", estado: "hecho" });
-  else if (fase === "hecho") pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "Aprobado, falta publicarlo" });
+  else if (/aprobado|exportado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "Aprobado, falta publicarlo" });
   else pasos.push({ clave: "publicar", titulo: "Publicar", estado: "pendiente" });
 
   return pasos;
