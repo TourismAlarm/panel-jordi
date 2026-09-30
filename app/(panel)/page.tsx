@@ -3,22 +3,24 @@ import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
 import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
-import { listarProyectos, ultimaSincronizacion } from "@/lib/datos/videos";
+import { estadoSync } from "@/lib/datos/sync";
+import { listarProyectos } from "@/lib/datos/videos";
 import { faseVideo, textoMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
-import { agruparPor, dia, diaCercano, haceCuanto, hoyLargo, plural } from "@/lib/formato";
+import { agruparPor, dia, diaCercano, hoyLargo, plural } from "@/lib/formato";
 import { pasosDe, teToca } from "@/lib/pasos";
 
 // Portada: todos los proyectos abiertos en orden de fecha, cada uno con sus pasos.
 // «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, los guiones que has pedido;
 // al final, plegados, los hechos y los que has descartado.
 export default async function Proyectos({ searchParams }: PageProps<"/">) {
-  const [{ ver }, proyectos, preguntas, enviadas, peticiones] = await Promise.all([
+  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
     contarEnviadas(),
     PETICIONES_ACTIVAS ? listarPeticiones() : Promise.resolve([]),
+    estadoSync(),
   ]);
 
   const descartes = descartesPorVideo(peticiones);
@@ -35,7 +37,11 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
   return (
     <Pantalla
       titulo="Proyectos"
-      subtitulo={`${hoyLargo()} · datos del PC ${haceCuanto(ultimaSincronizacion(proyectos)) || "sin sincronizar"}`}
+      subtitulo={
+        <>
+          {hoyLargo()} · <span style={sync.ok ? undefined : { color: "var(--mal)", fontWeight: 600 }}>{sync.texto}</span>
+        </>
+      }
       accion={
         <>
           {PETICIONES_ACTIVAS && (
@@ -57,7 +63,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
 
       {!!enviadas && (
         <Aviso tono="info">
-          {plural(enviadas, "respuesta enviada", "respuestas enviadas")}. El PC las recoge en menos de 15 min.
+          {plural(enviadas, "respuesta guardada", "respuestas guardadas")}. Pendiente de que la recoja el PC.
         </Aviso>
       )}
 

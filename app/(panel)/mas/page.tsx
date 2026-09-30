@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { Boton, Fila, Icono, Lista, Pantalla, Seccion } from "@/components/ui";
+import { Boton, Etiqueta, Fila, Icono, Lista, Pantalla, Seccion } from "@/components/ui";
 import { salir } from "@/lib/acciones";
 import { usuarioActual } from "@/lib/datos/sesion";
-import { listarVideos, ultimaSincronizacion } from "@/lib/datos/videos";
-import { fecha, haceCuanto } from "@/lib/formato";
+import { estadoSync } from "@/lib/datos/sync";
 
 export const metadata: Metadata = { title: "Más" };
 
 export default async function Mas() {
-  const [{ email }, videos] = await Promise.all([usuarioActual(), listarVideos()]);
-  const sync = ultimaSincronizacion(videos);
+  const [{ email }, sync] = await Promise.all([usuarioActual(), estadoSync()]);
 
   return (
     <Pantalla titulo="Más" accion={false}>
@@ -17,13 +15,12 @@ export default async function Mas() {
         <Lista>
           <Fila
             inicio={<Icono nombre="reloj" />}
-            titulo="Últimos datos del PC"
-            detalle={sync ? fecha(sync) : "Todavía no ha subido nada"}
-            fin={haceCuanto(sync)}
+            titulo="Estado del PC"
+            detalle={<Etiqueta tono={sync.tono}>{sync.texto}</Etiqueta>}
           />
         </Lista>
         <p className="suave pequeno">
-          El PC sube vídeos, guiones y actividad y recoge tus respuestas cada 15 minutos. Desde aquí solo se escriben tus
+          El PC sube vídeos, guiones y actividad y recoge tus respuestas cada pocos minutos. Desde aquí solo se escriben tus
           respuestas.
         </p>
       </Seccion>

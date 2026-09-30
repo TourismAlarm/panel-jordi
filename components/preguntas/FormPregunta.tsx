@@ -35,7 +35,7 @@ export function FormPregunta({ videoId, p }: { videoId: string; p: P }) {
             aria-label={`Respuesta a ${p.clave}`}
           />
           {estado?.error && <ErrorCampo>{estado.error}</ErrorCampo>}
-          {estado?.ok && <Aviso tono="bien">Enviada. El PC la recoge en menos de 15 min.</Aviso>}
+          {estado?.ok && <Aviso tono="bien">Guardada. Pendiente de que la recoja el PC.</Aviso>}
           <BotonEnviar texto={fase === "enviada" ? "Cambiar respuesta" : "Enviar"} />
         </form>
       )}
