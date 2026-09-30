@@ -1,0 +1,57 @@
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-s);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--rapido), opacity var(--rapido), background var(--rapido);
+}
+
+.boton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.principal {
+  background: var(--acento);
+  color: var(--acento-texto);
+}
+
+.secundario {
+  background: var(--superficie);
+  color: var(--texto);
+  border-color: var(--borde);
+}
+
+.secundario:active:not(:disabled) {
+  background: var(--superficie-2);
+}
+
+.peligro {
+  background: transparent;
+  color: var(--mal);
+  border-color: color-mix(in srgb, var(--mal) 40%, transparent);
+}
+
+/* Más pequeño y a su medida, para dentro de tarjetas */
+.compacto {
+  width: auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border-radius: 999px;
+}
+
+a.boton {
+  text-decoration: none;
+}

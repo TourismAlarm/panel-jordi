@@ -1,0 +1,22 @@
+.boton {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: transform var(--rapido), background var(--rapido);
+}
+
+.boton:active {
+  transform: scale(0.92);
+  background: var(--superficie-2);
+}
+
+.boton[data-cargando] svg {
+  animation: girar 0.8s linear infinite;
+  color: var(--acento);
+}

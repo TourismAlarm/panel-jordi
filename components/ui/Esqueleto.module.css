@@ -1,0 +1,46 @@
+.esqueleto {
+  display: block;
+  flex: none;
+  border-radius: 8px;
+  background: var(--superficie-2);
+  animation: brillo 1.4s ease-in-out infinite;
+}
+
+.pantalla {
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) var(--hueco) 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 560px) {
+  .cifras {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}

@@ -1,0 +1,55 @@
+.opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opcion {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.opcion input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opcion span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio-s);
+  background: var(--fondo);
+  font-weight: 600;
+  transition: border-color var(--rapido), background var(--rapido);
+}
+
+/* Círculo de la izquierda */
+.opcion span::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--borde);
+  transition: border var(--rapido);
+}
+
+.opcion input:checked + span {
+  border-color: var(--acento);
+  background: color-mix(in srgb, var(--acento) 8%, var(--superficie));
+}
+
+.opcion input:checked + span::before {
+  border: 6px solid var(--acento);
+}
+
+.opcion input:focus-visible + span {
+  outline: 3px solid color-mix(in srgb, var(--acento) 55%, transparent);
+  outline-offset: 2px;
+}

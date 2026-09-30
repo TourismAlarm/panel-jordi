@@ -1,26 +1,25 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { configSupabase } from "@/lib/supabase/config";
+import type { Database } from "@/lib/supabase/tipos";
 
 // Refresca la sesión en cada petición y manda a /login a quien no la tenga.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const { url, clave } = configSupabase();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(lista) {
-          lista.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          lista.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
+  const supabase = createServerClient<Database>(url, clave, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(lista) {
+        lista.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        lista.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
-  );
+  });
 
   const { data } = await supabase.auth.getClaims();
   const enLogin = request.nextUrl.pathname.startsWith("/login");

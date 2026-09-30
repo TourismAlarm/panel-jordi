@@ -1,0 +1,58 @@
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .cifras {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 14px 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  color: var(--texto);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--rapido), background var(--rapido);
+}
+
+.cifra::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--t);
+}
+
+.cifra:active {
+  transform: scale(0.97);
+  background: var(--superficie-2);
+}
+
+.cifra b {
+  font-size: 2.2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--t);
+}
+
+.cifra[data-tono="bien"] b,
+.cifra[data-tono="neutro"] b {
+  color: var(--texto);
+}
+
+.cifra span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}

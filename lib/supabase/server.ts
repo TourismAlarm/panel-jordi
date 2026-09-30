@@ -1,25 +1,26 @@
+import "server-only";
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { configSupabase } from "./config";
+import type { Database } from "./tipos";
 
-// Cliente con la sesión de Jordi (clave pública + RLS). Nunca la service_role.
-export async function supabaseServidor() {
+// Cliente con la sesión de Jordi (clave pública + RLS). Uno por petición gracias a cache().
+export const supabaseServidor = cache(async () => {
   const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(lista) {
-          try {
-            lista.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-          } catch {
-            // Desde un Server Component no se pueden escribir cookies; el proxy ya refresca la sesión.
-          }
-        },
+  const { url, clave } = configSupabase();
+  return createServerClient<Database>(url, clave, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(lista) {
+        try {
+          lista.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
+          // Desde un Server Component no se pueden escribir cookies; el proxy ya refresca la sesión.
+        }
       },
     },
-  );
-}
+  });
+});

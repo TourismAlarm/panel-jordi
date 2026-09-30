@@ -1,0 +1,21 @@
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radio-s);
+  background: color-mix(in srgb, var(--t) 11%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--t) 35%, transparent);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.aviso > svg {
+  color: var(--t);
+  margin-top: 1px;
+}
+
+.texto {
+  flex: 1;
+  min-width: 0;
+}

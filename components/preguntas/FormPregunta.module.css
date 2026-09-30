@@ -1,0 +1,18 @@
+.pregunta {
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.respuesta {
+  white-space: pre-wrap;
+  border-left: 3px solid var(--bien);
+  padding-left: 12px;
+  color: var(--texto);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}

@@ -1,0 +1,119 @@
+.guion {
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.guion > :first-child {
+  margin-top: 0;
+}
+
+.guion h1 {
+  font-size: 1.25rem;
+  margin: 1.4em 0 0.4em;
+}
+
+.guion h2 {
+  font-size: 1.1rem;
+  margin: 1.3em 0 0.4em;
+}
+
+.guion h3 {
+  font-size: 1rem;
+  margin: 1.2em 0 0.3em;
+}
+
+.guion p,
+.guion ul,
+.guion ol {
+  margin: 0 0 0.8em;
+}
+
+.guion ul,
+.guion ol {
+  padding-left: 1.2em;
+}
+
+.guion blockquote {
+  margin: 0 0 0.8em;
+  padding-left: 12px;
+  border-left: 3px solid var(--acento);
+  color: var(--texto-suave);
+}
+
+.guion table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 1em;
+}
+
+.guion td,
+.guion th {
+  border: 1px solid var(--borde);
+  padding: 6px 8px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.guion th {
+  background: var(--superficie-2);
+}
+
+.guion pre,
+.guion code {
+  white-space: pre-wrap;
+  font-size: 0.9em;
+}
+
+.guion hr {
+  border: 0;
+  border-top: 1px solid var(--borde);
+  margin: 1.4em 0;
+}
+
+/* Modo lectura: para leer de corrido en el móvil */
+.lectura {
+  font-size: 1.14rem;
+  line-height: 1.7;
+}
+
+.lectura p {
+  margin-bottom: 1em;
+}
+
+/* Etiqueta de bloque: A CÁMARA (marca) · VOZ EN OFF (azul) · CIERRE/RÓTULO (gris) */
+.bloque {
+  display: inline-block;
+  margin-top: 0.8em;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--acento);
+  background: color-mix(in srgb, var(--acento) 12%, transparent);
+}
+
+.bloque[data-tipo="voz"] {
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 12%, transparent);
+}
+
+.bloque[data-tipo="otro"] {
+  color: var(--texto-suave);
+  background: var(--superficie-2);
+}
+
+/* La nota que va al lado de la etiqueta («ya grabado · _024…») pasa a segundo plano */
+.guion p:has(> .bloque) {
+  margin-bottom: 0.4em;
+}
+
+.guion p:has(> .bloque) em {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--texto-suave);
+}

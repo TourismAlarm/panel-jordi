@@ -1,0 +1,15 @@
+.registro {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.video {
+  margin-left: 8px;
+}

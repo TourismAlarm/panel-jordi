@@ -1,0 +1,29 @@
+.segmentos {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--superficie-2);
+}
+
+.opcion {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1.2;
+  transition: background var(--rapido), color var(--rapido);
+}
+
+.opcion[aria-current="page"] {
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}

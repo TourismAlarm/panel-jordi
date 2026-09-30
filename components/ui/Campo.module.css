@@ -1,0 +1,38 @@
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.etiqueta {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.control {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radio-s);
+  border: 1px solid var(--borde);
+  background: var(--fondo);
+  transition: border-color var(--rapido), background var(--rapido);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--acento);
+  background: var(--superficie);
+}
+
+.area {
+  min-height: 6em;
+  resize: vertical;
+  field-sizing: content;
+  line-height: 1.45;
+}
+
+.error {
+  color: var(--mal);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
