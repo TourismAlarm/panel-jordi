@@ -25,11 +25,6 @@ export default async function Mas() {
         </p>
       </Seccion>
 
-      <Seccion titulo="La app">
-        <Lista>
-          <Fila href="/piezas" inicio={<Icono nombre="piezas" />} titulo="Piezas de la app" detalle="Todas las piezas de la base, a la vista" />
-        </Lista>
-      </Seccion>
 
       <Seccion titulo="Cuenta">
         <Lista>

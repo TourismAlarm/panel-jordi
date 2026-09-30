@@ -18,5 +18,5 @@
 
 .boton[data-cargando] svg {
   animation: girar 0.8s linear infinite;
-  color: var(--acento);
+  color: var(--acento-letra);
 }

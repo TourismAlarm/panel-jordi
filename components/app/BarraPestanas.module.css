@@ -32,7 +32,7 @@
 }
 
 .pestana[aria-current="page"] {
-  color: var(--acento);
+  color: var(--acento-letra);
 }
 
 .pestana[aria-current="page"] svg {

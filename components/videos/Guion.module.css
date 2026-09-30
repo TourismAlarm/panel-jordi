@@ -91,7 +91,7 @@
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: var(--acento);
+  color: var(--acento-letra);
   background: color-mix(in srgb, var(--acento) 12%, transparent);
 }
 

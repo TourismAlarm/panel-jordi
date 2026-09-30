@@ -19,6 +19,7 @@
   /* Marca ELSA */
   --acento: #d9560b;
   --acento-texto: #ffffff;
+  --acento-letra: #b04506; /* naranja para texto pequeño: 5,1:1 sobre el fondo claro */
 
   /* Tonos con significado: bien · ojo · mal · info · neutro */
   --bien: #1f7a3d;
@@ -47,6 +48,7 @@
     --borde: #313131;
     --acento: #ff7a2e;
     --acento-texto: #141414;
+    --acento-letra: #ff7a2e;
     --bien: #5cc07f;
     --ojo: #e3b341;
     --mal: #ff8a80;
@@ -99,7 +101,7 @@ h2 {
 }
 
 a {
-  color: var(--acento);
+  color: var(--acento-letra);
 }
 
 button,

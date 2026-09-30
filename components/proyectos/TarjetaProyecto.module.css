@@ -37,7 +37,7 @@
 }
 
 .tarjeta[data-pronto] .cuando {
-  color: var(--acento);
+  color: var(--acento-letra);
 }
 
 .titulo {
