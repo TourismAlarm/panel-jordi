@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Tarjeta } from "@/components/ui";
 import type { Peticion } from "@/lib/datos/peticiones";
-import { textoMotivo } from "@/lib/estados";
+import { estadoPeticion, textoMotivo } from "@/lib/estados";
 import { haceCuanto } from "@/lib/formato";
 import { BotonDeshacer } from "./BotonDeshacer";
 import s from "./Peticiones.module.css";
@@ -19,7 +19,7 @@ export function AvisoDescartado({ p }: { p: Peticion }) {
       </div>
       {p.texto && <p className="suave">«{p.texto}»</p>}
       <span className="suave pequeno">
-        {p.recogida_en ? "El PC ya lo ha recogido y no trabaja más en él." : "Pendiente de que lo recoja el PC."}
+        {p.estado === "hecha" ? "Hecho: el PC ya no trabaja más en él." : estadoPeticion(p).texto + "."}
       </span>
       <Link href="/nuevo" className={s.enlace}>
         ¿Hacemos un guion para otro trabajo? →

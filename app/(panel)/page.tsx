@@ -5,7 +5,7 @@ import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
 import { estadoSync } from "@/lib/datos/sync";
 import { listarProyectos } from "@/lib/datos/videos";
-import { faseVideo, textoMotivo } from "@/lib/estados";
+import { estadoPeticion, faseVideo, textoMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 import { agruparPor, dia, diaCercano, hoyLargo, plural } from "@/lib/formato";
 import { pasosDe, teToca } from "@/lib/pasos";
@@ -24,7 +24,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
   ]);
 
   const descartes = descartesPorVideo(peticiones);
-  const pedidos = peticiones.filter((x) => x.tipo === "nuevo" && !x.recogida_en);
+  const pedidos = peticiones.filter((x) => x.tipo === "nuevo" && x.estado !== "hecha");
   const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe({ ...p, descartado: descartes.has(p.id) }, preguntas.get(p.id)) }));
   const vivos = conPasos.filter(({ p }) => !descartes.has(p.id));
   const descartados = conPasos.filter(({ p }) => descartes.has(p.id));
@@ -75,8 +75,8 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
                 key={x.id}
                 inicio={<Icono nombre="reloj" />}
                 titulo={x.texto}
-                detalle={`${x.fecha_trabajo ? `Para el ${dia(x.fecha_trabajo)} · ` : ""}esperando a que el PC lo recoja`}
-                fin={<BotonDeshacer id={x.id} />}
+                detalle={`${x.fecha_trabajo ? `Para el ${dia(x.fecha_trabajo)} · ` : ""}${estadoPeticion(x).texto}`}
+                fin={x.estado === "pendiente" && !x.recogida_en ? <BotonDeshacer id={x.id} /> : undefined}
               />
             ))}
           </Lista>
@@ -117,7 +117,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
                   key={p.id}
                   href={`/videos/${p.id}`}
                   titulo={p.titulo ?? p.id}
-                  detalle={`${textoMotivo(d.motivo)} · ${d.recogida_en ? "el PC ya lo sabe" : "esperando al PC"}`}
+                  detalle={`${textoMotivo(d.motivo)} · ${estadoPeticion(d).texto.toLowerCase()}`}
                 />
               );
             })}

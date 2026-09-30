@@ -8,10 +8,10 @@ import { FormDescartar } from "@/components/proyectos/FormDescartar";
 import { ListaPasos } from "@/components/proyectos/ListaPasos";
 import { Guion } from "@/components/videos/Guion";
 import { actividadDeVideo } from "@/lib/datos/actividad";
-import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
+import { descartesFallidos, descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { preguntasDeVideo, resumir } from "@/lib/datos/preguntas";
 import { obtenerVideo } from "@/lib/datos/videos";
-import { faseVideo } from "@/lib/estados";
+import { faseVideo, estadoPeticion } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 import { buscarSeccion, esSeccionPropia, fichaDeGuion, SECCION, seccionesDeGuion } from "@/lib/guion";
 import { diaCercano, haceCuanto, plural } from "@/lib/formato";
@@ -37,6 +37,7 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
 
   const fase = faseVideo(video.estado);
   const descarte = descartesPorVideo(peticiones).get(video.id);
+  const descarteFallido = descartesFallidos(peticiones).get(video.id);
   const ficha = fichaDeGuion(video.guion_md);
   const resumen = resumir(preguntas);
   const pasos = pasosDe({ ...video, ficha, tieneGuion: !!video.guion_md, descartado: !!descarte }, resumen);
@@ -52,6 +53,12 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
       subtitulo={`Actualizado ${haceCuanto(video.actualizado_en)}${ficha.version ? ` · guion ${ficha.version}` : ""}`}
     >
       {descarte && <AvisoDescartado p={descarte} />}
+      {descarteFallido && (
+        <Tarjeta tono="mal">
+          <strong>No se pudo descartar</strong>
+          <span className="suave pequeno">{estadoPeticion(descarteFallido).texto}</span>
+        </Tarjeta>
+      )}
 
       {video.guion_md ? (
         <BotonEnlace href={`/videos/${video.id}/guion`}>

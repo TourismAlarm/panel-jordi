@@ -15,12 +15,25 @@ export const listarPeticiones = cache(async (): Promise<Peticion[]> => {
   return comprobar(r, "tus peticiones");
 });
 
-// Proyectos que has descartado (esperando al PC o ya recogidos), por id de vídeo.
+// Proyectos que has descartado (esperando al PC, hechos), por id de vídeo.
 // Si hay varios del mismo vídeo, gana el más reciente (la lista viene de más nuevo a más viejo).
+// Un descarte que falló no cuenta: el proyecto sigue vivo (ver descartesFallidos).
 export function descartesPorVideo(peticiones: Peticion[]) {
   const porVideo = new Map<string, Peticion>();
   for (const p of peticiones) {
-    if (p.tipo === "descartar" && p.video_id && !porVideo.has(p.video_id)) porVideo.set(p.video_id, p);
+    if (p.tipo === "descartar" && p.estado !== "fallida" && p.video_id && !porVideo.has(p.video_id)) porVideo.set(p.video_id, p);
+  }
+  return porVideo;
+}
+
+// Descartes que el PC no pudo hacer, por id de vídeo (el más reciente), para decirle a Jordi por qué.
+export function descartesFallidos(peticiones: Peticion[]) {
+  const vivos = descartesPorVideo(peticiones);
+  const porVideo = new Map<string, Peticion>();
+  for (const p of peticiones) {
+    if (p.tipo === "descartar" && p.estado === "fallida" && p.video_id && !vivos.has(p.video_id) && !porVideo.has(p.video_id)) {
+      porVideo.set(p.video_id, p);
+    }
   }
   return porVideo;
 }

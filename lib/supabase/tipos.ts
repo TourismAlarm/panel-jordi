@@ -73,9 +73,13 @@ export type Database = {
       peticiones: {
         Row: {
           creada_en: string
+          error: string | null
+          estado: string
           fecha_trabajo: string | null
           id: string
           motivo: string | null
+          pregunta_id: string | null
+          procesada_en: string | null
           recogida_en: string | null
           texto: string | null
           tipo: string
@@ -83,9 +87,13 @@ export type Database = {
         }
         Insert: {
           creada_en?: string
+          error?: string | null
+          estado?: string
           fecha_trabajo?: string | null
           id?: string
           motivo?: string | null
+          pregunta_id?: string | null
+          procesada_en?: string | null
           recogida_en?: string | null
           texto?: string | null
           tipo: string
@@ -93,9 +101,13 @@ export type Database = {
         }
         Update: {
           creada_en?: string
+          error?: string | null
+          estado?: string
           fecha_trabajo?: string | null
           id?: string
           motivo?: string | null
+          pregunta_id?: string | null
+          procesada_en?: string | null
           recogida_en?: string | null
           texto?: string | null
           tipo?: string

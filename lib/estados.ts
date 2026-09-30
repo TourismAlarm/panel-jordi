@@ -90,3 +90,20 @@ export function esMotivo(m: string): m is Motivo {
 export function textoMotivo(m: string | null) {
   return m && esMotivo(m) ? MOTIVOS[m] : "Descartado";
 }
+
+// ── Peticiones (lo que pides al PC) ───────────────────────
+
+type PeticionEstado = Pick<Fila<"peticiones">, "estado" | "error">;
+
+export function estadoPeticion(p: PeticionEstado): Estado {
+  switch (p.estado) {
+    case "hecha":
+      return { texto: "Hecho", tono: "bien" };
+    case "fallida":
+      return { texto: `Falló: ${p.error ?? "sin detalle"}`, tono: "mal" };
+    case "procesando":
+      return { texto: "El PC lo está haciendo", tono: "info" };
+    default:
+      return { texto: "Esperando al PC", tono: "info" };
+  }
+}
