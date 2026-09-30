@@ -144,6 +144,30 @@ export type Database = {
           },
         ]
       }
+      sync_estado: {
+        Row: {
+          id: number
+          mensaje: string | null
+          ultimo_error: string | null
+          ultimo_inicio: string | null
+          ultimo_ok: string | null
+        }
+        Insert: {
+          id?: number
+          mensaje?: string | null
+          ultimo_error?: string | null
+          ultimo_inicio?: string | null
+          ultimo_ok?: string | null
+        }
+        Update: {
+          id?: number
+          mensaje?: string | null
+          ultimo_error?: string | null
+          ultimo_inicio?: string | null
+          ultimo_ok?: string | null
+        }
+        Relationships: []
+      }
       videos: {
         Row: {
           actualizado_en: string
