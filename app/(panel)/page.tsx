@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Rotulo, Seccion, Segmentos, Vacio } from "@/components/ui";
 import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
 import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
+import { contarPorDecidir } from "@/lib/datos/reglas";
 import { estadoSync } from "@/lib/datos/sync";
 import { listarProyectos } from "@/lib/datos/videos";
 import { estadoPeticion, faseVideo, textoMotivo } from "@/lib/estados";
@@ -14,13 +16,14 @@ import { pasosDe, teToca } from "@/lib/pasos";
 // «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, los guiones que has pedido;
 // al final, plegados, los hechos y los que has descartado.
 export default async function Proyectos({ searchParams }: PageProps<"/">) {
-  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync] = await Promise.all([
+  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync, reglas] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
     contarEnviadas(),
     PETICIONES_ACTIVAS ? listarPeticiones() : Promise.resolve([]),
     estadoSync(),
+    contarPorDecidir(),
   ]);
 
   const descartes = descartesPorVideo(peticiones);
@@ -60,6 +63,14 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
           { href: "/?ver=mios", texto: `Me toca (${mios.length})`, activo: soloMios },
         ]}
       />
+
+      {!!reglas && (
+        <Aviso tono="ojo" icono="bombilla">
+          <Link href="/aprendizaje">
+            {plural(reglas, "cosa", "cosas")} que los agentes quieren aprender de ti: <strong>¿sí o no?</strong>
+          </Link>
+        </Aviso>
+      )}
 
       {!!enviadas && (
         <Aviso tono="info">

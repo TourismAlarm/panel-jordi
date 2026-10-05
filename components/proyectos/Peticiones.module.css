@@ -26,3 +26,19 @@
   font-size: 0.92rem;
   text-decoration: none;
 }
+
+.casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.casilla input {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  flex: none;
+  accent-color: var(--acento);
+}

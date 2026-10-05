@@ -9,6 +9,7 @@ import s from "./BarraPestanas.module.css";
 // «tambien»: otras rutas que cuelgan de esa pestaña aunque no empiecen por su dirección.
 const PESTANAS: { href: string; texto: string; icono: NombreIcono; tambien?: string[] }[] = [
   { href: "/", texto: "Proyectos", icono: "videos", tambien: ["/videos"] },
+  { href: "/aprendizaje", texto: "Aprende", icono: "bombilla" },
   { href: "/actividad", texto: "Actividad", icono: "actividad" },
   { href: "/mas", texto: "Más", icono: "mas", tambien: ["/piezas"] },
 ];

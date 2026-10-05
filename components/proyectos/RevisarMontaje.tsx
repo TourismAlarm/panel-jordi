@@ -26,6 +26,7 @@ export function RevisarMontaje({ videoId, montajeUrl, revision }: { videoId: str
           {!revision.recogida_en && <BotonDeshacer id={revision.id} />}
         </div>
         {revision.texto && <p className="suave">«{revision.texto}»</p>}
+        {revision.siempre && <span className="suave pequeno">Y se guarda como regla del montador.</span>}
       </Tarjeta>
     );
   }
@@ -68,6 +69,13 @@ export function RevisarMontaje({ videoId, montajeUrl, revision }: { videoId: str
           <Campo etiqueta="¿Qué quieres cambiar?">
             <AreaTexto name="texto" required placeholder="Ej.: en 00:12 deja el sonido real · quita el rótulo del final…" />
           </Campo>
+          <label className={s.casilla}>
+            <input type="checkbox" name="siempre" />
+            <span>
+              Hazlo siempre así
+              <span className="suave pequeno"> — el montador lo guarda como regla para todos los vídeos (la ves y la quitas en Aprende)</span>
+            </span>
+          </label>
           {cambios?.error && <ErrorCampo>{cambios.error}</ErrorCampo>}
           <BotonEnviar texto="Enviar cambios" enviando="Enviando…" variante="secundario" />
           <Boton type="button" variante="secundario" onClick={() => setPidiendo(false)}>

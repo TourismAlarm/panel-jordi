@@ -81,6 +81,7 @@ export type Database = {
           pregunta_id: string | null
           procesada_en: string | null
           recogida_en: string | null
+          siempre: boolean
           texto: string | null
           tipo: string
           video_id: string | null
@@ -95,6 +96,7 @@ export type Database = {
           pregunta_id?: string | null
           procesada_en?: string | null
           recogida_en?: string | null
+          siempre?: boolean
           texto?: string | null
           tipo: string
           video_id?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           pregunta_id?: string | null
           procesada_en?: string | null
           recogida_en?: string | null
+          siempre?: boolean
           texto?: string | null
           tipo?: string
           video_id?: string | null
@@ -155,6 +158,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reglas: {
+        Row: {
+          actualizada_en: string
+          agente: string
+          clave: string
+          creada_en: string
+          decidida_en: string | null
+          decision: string | null
+          decision_texto: string | null
+          estado: string
+          evidencia: string | null
+          id: string
+          medida: string | null
+          origen: string
+          regla: string
+        }
+        Insert: {
+          actualizada_en?: string
+          agente: string
+          clave: string
+          creada_en?: string
+          decidida_en?: string | null
+          decision?: string | null
+          decision_texto?: string | null
+          estado?: string
+          evidencia?: string | null
+          id?: string
+          medida?: string | null
+          origen?: string
+          regla: string
+        }
+        Update: {
+          actualizada_en?: string
+          agente?: string
+          clave?: string
+          creada_en?: string
+          decidida_en?: string | null
+          decision?: string | null
+          decision_texto?: string | null
+          estado?: string
+          evidencia?: string | null
+          id?: string
+          medida?: string | null
+          origen?: string
+          regla?: string
+        }
+        Relationships: []
       }
       sync_estado: {
         Row: {
@@ -213,6 +264,24 @@ export type Database = {
           por_revisar?: boolean
           siguiente_paso?: string | null
           titulo?: string | null
+        }
+        Relationships: []
+      }
+      windsor_fotos: {
+        Row: {
+          datos: Json
+          fecha: string
+          tomada_en: string
+        }
+        Insert: {
+          datos: Json
+          fecha: string
+          tomada_en?: string
+        }
+        Update: {
+          datos?: Json
+          fecha?: string
+          tomada_en?: string
         }
         Relationships: []
       }

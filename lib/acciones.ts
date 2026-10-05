@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
 import { borrarPeticion, descartarProyecto, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
+import { guardarDecision } from "@/lib/datos/reglas";
 import { esMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 
@@ -81,10 +82,26 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   if (tipo !== "aprobar" && tipo !== "cambios") return { error: "Acción no válida." };
   if (tipo === "cambios" && !texto) return { error: "Escribe qué quieres cambiar." };
 
-  if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null))) {
+  const siempre = tipo === "cambios" && form.get("siempre") === "on";
+  if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
     return { error: "No se ha podido guardar. Prueba otra vez." };
   }
   revalidatePath(`/videos/${videoId}`);
+  revalidatePath("/");
+  return { ok: true };
+}
+
+// Lo que aprenden los agentes: sí / no / sí cambiada a una propuesta, quitar una activa, o deshacer.
+export async function decidirRegla(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const id = String(form.get("id") ?? "");
+  const que = String(form.get("decision") ?? "");
+  const texto = String(form.get("texto") ?? "").trim() || null;
+  if (!id) return { error: "Falta la regla." };
+  if (que !== "si" && que !== "no" && que !== "quitar" && que !== "deshacer") return { error: "Acción no válida." };
+  const r = await guardarDecision(id, que === "deshacer" ? null : que, que === "si" ? texto : null);
+  if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
+  if (r === "recogida") return { error: "El PC ya la ha aplicado: no se puede cambiar desde aquí." };
+  revalidatePath("/aprendizaje");
   revalidatePath("/");
   return { ok: true };
 }

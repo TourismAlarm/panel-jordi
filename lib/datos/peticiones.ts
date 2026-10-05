@@ -51,9 +51,10 @@ export async function pedirGuionNuevo(texto: string, fecha: string | null) {
 }
 
 // Revisión del montaje: aprobar o pedir cambios. El PC lo recoge y actúa (aprobar → aprobado; cambios → al montador).
-export async function pedirRevision(videoId: string, tipo: "aprobar" | "cambios", texto: string | null) {
+// siempre: «hazlo siempre así» → además de este montaje, el PC lo guarda como regla del montador.
+export async function pedirRevision(videoId: string, tipo: "aprobar" | "cambios", texto: string | null, siempre = false) {
   const supabase = await supabaseServidor();
-  const { error } = await supabase.from("peticiones").insert({ tipo, video_id: videoId, texto });
+  const { error } = await supabase.from("peticiones").insert({ tipo, video_id: videoId, texto, siempre });
   return !error;
 }
 
