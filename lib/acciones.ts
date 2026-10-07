@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
-import { borrarPeticion, descartarProyecto, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
+import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { guardarDecision } from "@/lib/datos/reglas";
 import { esMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
@@ -86,6 +86,16 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
     return { error: "No se ha podido guardar. Prueba otra vez." };
   }
+  revalidatePath(`/videos/${videoId}`);
+  revalidatePath("/");
+  return { ok: true };
+}
+
+// «Ya he subido todo el material»: hasta que lo pulsas, el PC no empieza a procesar ni a montar el vídeo.
+export async function materialListo(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const videoId = String(form.get("video_id") ?? "");
+  if (!videoId) return { error: "Falta el proyecto." };
+  if (!(await confirmarMaterial(videoId))) return { error: "No se ha podido guardar. Prueba otra vez." };
   revalidatePath(`/videos/${videoId}`);
   revalidatePath("/");
   return { ok: true };

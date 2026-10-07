@@ -31,7 +31,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `videos.ts`    | `listarProyectos()` (vídeo + ficha sacada del guion), `listarVideos()`, `obtenerVideo(id)`, `ultimaSincronizacion(videos)` |
 | `preguntas.ts` | `resumenPreguntas()` (por proyecto: total, sin contestar, enviadas), `resumir(filas)`, `preguntasDeVideo(id)`, `contarEnviadas()`, `guardarRespuesta(id, texto)` |
 | `actividad.ts` | `actividadReciente()`, `actividadDeVideo(id)`, `estadoAgentes()` |
-| `peticiones.ts` | `listarPeticiones()`, `descartesPorVideo()`, `descartarProyecto()`, `pedirGuionNuevo()`, `borrarPeticion()` (deshacer). Lo que pides al PC; él lo recoge (ver `docs/pc-peticiones.md`). |
+| `peticiones.ts` | `listarPeticiones()`, `descartesPorVideo()`, `descartarProyecto()`, `pedirGuionNuevo()`, `confirmarMaterial()` / `materialDeVideo()` («Ya he subido todo»: hasta que se pulsa, el PC no procesa ni monta el material), `borrarPeticion()` (deshacer). Lo que pides al PC; él lo recoge (ver `docs/pc-peticiones.md`). |
 | `reglas.ts`    | `listarReglas()`, `contarPorDecidir()`, `agruparReglas()`, `guardarDecision(id, si/no/quitar/null)`. Lo que aprenden los agentes: ellos proponen, tú decides en **Aprende** y el PC lo escribe en `sistema/aprendido/` (ver `sistema/aprendizaje.md` en `D:\automatizaciones`). |
 | `sesion.ts`    | `usuarioActual()` |
 

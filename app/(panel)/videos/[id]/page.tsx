@@ -5,11 +5,12 @@ import { Registro } from "@/components/actividad/Registro";
 import { FormPregunta } from "@/components/preguntas/FormPregunta";
 import { AvisoDescartado } from "@/components/proyectos/AvisoDescartado";
 import { FormDescartar } from "@/components/proyectos/FormDescartar";
+import { MaterialListo } from "@/components/proyectos/MaterialListo";
 import { RevisarMontaje } from "@/components/proyectos/RevisarMontaje";
 import { ListaPasos } from "@/components/proyectos/ListaPasos";
 import { Guion } from "@/components/videos/Guion";
 import { actividadDeVideo } from "@/lib/datos/actividad";
-import { descartesFallidos, descartesPorVideo, listarPeticiones, revisionDeVideo } from "@/lib/datos/peticiones";
+import { descartesFallidos, descartesPorVideo, listarPeticiones, materialDeVideo, revisionDeVideo } from "@/lib/datos/peticiones";
 import { preguntasDeVideo, resumir } from "@/lib/datos/preguntas";
 import { obtenerVideo } from "@/lib/datos/videos";
 import { faseVideo, estadoPeticion } from "@/lib/estados";
@@ -39,10 +40,11 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
   const fase = faseVideo(video.estado);
   const descarte = descartesPorVideo(peticiones).get(video.id);
   const revision = revisionDeVideo(peticiones, video.id);
+  const material = materialDeVideo(peticiones, video.id);
   const descarteFallido = descartesFallidos(peticiones).get(video.id);
   const ficha = fichaDeGuion(video.guion_md);
   const resumen = resumir(preguntas);
-  const pasos = pasosDe({ ...video, ficha, tieneGuion: !!video.guion_md, descartado: !!descarte }, resumen);
+  const pasos = pasosDe({ ...video, ficha, tieneGuion: !!video.guion_md, descartado: !!descarte, materialListo: !!material }, resumen);
   const secciones = seccionesDeGuion(video.guion_md);
   const notas = buscarSeccion(secciones, SECCION.notas);
   const otras = secciones.filter((s) => !esSeccionPropia(s));
@@ -92,6 +94,12 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
               <strong>Nota del PC:</strong> {video.siguiente_paso}
             </p>
           )}
+        </Seccion>
+      )}
+
+      {!descarte && (fase === "guion" || fase === "grabar") && (
+        <Seccion titulo="Material grabado" id="material">
+          <MaterialListo videoId={video.id} peticion={material} />
         </Seccion>
       )}
 

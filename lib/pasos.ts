@@ -21,7 +21,7 @@ export type Paso = {
 
 export const TONO_PASO: Record<EstadoPaso, Tono> = { hecho: "bien", tuyo: "ojo", sistema: "info", pendiente: "neutro" };
 
-type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" | "tieneGuion" | "ficha"> & { descartado?: boolean };
+type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" | "tieneGuion" | "ficha"> & { descartado?: boolean; materialListo?: boolean };
 
 const SIN_PREGUNTAS: ResumenPreguntas = { total: 0, sinContestar: 0, enviadas: 0 };
 
@@ -63,12 +63,15 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   const cuando = `${diaCercano(p.fecha_trabajo)}${p.ficha.hora ? ` · ${p.ficha.hora}` : ""}`;
   if (yaGrabado) {
     pasos.push({ clave: "grabar", titulo: "Grabado y subido", estado: "hecho" });
+  } else if (p.materialListo) {
+    pasos.push({ clave: "subir", titulo: "Material entregado", estado: "sistema", detalle: "Dijiste que está todo · el PC lo recoge y empieza el montaje" });
   } else if (p.fecha_trabajo && p.fecha_trabajo < hoy()) {
     pasos.push({
       clave: "subir",
       titulo: `Subir lo grabado (fue ${diaCercano(p.fecha_trabajo).toLowerCase()})`,
       estado: "tuyo",
-      detalle: "En el PC: suelta los vídeos en videos/_entrada/ y se reparten solos",
+      detalle: "Cuando esté todo subido, pulsa «Ya he subido todo»: hasta entonces no se monta",
+      accion: { texto: "Ya he subido todo", href: `/videos/${p.id}#material` },
     });
   } else {
     pasos.push({
@@ -78,7 +81,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       detalle: p.tieneGuion ? "Antes, mira las notas del guion" : undefined,
       accion: p.tieneGuion ? { texto: "Notas", href: `/videos/${p.id}/guion?ver=notas` } : undefined,
     });
-    pasos.push({ clave: "subir", titulo: "Subir lo grabado", estado: "pendiente", detalle: "En el PC: carpeta videos/_entrada/" });
+    pasos.push({ clave: "subir", titulo: "Subir lo grabado", estado: "pendiente", detalle: "Súbelo todo y pulsa «Ya he subido todo»: hasta entonces no se monta" });
   }
 
   // 4 · Montaje (lo hacen los agentes)

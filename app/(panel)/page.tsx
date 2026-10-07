@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Rotulo, Seccion, Segmentos, Vacio } from "@/components/ui";
 import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
-import { descartesPorVideo, listarPeticiones } from "@/lib/datos/peticiones";
+import { descartesPorVideo, listarPeticiones, materialDeVideo } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
 import { contarPorDecidir } from "@/lib/datos/reglas";
 import { estadoSync } from "@/lib/datos/sync";
@@ -28,7 +28,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
 
   const descartes = descartesPorVideo(peticiones);
   const pedidos = peticiones.filter((x) => x.tipo === "nuevo" && x.estado !== "hecha");
-  const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe({ ...p, descartado: descartes.has(p.id) }, preguntas.get(p.id)) }));
+  const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe({ ...p, descartado: descartes.has(p.id), materialListo: !!materialDeVideo(peticiones, p.id) }, preguntas.get(p.id)) }));
   const vivos = conPasos.filter(({ p }) => !descartes.has(p.id));
   const descartados = conPasos.filter(({ p }) => descartes.has(p.id));
   const abiertos = vivos.filter(({ p }) => faseVideo(p.estado) !== "hecho");

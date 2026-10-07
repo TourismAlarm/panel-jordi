@@ -63,6 +63,18 @@ export function revisionDeVideo(peticiones: Peticion[], videoId: string) {
   return peticiones.find((p) => p.video_id === videoId && (p.tipo === "aprobar" || p.tipo === "cambios"));
 }
 
+// «Ya he subido todo»: el PC no procesa el material de un vídeo hasta que llega esta petición.
+export async function confirmarMaterial(videoId: string) {
+  const supabase = await supabaseServidor();
+  const { error } = await supabase.from("peticiones").insert({ tipo: "material_listo", video_id: videoId });
+  return !error;
+}
+
+// La última confirmación de material de un vídeo que no ha fallado (la lista viene de más nueva a más vieja).
+export function materialDeVideo(peticiones: Peticion[], videoId: string) {
+  return peticiones.find((p) => p.video_id === videoId && p.tipo === "material_listo" && p.estado !== "fallida");
+}
+
 // Deshacer: RLS solo deja borrar si el PC aún no la ha recogido.
 export async function borrarPeticion(id: string): Promise<"ok" | "recogida" | "error"> {
   const supabase = await supabaseServidor();
