@@ -21,6 +21,10 @@ function textoCrudo(estado: string) {
 
 export function estadoVideo(estado: string): Estado {
   if (estado === "revision_jordi") return { texto: "Te toca revisar", tono: "ojo" };
+  if (estado === "corte_listo") return { texto: "Te toca revisar el corte", tono: "ojo" };
+  if (estado === "acabado_pendiente") return { texto: "Acabado en ChatCut", tono: "info" };
+  if (estado === "acabado_listo") return { texto: "Te toca revisar el acabado", tono: "ojo" };
+  if (estado === "exportacion_pendiente") return { texto: "Aprobado · exportando", tono: "bien" };
   if (/respuestas|pregunt/.test(estado)) return { texto: "Faltan tus respuestas", tono: "ojo" };
   if (/guion_listo/.test(estado) && /material/.test(estado)) return { texto: "Guion listo · falta grabar", tono: "info" };
   if (/material|grab/.test(estado)) return { texto: "Falta grabar", tono: "neutro" };
@@ -39,7 +43,7 @@ export type Fase = "grabar" | "guion" | "montaje" | "hecho";
 export function faseVideo(estado: string): Fase {
   if (videoCerrado(estado)) return "hecho";
   if (/material|grab/.test(estado)) return "grabar";
-  if (/revision|mont|observ|archiv|invent|render|export/.test(estado)) return "montaje";
+  if (/revision|mont|observ|archiv|invent|render|export|corte|acabado|correcc/.test(estado)) return "montaje";
   return "guion";
 }
 

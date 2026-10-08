@@ -86,13 +86,13 @@ export async function pedirEdicion(_prev: Resultado, form: FormData): Promise<Re
   redirect("/");
 }
 
-// Revisar el montaje sin salir del panel: aprobar, o pedir cambios con el texto de qué cambiar.
+// Revisar el montaje sin salir del panel: «Corte OK» (el corte), aprobar (el acabado), o pedir cambios con el texto de qué cambiar.
 export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<Resultado> {
   const videoId = String(form.get("video_id") ?? "");
   const tipo = String(form.get("tipo") ?? "");
   const texto = String(form.get("texto") ?? "").trim();
   if (!videoId) return { error: "Falta el proyecto." };
-  if (tipo !== "aprobar" && tipo !== "cambios") return { error: "Acción no válida." };
+  if (tipo !== "aprobar" && tipo !== "cambios" && tipo !== "corte_ok") return { error: "Acción no válida." };
   if (tipo === "cambios" && !texto) return { error: "Escribe qué quieres cambiar." };
 
   const siempre = tipo === "cambios" && form.get("siempre") === "on";

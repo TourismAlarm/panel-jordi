@@ -9,7 +9,7 @@ const ficha = (estadoGuion: string | null): Ficha => ({
 const video = (estado: string, guion: string | null = "listo") => ({
   id: "GE_001",
   estado,
-  por_revisar: estado === "revision_jordi",
+  por_revisar: ["revision_jordi", "corte_listo", "acabado_listo"].includes(estado),
   fecha_trabajo: "2026-09-01",
   tieneGuion: guion !== null,
   ficha: ficha(guion),
@@ -55,6 +55,29 @@ describe("pasosDe", () => {
     const accion = por(pasosDe(video("revision_jordi"), preguntas(0, 0, 0)), "revisar")?.accion;
     expect(accion?.href).toBe("/videos/GE_001#montaje");
     expect(accion?.externo).toBeUndefined();
+  });
+
+  it("corte_listo: revisar el corte es tuyo y lleva a la ficha", () => {
+    const r = por(pasosDe(video("corte_listo"), preguntas(0, 0, 0)), "revisar");
+    expect(r).toMatchObject({ estado: "tuyo", titulo: "Revisar el corte" });
+    expect(r?.accion?.href).toBe("/videos/GE_001#montaje");
+  });
+
+  it("acabado_pendiente: el corte está hecho y el acabado es del PC", () => {
+    const pasos = pasosDe(video("acabado_pendiente"), preguntas(0, 0, 0));
+    expect(por(pasos, "corte")?.estado).toBe("hecho");
+    expect(por(pasos, "acabado")?.estado).toBe("sistema");
+    expect(por(pasos, "revisar")?.estado).toBe("pendiente");
+  });
+
+  it("acabado_listo: revisar el acabado es tuyo", () => {
+    expect(por(pasosDe(video("acabado_listo"), preguntas(0, 0, 0)), "revisar")).toMatchObject({ estado: "tuyo", titulo: "Revisar el acabado" });
+  });
+
+  it("exportacion_pendiente: aprobado y el PC exporta", () => {
+    const pasos = pasosDe(video("exportacion_pendiente"), preguntas(0, 0, 0));
+    expect(por(pasos, "revisar")?.estado).toBe("hecho");
+    expect(por(pasos, "publicar")).toMatchObject({ estado: "sistema", detalle: "El PC exporta el vídeo final de ChatCut" });
   });
 
   it("publicado: todo hecho", () => {

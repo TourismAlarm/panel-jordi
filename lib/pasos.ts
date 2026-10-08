@@ -86,9 +86,10 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
     pasos.push({ clave: "subir", titulo: "Subir lo grabado", estado: "pendiente", detalle: "Súbelo todo y pulsa «Ya he subido todo»: hasta entonces no se monta" });
   }
 
-  // 4 · Montaje (lo hacen los agentes)
-  if (fase === "hecho" || p.por_revisar || p.estado === "revision_jordi") {
-    pasos.push({ clave: "montaje", titulo: "Montaje hecho", estado: "hecho" });
+  // 4 · Montaje (lo hacen los agentes). En dos fases: primero el corte (ffmpeg) y, tras tu «Corte OK», el acabado (ChatCut).
+  const enAcabado = /acabado|exportacion/.test(p.estado);
+  if (fase === "hecho" || p.por_revisar || p.estado === "revision_jordi" || enAcabado) {
+    pasos.push({ clave: "montaje", titulo: p.estado === "corte_listo" ? "Corte hecho" : "Montaje hecho", estado: "hecho" });
   } else if (fase === "montaje") {
     pasos.push({ clave: "montaje", titulo: "Montando", estado: "sistema", detalle: "Lo hacen los agentes en el PC" });
   } else {
@@ -98,6 +99,30 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   // 5 · Revisar el montaje (en la ficha: ver, aprobar o pedir cambios)
   if (fase === "hecho") {
     pasos.push({ clave: "revisar", titulo: "Montaje revisado", estado: "hecho" });
+  } else if (p.estado === "corte_listo") {
+    pasos.push({
+      clave: "revisar",
+      titulo: "Revisar el corte",
+      estado: "tuyo",
+      detalle: "Sin subtítulos ni título: mira cortes y ritmo. Dale «Corte OK» o pide cambios",
+      accion: { texto: "Revisar", href: `/videos/${p.id}#montaje` },
+    });
+  } else if (enAcabado) {
+    pasos.push({ clave: "corte", titulo: "Corte OK", estado: "hecho" });
+    if (p.estado === "acabado_pendiente") {
+      pasos.push({ clave: "acabado", titulo: "Subtítulos y título en ChatCut", estado: "sistema", detalle: "Lo hace el PC · te avisa cuando esté" });
+      pasos.push({ clave: "revisar", titulo: "Revisar el acabado", estado: "pendiente" });
+    } else if (p.estado === "acabado_listo") {
+      pasos.push({
+        clave: "revisar",
+        titulo: "Revisar el acabado",
+        estado: "tuyo",
+        detalle: "En ChatCut: apruébalo o pide cambios",
+        accion: { texto: "Revisar", href: `/videos/${p.id}#montaje` },
+      });
+    } else {
+      pasos.push({ clave: "revisar", titulo: "Acabado aprobado", estado: "hecho" });
+    }
   } else if (p.por_revisar || p.estado === "revision_jordi") {
     pasos.push({
       clave: "revisar",
@@ -112,6 +137,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
 
   // 6 · Publicar
   if (/publicado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicado", estado: "hecho" });
+  else if (p.estado === "exportacion_pendiente") pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "El PC exporta el vídeo final de ChatCut" });
   else if (/aprobado|exportado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "Aprobado, falta publicarlo" });
   else pasos.push({ clave: "publicar", titulo: "Publicar", estado: "pendiente" });
 

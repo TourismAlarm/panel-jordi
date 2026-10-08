@@ -107,7 +107,7 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
 
       {!descarte && (video.por_revisar || video.estado === "revision_jordi" || revision?.estado === "procesando" || revision?.estado === "pendiente") && (
         <Seccion titulo="Revisar el montaje" id="montaje">
-          <RevisarMontaje videoId={video.id} montajeUrl={video.montaje_url} revision={revision} />
+          <RevisarMontaje videoId={video.id} estado={video.estado} montajeUrl={video.montaje_url} revision={revision} />
         </Seccion>
       )}
 

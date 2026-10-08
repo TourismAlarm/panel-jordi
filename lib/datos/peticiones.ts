@@ -57,9 +57,12 @@ export async function pedirEdicionSinGuion(texto: string, fecha: string | null) 
   return !error;
 }
 
-// Revisión del montaje: aprobar o pedir cambios. El PC lo recoge y actúa (aprobar → aprobado; cambios → al montador).
+// Revisión del montaje, en dos fases: el corte (corte_ok o cambios) y el acabado de ChatCut (aprobar o cambios).
+// El PC lo recoge y actúa (corte_ok → acabado en ChatCut; aprobar → exporta y aprobado; cambios → al montador).
 // siempre: «hazlo siempre así» → además de este montaje, el PC lo guarda como regla del montador.
-export async function pedirRevision(videoId: string, tipo: "aprobar" | "cambios", texto: string | null, siempre = false) {
+export type TipoRevision = "aprobar" | "cambios" | "corte_ok";
+
+export async function pedirRevision(videoId: string, tipo: TipoRevision, texto: string | null, siempre = false) {
   const supabase = await supabaseServidor();
   const { error } = await supabase.from("peticiones").insert({ tipo, video_id: videoId, texto, siempre });
   return !error;
@@ -67,7 +70,7 @@ export async function pedirRevision(videoId: string, tipo: "aprobar" | "cambios"
 
 // La última petición de revisión de un vídeo (la lista viene de más nueva a más vieja), para saber si está en manos del PC.
 export function revisionDeVideo(peticiones: Peticion[], videoId: string) {
-  return peticiones.find((p) => p.video_id === videoId && (p.tipo === "aprobar" || p.tipo === "cambios"));
+  return peticiones.find((p) => p.video_id === videoId && (p.tipo === "aprobar" || p.tipo === "cambios" || p.tipo === "corte_ok"));
 }
 
 // «Ya he subido todo»: el PC no procesa el material de un vídeo hasta que llega esta petición.
