@@ -13,6 +13,7 @@ const video = (estado: string, guion: string | null = "listo") => ({
   fecha_trabajo: "2026-09-01",
   tieneGuion: guion !== null,
   ficha: ficha(guion),
+  sin_guion: false,
 });
 
 const preguntas = (sinContestar: number, enviadas: number, total: number) => ({ total, sinContestar, enviadas });
@@ -64,5 +65,13 @@ describe("pasosDe", () => {
   it("aprobado: falta publicarlo; solo aprobado o exportado lo dicen", () => {
     expect(por(pasosDe(video("aprobado"), preguntas(0, 0, 0)), "publicar")?.detalle).toBe("Aprobado, falta publicarlo");
     expect(por(pasosDe(video("exportado"), preguntas(0, 0, 0)), "publicar")?.detalle).toBe("Aprobado, falta publicarlo");
+  });
+
+  it("sin guion (urgencia ya grabada): no espera al guionista y lo tuyo es subir lo grabado, aunque sea de hoy", () => {
+    const pasos = pasosDe({ ...video("esperando_material", null), sin_guion: true, fecha_trabajo: "2999-01-01" });
+    expect(por(pasos, "guion")?.estado).toBe("hecho");
+    expect(por(pasos, "grabar")).toBeUndefined();
+    expect(por(pasos, "subir")?.estado).toBe("tuyo");
+    expect(por(pasos, "subir")?.titulo).toBe("Subir lo grabado");
   });
 });

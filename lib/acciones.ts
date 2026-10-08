@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
-import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
+import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { guardarDecision } from "@/lib/datos/reglas";
 import { esMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
@@ -69,6 +69,19 @@ export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resu
   if (fecha && !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: "La fecha no es válida." };
 
   if (!(await pedirGuionNuevo(texto, fecha))) return { error: "No se ha podido guardar. Prueba otra vez." };
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+// «Ya lo he grabado»: una urgencia sin guion. El PC crea el proyecto con su carpeta para subir el material.
+export async function pedirEdicion(_prev: Resultado, form: FormData): Promise<Resultado> {
+  if (!PETICIONES_ACTIVAS) return { error: "Todavía no está disponible." };
+  const texto = String(form.get("texto") ?? "").trim();
+  const fecha = String(form.get("fecha") ?? "").trim() || null;
+  if (!texto) return { error: "Cuenta qué trabajo es." };
+  if (fecha && !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: "La fecha no es válida." };
+
+  if (!(await pedirEdicionSinGuion(texto, fecha))) return { error: "No se ha podido guardar. Prueba otra vez." };
   revalidatePath("/", "layout");
   redirect("/");
 }

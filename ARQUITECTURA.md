@@ -31,7 +31,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `videos.ts`    | `listarProyectos()` (vídeo + ficha sacada del guion), `listarVideos()`, `obtenerVideo(id)`, `ultimaSincronizacion(videos)` |
 | `preguntas.ts` | `resumenPreguntas()` (por proyecto: total, sin contestar, enviadas), `resumir(filas)`, `preguntasDeVideo(id)`, `contarEnviadas()`, `guardarRespuesta(id, texto)` |
 | `actividad.ts` | `actividadReciente()`, `actividadDeVideo(id)`, `estadoAgentes()` |
-| `peticiones.ts` | `listarPeticiones()`, `descartesPorVideo()`, `descartarProyecto()`, `pedirGuionNuevo()`, `confirmarMaterial()` / `materialDeVideo()` («Ya he subido todo»: hasta que se pulsa, el PC no procesa ni monta el material), `borrarPeticion()` (deshacer). Lo que pides al PC; él lo recoge (ver `docs/pc-peticiones.md`). |
+| `peticiones.ts` | `listarPeticiones()`, `descartesPorVideo()`, `descartarProyecto()`, `pedirGuionNuevo()`, `pedirEdicionSinGuion()` (urgencia ya grabada: el PC crea el proyecto con `videos.sin_guion` y su carpeta de Drive, sin guionista), `confirmarMaterial()` / `materialDeVideo()` («Ya he subido todo»: hasta que se pulsa, el PC no procesa ni monta el material), `borrarPeticion()` (deshacer). Lo que pides al PC; él lo recoge (ver `docs/pc-peticiones.md`). |
 | `reglas.ts`    | `listarReglas()`, `contarPorDecidir()`, `agruparReglas()`, `guardarDecision(id, si/no/quitar/null)`. Lo que aprenden los agentes: ellos proponen, tú decides en **Aprende** y el PC lo escribe en `sistema/aprendido/` (ver `sistema/aprendizaje.md` en `D:\automatizaciones`). |
 | `sesion.ts`    | `usuarioActual()` |
 
@@ -47,7 +47,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `pasos.ts`    | **Los pasos de cada proyecto en orden** (guion → preguntas → grabar/subir → montaje → revisar → publicar), calculados con los datos reales. Cada paso dice de quién es (`tuyo` · `sistema` · `pendiente` · `hecho`) y, si es tuyo, qué tocar (`accion`). No usa el texto «siguiente paso» del PC porque a veces se queda viejo. |
 | `guion.ts`    | Lee el guion: la cabecera YAML (`fichaDeGuion`: hora, lugar, camión, trabajo, datos por confirmar) y las secciones `# …` (`seccionesDeGuion`, `buscarSeccion`). |
 | `formato.ts`  | Fechas en hora de Madrid (`dia`, `diaCercano` «Hoy/Mañana», `fecha`, `hora`, `haceCuanto`, `diaRelativo`, `hoy`, `hoyLargo`), `plural` y `agruparPor`. |
-| `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`, `descartar`, `pedirGuion`, `deshacer`. |
+| `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`, `descartar`, `pedirGuion`, `pedirEdicion`, `deshacer`. |
 
 ## 3 · Piezas — `components/`
 
@@ -103,7 +103,7 @@ app/
     page.tsx              Proyectos: todos por fecha, con rótulo por día; filtro «Me toca» (?ver=mios)
     videos/[id]/          ficha del proyecto (/videos/GE_008)
     videos/[id]/guion/    modo lectura del guion (?ver=lectura|indicaciones|notas)
-    nuevo/                pedir guion para otro trabajo
+    nuevo/                pedir guion para otro trabajo, o «Ya lo he grabado» (?que=grabado: edición sin guion)
     actividad/            agentes y registro
     mas/                  sincronización, cuenta, salir
     piezas/               catálogo de la base

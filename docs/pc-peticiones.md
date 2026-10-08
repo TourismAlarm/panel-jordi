@@ -45,3 +45,11 @@ for p in pendientes:
   sigue saliendo como «Descartado» (la app mira `peticiones`), pero los agentes seguirían trabajando en él.
 - Una petición borrada antes de recogerla = Jordi la ha deshecho. No hay que hacer nada.
 - Si no se puede actuar (p. ej. el proyecto ya no existe), marcar `recogida_en` igualmente para no repetirla.
+
+## Edición sin guion (`sin_guion`)
+
+Urgencia que Jordi ya ha grabado sin guion («Nuevo» → «Ya lo he grabado»): `texto` = qué trabajo es, `fecha_trabajo` = día
+que lo grabó. `sync_panel.py` (`edicion_sin_guion`) crea el vídeo con `contenido.crear(...)` en estado `esperando_material`
+y `sin_guion: true`, le crea su carpeta de Drive, apunta el código en `peticiones.video_id` y lo sube a `videos` con
+`sin_guion = true` (el panel no espera guion y pide subir lo grabado). Desde ahí es un vídeo más: «Ya he subido todo»
+→ `LISTO.txt` → archivador → observador → guionista modo 3 → montador.

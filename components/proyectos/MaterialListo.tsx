@@ -30,7 +30,7 @@ export function MaterialListo({ videoId, peticion }: { videoId: string; peticion
   return (
     <form action={accion} className={s.form}>
       <p className="suave pequeno">
-        Sube todo lo grabado (Drive o <code>videos/_entrada/</code>). Los agentes no tocan este vídeo hasta que pulses el botón: así montan una sola vez, con todo el material.
+        Sube todo lo grabado a Drive, en <em>contenido para claude</em> › la carpeta que empieza por <strong>{videoId}</strong> (o en el PC, <code>videos/_entrada/{videoId}/</code>). Los agentes no tocan este vídeo hasta que pulses el botón: así montan una sola vez, con todo el material.
       </p>
       <input type="hidden" name="video_id" value={videoId} />
       <BotonEnviar texto="Ya he subido todo" enviando="Avisando al PC…" />

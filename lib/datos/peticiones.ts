@@ -50,6 +50,13 @@ export async function pedirGuionNuevo(texto: string, fecha: string | null) {
   return !error;
 }
 
+// Edición sin guion: una urgencia que ya has grabado. El PC crea el proyecto (y su carpeta de Drive) sin pasar por el guionista.
+export async function pedirEdicionSinGuion(texto: string, fecha: string | null) {
+  const supabase = await supabaseServidor();
+  const { error } = await supabase.from("peticiones").insert({ tipo: "sin_guion", texto, fecha_trabajo: fecha });
+  return !error;
+}
+
 // Revisión del montaje: aprobar o pedir cambios. El PC lo recoge y actúa (aprobar → aprobado; cambios → al montador).
 // siempre: «hazlo siempre así» → además de este montaje, el PC lo guarda como regla del montador.
 export async function pedirRevision(videoId: string, tipo: "aprobar" | "cambios", texto: string | null, siempre = false) {

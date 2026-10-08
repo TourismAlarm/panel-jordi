@@ -71,7 +71,9 @@ export default async function Proyecto({ params }: PageProps<"/videos/[id]">) {
         </BotonEnlace>
       ) : (
         <Tarjeta>
-          <span className="suave">Todavía no hay guion. El guionista lo subirá cuando esté.</span>
+          <span className="suave">
+            {video.sin_guion ? "Sin guion: se monta con lo que grabaste." : "Todavía no hay guion. El guionista lo subirá cuando esté."}
+          </span>
         </Tarjeta>
       )}
 

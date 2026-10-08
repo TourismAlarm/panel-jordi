@@ -68,6 +68,7 @@ const EJEMPLO = {
   fecha_trabajo: null,
   por_revisar: false,
   tieneGuion: true,
+  sin_guion: false,
   ficha: {
     hora: "08:00",
     franja: null,

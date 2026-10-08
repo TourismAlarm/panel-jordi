@@ -241,6 +241,7 @@ export type Database = {
           montaje_url: string | null
           por_revisar: boolean
           siguiente_paso: string | null
+          sin_guion: boolean
           titulo: string | null
         }
         Insert: {
@@ -252,6 +253,7 @@ export type Database = {
           montaje_url?: string | null
           por_revisar?: boolean
           siguiente_paso?: string | null
+          sin_guion?: boolean
           titulo?: string | null
         }
         Update: {
@@ -263,6 +265,7 @@ export type Database = {
           montaje_url?: string | null
           por_revisar?: boolean
           siguiente_paso?: string | null
+          sin_guion?: boolean
           titulo?: string | null
         }
         Relationships: []

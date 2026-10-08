@@ -13,7 +13,7 @@ import { agruparPor, dia, diaCercano, hoyLargo, plural } from "@/lib/formato";
 import { pasosDe, teToca } from "@/lib/pasos";
 
 // Portada: todos los proyectos abiertos en orden de fecha, cada uno con sus pasos.
-// «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, los guiones que has pedido;
+// «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, lo que has pedido (guiones y ediciones sin guion);
 // al final, plegados, los hechos y los que has descartado.
 export default async function Proyectos({ searchParams }: PageProps<"/">) {
   const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync, reglas] = await Promise.all([
@@ -27,7 +27,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
   ]);
 
   const descartes = descartesPorVideo(peticiones);
-  const pedidos = peticiones.filter((x) => x.tipo === "nuevo" && x.estado !== "hecha");
+  const pedidos = peticiones.filter((x) => (x.tipo === "nuevo" || x.tipo === "sin_guion") && x.estado !== "hecha");
   const conPasos = proyectos.map((p) => ({ p, pasos: pasosDe({ ...p, descartado: descartes.has(p.id), materialListo: !!materialDeVideo(peticiones, p.id) }, preguntas.get(p.id)) }));
   const vivos = conPasos.filter(({ p }) => !descartes.has(p.id));
   const descartados = conPasos.filter(({ p }) => descartes.has(p.id));
@@ -50,7 +50,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
           {PETICIONES_ACTIVAS && (
             <BotonEnlace href="/nuevo" variante="secundario" compacto>
               <Icono nombre="anadir" tamano={18} />
-              Guion
+              Nuevo
             </BotonEnlace>
           )}
           <BotonActualizar />
@@ -79,14 +79,14 @@ export default async function Proyectos({ searchParams }: PageProps<"/">) {
       )}
 
       {!!pedidos.length && (
-        <Seccion titulo="Guiones que has pedido">
+        <Seccion titulo="Lo que has pedido">
           <Lista>
             {pedidos.map((x) => (
               <Fila
                 key={x.id}
                 inicio={<Icono nombre="reloj" />}
                 titulo={x.texto}
-                detalle={`${x.fecha_trabajo ? `Para el ${dia(x.fecha_trabajo)} · ` : ""}${estadoPeticion(x).texto}`}
+                detalle={`${x.tipo === "sin_guion" ? "Sin guion, ya grabado · " : "Guion · "}${x.fecha_trabajo ? `${x.tipo === "sin_guion" ? "Del" : "Para el"} ${dia(x.fecha_trabajo)} · ` : ""}${estadoPeticion(x).texto}`}
                 fin={x.estado === "pendiente" && !x.recogida_en ? <BotonDeshacer id={x.id} /> : undefined}
               />
             ))}
