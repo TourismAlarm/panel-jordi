@@ -28,6 +28,8 @@ export type InfoReel = {
   gancho: string | null;
   duracion_s: number | null;
   elsa: boolean;
+  tipo_gancho: string | null; // lo apunta el guionista: cifra+problema, pregunta, reto…
+  prueba: string | null; // apuesta del analista que probaba (A01…) o «ninguna»
 };
 
 export type Senal = { tono: Tono; texto: string };
@@ -39,6 +41,8 @@ export type Reel = {
   titulo: string;
   ge: string | null;
   tema: string | null;
+  tipoGancho: string | null;
+  prueba: string | null;
   portada: string | null;
   vistas: number;
   alcance: number;
@@ -109,6 +113,8 @@ export function construirReels(fotos: Foto[], info: InfoReel[]): { reels: Reel[]
         titulo: tituloDe(r.media_caption, i?.gancho ?? null),
         ge: i?.ge ?? null,
         tema: i?.tema ?? null,
+        tipoGancho: i?.tipo_gancho ?? null,
+        prueba: i?.prueba && i.prueba !== "ninguna" ? i.prueba : null,
         portada: r.media_thumbnail_url ?? null,
         vistas,
         alcance: n(r.media_reach),
@@ -264,3 +270,33 @@ export function resumen(reels: Reel[], hoyISO: string) {
 }
 
 export { miles };
+
+// Apuestas del analista (trabajo/feedback/apuestas.md): lo que el guionista está probando y cómo se mide.
+// Líneas «- A01 · qué probar · medida: … · desde AAAA-MM-DD · origen: …» bajo «## Abiertas» / «## Cerradas».
+export type Apuesta = { id: string; texto: string; medida: string | null; desde: string | null; cerrada: boolean };
+
+export function leerApuestas(md: string): Apuesta[] {
+  const out: Apuesta[] = [];
+  let seccion: "abiertas" | "cerradas" | null = null;
+  for (const linea of md.split("\n")) {
+    const t = linea.trim();
+    if (t.startsWith("## ")) {
+      const nombre = t.slice(3).toLowerCase();
+      seccion = nombre.startsWith("abiertas") ? "abiertas" : nombre.startsWith("cerradas") ? "cerradas" : null;
+      continue;
+    }
+    const m = seccion && t.match(/^-\s*(A\d+)\s*·\s*(.*)$/);
+    if (!m) continue;
+    const partes = m[2].split(/\s+·\s+/);
+    const campo = (k: string) => partes.find((x) => x.toLowerCase().startsWith(`${k}`))?.replace(/^[^:\s]+:?\s*/, "") ?? null;
+    out.push({
+      id: m[1],
+      texto: partes[0],
+      medida: campo("medida"),
+      desde: partes.find((x) => x.startsWith("desde"))?.replace(/^desde\s*/, "") ?? null,
+      cerrada: seccion === "cerradas",
+    });
+  }
+  return out;
+}
+

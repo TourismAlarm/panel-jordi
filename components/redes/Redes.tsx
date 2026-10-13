@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Etiqueta, Tarjeta, type Tono } from "@/components/ui";
 import { dia } from "@/lib/formato";
-import { miles, type Conclusion, type Reel } from "@/lib/redes";
+import { miles, type Apuesta, type Conclusion, type Reel } from "@/lib/redes";
 import s from "./Redes.module.css";
 
 const coma = (x: number, d = 1) => x.toFixed(d).replace(".", ",");
@@ -82,6 +82,17 @@ export function TarjetaReel({ r }: { r: Reel }) {
           <Dato nombre="Guardados" valor={`${r.guardados}`} />
           <Dato nombre="Compartidos" valor={`${r.compartidos}`} />
         </dl>
+        {(r.prueba || r.tipoGancho) && (
+          <p className={s.probaba}>
+            {r.prueba && (
+              <>
+                Probaba <b>{r.prueba}</b>
+              </>
+            )}
+            {r.prueba && r.tipoGancho && " · "}
+            {r.tipoGancho && <>gancho {r.tipoGancho}</>}
+          </p>
+        )}
         {!!r.senales.length && (
           <div className={s.senales}>
             {r.senales.map((x) => (
@@ -119,6 +130,29 @@ export function TarjetaConclusion({ c }: { c: Conclusion }) {
           <b>Prueba:</b> {c.prueba}
         </p>
       )}
+    </Tarjeta>
+  );
+}
+
+// Una apuesta del analista: qué se prueba en los guiones, cómo se mide y qué reels la llevaban.
+export function TarjetaApuesta({ a, reels }: { a: Apuesta; reels: Reel[] }) {
+  return (
+    <Tarjeta tono={a.cerrada ? "neutro" : "info"}>
+      <span className="codigo">
+        {a.id}
+        {a.desde ? ` · desde ${dia(a.desde)}` : ""}
+      </span>
+      <strong className={s.reelTitulo}>{a.texto}</strong>
+      {a.medida && (
+        <p className="suave pequeno">
+          <b>Funciona si:</b> {a.medida}
+        </p>
+      )}
+      <p className="suave pequeno">
+        {reels.length
+          ? `La llevan: ${reels.map((r) => r.ge ?? r.titulo).join(", ")}`
+          : "Ningún reel publicado la lleva todavía: entra en los próximos guiones."}
+      </p>
     </Tarjeta>
   );
 }

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Aviso, Desplegable, Pantalla, Seccion, Vacio } from "@/components/ui";
-import { GraficaVistas, Indicador, Indicadores, TarjetaConclusion, TarjetaReel } from "@/components/redes/Redes";
+import { GraficaVistas, Indicador, Indicadores, TarjetaApuesta, TarjetaConclusion, TarjetaReel } from "@/components/redes/Redes";
 import { Guion } from "@/components/videos/Guion";
-import { fotosRecientes, infoReels, ultimoInforme } from "@/lib/datos/redes";
+import { apuestasMd, fotosRecientes, infoReels, ultimoInforme } from "@/lib/datos/redes";
 import { dia, hoy, plural } from "@/lib/formato";
-import { conclusiones, construirReels, miles, resumen } from "@/lib/redes";
+import { conclusiones, construirReels, leerApuestas, miles, resumen } from "@/lib/redes";
 
 export const metadata: Metadata = { title: "Redes" };
 
@@ -14,7 +14,7 @@ const coma = (x: number | null) => (x === null ? "–" : x.toFixed(1).replace(".
 // Cómo van los reels y qué cambiar. Números: foto diaria de Instagram (Windsor).
 // Qué es cada reel (GE, tema) y el informe del analista: los sube el PC.
 export default async function Redes() {
-  const [fotos, info, informe] = await Promise.all([fotosRecientes(), infoReels(), ultimoInforme()]);
+  const [fotos, info, informe, md] = await Promise.all([fotosRecientes(), infoReels(), ultimoInforme(), apuestasMd()]);
   const { reels, foto, diasSemana } = construirReels(fotos, info);
   const hoyISO = hoy();
 
@@ -28,6 +28,9 @@ export default async function Redes() {
 
   const r = resumen(reels, hoyISO);
   const ideas = conclusiones(reels, hoyISO);
+  const apuestas = leerApuestas(md ?? "");
+  const abiertas = apuestas.filter((a) => !a.cerrada);
+  const cerradas = apuestas.filter((a) => a.cerrada);
   const vieja = Date.parse(`${hoyISO}T12:00:00Z`) - Date.parse(`${foto}T12:00:00Z`) > 864e5;
 
   return (
@@ -73,6 +76,27 @@ export default async function Redes() {
           Sale de {plural(reels.length, "reel")} de los últimos 90 días: son indicios, no reglas. Lo que se repita en 3 vídeos o más, el analista lo
           propone en Aprende.
         </p>
+      </Seccion>
+
+      <Seccion titulo="Lo que se está probando" cuenta={abiertas.length}>
+        {abiertas.length ? (
+          abiertas.map((a) => <TarjetaApuesta key={a.id} a={a} reels={reels.filter((r) => r.prueba === a.id)} />)
+        ) : (
+          <Vacio titulo="Nada en prueba" texto="El analista abre apuestas los lunes con lo que ve en los números." icono="reloj" tono="neutro" />
+        )}
+        <p className="suave pequeno">
+          El guionista aplica una en cada guion y la apunta. A los 7 días de publicar, el analista mira si se cumplió; si funciona en 3 vídeos, te
+          la propone como regla en Aprende.
+        </p>
+        {!!cerradas.length && (
+          <Desplegable titulo={`Cerradas (${cerradas.length})`}>
+            {cerradas.map((a) => (
+              <p key={a.id} className="suave pequeno">
+                <b>{a.id}</b> · {a.texto}
+              </p>
+            ))}
+          </Desplegable>
+        )}
       </Seccion>
 
       {informe && (

@@ -191,7 +191,9 @@ export type Database = {
           gancho: string | null
           ge: string | null
           permalink: string
+          prueba: string | null
           tema: string | null
+          tipo_gancho: string | null
         }
         Insert: {
           actualizado_en?: string
@@ -200,7 +202,9 @@ export type Database = {
           gancho?: string | null
           ge?: string | null
           permalink: string
+          prueba?: string | null
           tema?: string | null
+          tipo_gancho?: string | null
         }
         Update: {
           actualizado_en?: string
@@ -209,7 +213,9 @@ export type Database = {
           gancho?: string | null
           ge?: string | null
           permalink?: string
+          prueba?: string | null
           tema?: string | null
+          tipo_gancho?: string | null
         }
         Relationships: []
       }

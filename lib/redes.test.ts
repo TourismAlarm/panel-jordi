@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conclusiones, construirReels, mediana, tituloDe, type Foto, type ReelWindsor } from "./redes";
+import { conclusiones, construirReels, leerApuestas, mediana, tituloDe, type Foto, type ReelWindsor } from "./redes";
 
 const reel = (url: string, ts: string, vistas: number, salto: number, extra: Partial<ReelWindsor> = {}): ReelWindsor => ({
   timestamp: ts,
@@ -40,8 +40,8 @@ describe("redes", () => {
       },
     ];
     const { reels, foto, diasSemana } = construirReels(fotos, [
-      { permalink: "p", ge: null, tema: null, gancho: null, duracion_s: null, elsa: false },
-      { permalink: "a", ge: "GE_001", tema: "nave", gancho: null, duracion_s: 40, elsa: true },
+      { permalink: "p", ge: null, tema: null, gancho: null, duracion_s: null, elsa: false, tipo_gancho: null, prueba: null },
+      { permalink: "a", ge: "GE_001", tema: "nave", gancho: null, duracion_s: 40, elsa: true, tipo_gancho: "cifra+problema", prueba: "A01" },
     ]);
     expect(foto).toBe("2026-10-13");
     expect(diasSemana).toBe(7);
@@ -50,6 +50,7 @@ describe("redes", () => {
     expect(a.vistasSemana).toBe(500);
     expect(a.ge).toBe("GE_001");
     expect(a.pctVisto).toBe(50);
+    expect(a.prueba).toBe("A01");
     expect(reels[0].vistasSemana).toBe(300); // no estaba hace 7 días: todo es de esta semana
     expect(reels[0].senales.some((s) => s.texto.startsWith("Recién publicado"))).toBe(true);
     expect(reels[0].senales.some((s) => s.tono === "mal")).toBe(true); // salto 40 %
@@ -71,5 +72,20 @@ describe("redes", () => {
     expect(c[0].titulo).toBe("1 reels en 30 días (objetivo 8)");
     expect(c[0].tono).toBe("mal");
     expect(c.find((x) => x.titulo.startsWith("Buen gancho"))?.texto).toContain("7.500");
+  });
+
+  it("apuestas: abiertas y cerradas con su medida", () => {
+    const md = [
+      "# Apuestas",
+      "Formato: `- A0N · …`",
+      "## Abiertas",
+      "- A01 · Cierre con la cifra final · medida: ≥ 1,0 compartidos por mil a 7 d · desde 2026-10-13 · origen: informe 41",
+      "## Cerradas",
+      "- A00 · Algo viejo · medida: x · desde 2026-09-01",
+    ].join("\n");
+    const a = leerApuestas(md);
+    expect(a).toHaveLength(2);
+    expect(a[0]).toEqual({ id: "A01", texto: "Cierre con la cifra final", medida: "≥ 1,0 compartidos por mil a 7 d", desde: "2026-10-13", cerrada: false });
+    expect(a[1].cerrada).toBe(true);
   });
 });

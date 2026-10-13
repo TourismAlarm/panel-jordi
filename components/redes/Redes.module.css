@@ -202,3 +202,12 @@
   background: var(--superficie-2);
   border-radius: var(--radio-s);
 }
+
+.probaba {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.probaba b {
+  color: var(--info);
+}
