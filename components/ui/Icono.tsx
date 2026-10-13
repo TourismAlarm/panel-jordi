@@ -10,6 +10,7 @@ const TRAZOS = {
     </>
   ),
   actividad: <path d="M3 12h4l3-8 4 16 3-8h4" />,
+  grafica: <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" />,
   bombilla: (
     <>
       <path d="M9 18h6M10 21h4" />

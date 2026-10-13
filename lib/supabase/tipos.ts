@@ -58,6 +58,30 @@ export type Database = {
           },
         ]
       }
+      informes_redes: {
+        Row: {
+          fecha: string
+          markdown: string
+          semana: string
+          subido_en: string
+          titulo: string
+        }
+        Insert: {
+          fecha: string
+          markdown: string
+          semana: string
+          subido_en?: string
+          titulo: string
+        }
+        Update: {
+          fecha?: string
+          markdown?: string
+          semana?: string
+          subido_en?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       permitidos: {
         Row: {
           user_id: string
@@ -158,6 +182,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      redes_reels: {
+        Row: {
+          actualizado_en: string
+          duracion_s: number | null
+          elsa: boolean
+          gancho: string | null
+          ge: string | null
+          permalink: string
+          tema: string | null
+        }
+        Insert: {
+          actualizado_en?: string
+          duracion_s?: number | null
+          elsa?: boolean
+          gancho?: string | null
+          ge?: string | null
+          permalink: string
+          tema?: string | null
+        }
+        Update: {
+          actualizado_en?: string
+          duracion_s?: number | null
+          elsa?: boolean
+          gancho?: string | null
+          ge?: string | null
+          permalink?: string
+          tema?: string | null
+        }
+        Relationships: []
       }
       reglas: {
         Row: {

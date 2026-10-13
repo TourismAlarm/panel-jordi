@@ -1,0 +1,204 @@
+/* Pestaña Redes: cifras con comparación, barras de vistas por reel y fichas de reel. */
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 14px 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  position: relative;
+  overflow: hidden;
+}
+
+.indicador::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--t);
+}
+
+.indicador b {
+  font-size: 1.9rem;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.nombre {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.comparacion {
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+}
+
+/* Barras de vistas */
+.grafica {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.barraFila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "texto valor" "pista pista";
+  column-gap: 8px;
+  row-gap: 3px;
+  padding: 7px 4px;
+  border-radius: var(--radio-s);
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.barraFila:hover,
+.barraFila:focus-visible {
+  background: var(--superficie-2);
+}
+
+.barraTexto {
+  grid-area: texto;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.barraFecha {
+  flex: none;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.barraTitulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barraValor {
+  grid-area: valor;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.barraPista {
+  grid-area: pista;
+  height: 10px;
+}
+
+.barra {
+  display: block;
+  height: 100%;
+  background: var(--info);
+  border-radius: 0 4px 4px 0;
+}
+
+.barra[data-nuevo] {
+  background: var(--acento);
+}
+
+/* Ficha de reel */
+.ancla {
+  scroll-margin-top: 16px;
+}
+
+.reel {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.portada {
+  flex: none;
+  width: 64px;
+  height: 114px;
+  border-radius: var(--radio-s);
+  background: var(--superficie-2) center / cover no-repeat;
+}
+
+.reelTextos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reelTitulo {
+  line-height: 1.3;
+}
+
+.reelVistas {
+  font-size: 0.9rem;
+}
+
+.reelVistas b {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 0;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dato dt {
+  font-size: 0.72rem;
+  color: var(--texto-suave);
+  line-height: 1.25;
+}
+
+.dato dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.senales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.senales > span {
+  white-space: normal;
+}
+
+.enlace {
+  font-size: 0.85rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.prueba {
+  font-size: 0.92rem;
+  padding: 8px 10px;
+  background: var(--superficie-2);
+  border-radius: var(--radio-s);
+}

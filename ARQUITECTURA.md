@@ -33,6 +33,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `actividad.ts` | `actividadReciente()`, `actividadDeVideo(id)`, `estadoAgentes()` |
 | `peticiones.ts` | `listarPeticiones()`, `descartesPorVideo()`, `descartarProyecto()`, `pedirGuionNuevo()`, `pedirEdicionSinGuion()` (urgencia ya grabada: el PC crea el proyecto con `videos.sin_guion` y su carpeta de Drive, sin guionista), `confirmarMaterial()` / `materialDeVideo()` («Ya he subido todo»: hasta que se pulsa, el PC no procesa ni monta el material), `borrarPeticion()` (deshacer). Lo que pides al PC; él lo recoge (ver `docs/pc-peticiones.md`). |
 | `reglas.ts`    | `listarReglas()`, `contarPorDecidir()`, `agruparReglas()`, `guardarDecision(id, si/no/quitar/null)`. Lo que aprenden los agentes: ellos proponen, tú decides en **Aprende** y el PC lo escribe en `sistema/aprendido/` (ver `sistema/aprendizaje.md` en `D:\automatizaciones`). |
+| `redes.ts`     | `fotosRecientes()` (fotos diarias de Instagram, tabla `windsor_fotos`), `infoReels()` (GE, tema y duración de cada reel, `redes_reels`), `ultimoInforme()` (informe del analista, `informes_redes`). Las dos últimas las sube el PC (`subir_redes` en `sync_panel.py`). |
 | `sesion.ts`    | `usuarioActual()` |
 
 - Si Supabase falla, se lanza un error y sale la pantalla «Algo ha fallado» con **Reintentar**
@@ -47,6 +48,7 @@ Un archivo por tabla. Las pantallas nunca llaman a Supabase directamente: piden 
 | `pasos.ts`    | **Los pasos de cada proyecto en orden** (guion → preguntas → grabar/subir → montaje → revisar → publicar), calculados con los datos reales. Cada paso dice de quién es (`tuyo` · `sistema` · `pendiente` · `hecho`) y, si es tuyo, qué tocar (`accion`). No usa el texto «siguiente paso» del PC porque a veces se queda viejo. |
 | `guion.ts`    | Lee el guion: la cabecera YAML (`fichaDeGuion`: hora, lugar, camión, trabajo, datos por confirmar) y las secciones `# …` (`seccionesDeGuion`, `buscarSeccion`). |
 | `formato.ts`  | Fechas en hora de Madrid (`dia`, `diaCercano` «Hoy/Mañana», `fecha`, `hora`, `haceCuanto`, `diaRelativo`, `hoy`, `hoyLargo`), `plural` y `agruparPor`. |
+| `redes.ts`    | Cálculos de la pestaña Redes, sin Supabase (tests en `redes.test.ts`): `construirReels` (cifras de la última foto + vistas de la semana con la foto de hace ~7 días), `senales` (diagnóstico de cada reel: gancho, retención, guardados/compartidos), `conclusiones` (qué cambiar o enfocar) y `resumen` (cifras de cabecera). |
 | `acciones.ts` | Lo que la app escribe: `entrar`, `salir`, `responder`, `descartar`, `pedirGuion`, `pedirEdicion`, `deshacer`. |
 
 ## 3 · Piezas — `components/`
@@ -104,6 +106,7 @@ app/
     videos/[id]/          ficha del proyecto (/videos/GE_008)
     videos/[id]/guion/    modo lectura del guion (?ver=lectura|indicaciones|notas)
     nuevo/                pedir guion para otro trabajo, o «Ya lo he grabado» (?que=grabado: edición sin guion)
+    redes/                cómo van los reels en Instagram y qué cambiar
     actividad/            agentes y registro
     mas/                  sincronización, cuenta, salir
     piezas/               catálogo de la base
