@@ -348,6 +348,24 @@ export type Database = {
         }
         Relationships: []
       }
+      windsor_fotos_tiktok: {
+        Row: {
+          datos: Json
+          fecha: string
+          tomada_en: string
+        }
+        Insert: {
+          datos: Json
+          fecha: string
+          tomada_en?: string
+        }
+        Update: {
+          datos?: Json
+          fecha?: string
+          tomada_en?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

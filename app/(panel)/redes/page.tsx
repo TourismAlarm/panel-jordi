@@ -1,27 +1,102 @@
 import type { Metadata } from "next";
-import { Aviso, Desplegable, Pantalla, Seccion, Vacio } from "@/components/ui";
-import { GraficaVistas, Indicador, Indicadores, TarjetaApuesta, TarjetaConclusion, TarjetaReel } from "@/components/redes/Redes";
+import { Aviso, Desplegable, Pantalla, Seccion, Segmentos, Vacio } from "@/components/ui";
+import { GraficaVistas, Indicador, Indicadores, TarjetaApuesta, TarjetaConclusion, TarjetaPareja, TarjetaReel } from "@/components/redes/Redes";
 import { Guion } from "@/components/videos/Guion";
-import { apuestasMd, fotosRecientes, infoReels, ultimoInforme } from "@/lib/datos/redes";
+import { apuestasMd, fotosRecientes, fotosTikTok, infoReels, ultimoInforme } from "@/lib/datos/redes";
 import { dia, hoy, plural } from "@/lib/formato";
-import { conclusiones, construirReels, leerApuestas, miles, resumen } from "@/lib/redes";
+import {
+  comparar,
+  conclusiones,
+  conclusionesComparar,
+  construirReels,
+  emparejar,
+  infoTikTok,
+  leerApuestas,
+  miles,
+  NOMBRE_RED,
+  resumen,
+  type Foto,
+  type Red,
+} from "@/lib/redes";
 
 export const metadata: Metadata = { title: "Redes" };
 
 const pct = (x: number | null) => (x === null ? "–" : `${Math.round(x)} %`);
 const coma = (x: number | null) => (x === null ? "–" : x.toFixed(1).replace(".", ","));
+const ultima = (fotos: Foto[]) => [...fotos].sort((a, b) => b.fecha.localeCompare(a.fecha))[0]?.reels ?? [];
 
-// Cómo van los reels y qué cambiar. Números: foto diaria de Instagram (Windsor).
-// Qué es cada reel (GE, tema) y el informe del analista: los sube el PC.
-export default async function Redes() {
-  const [fotos, info, informe, md] = await Promise.all([fotosRecientes(), infoReels(), ultimoInforme(), apuestasMd()]);
-  const { reels, foto, diasSemana } = construirReels(fotos, info);
+// Cómo van los reels y qué cambiar. Números: foto diaria de Instagram y de TikTok (Windsor).
+// Qué es cada reel (GE, tema) y el informe del analista: los sube el PC. Los vídeos de TikTok
+// heredan la ficha de su pareja en Instagram (mismo montaje, publicado casi a la vez).
+export default async function Redes({ searchParams }: PageProps<"/redes">) {
+  const { red: q } = await searchParams;
+  const vista: Red | "las-dos" = q === "tiktok" ? "tiktok" : q === "las-dos" ? "las-dos" : "instagram";
+  const [fotosIg, fotosTt, info, informe, md] = await Promise.all([fotosRecientes(), fotosTikTok(), infoReels(), ultimoInforme(), apuestasMd()]);
+  const pareja = emparejar(ultima(fotosIg), ultima(fotosTt));
+  const ig = construirReels(fotosIg, info, "instagram");
+  const tt = construirReels(fotosTt, infoTikTok(pareja, info), "tiktok");
   const hoyISO = hoy();
+
+  const selector = (
+    <Segmentos
+      opciones={[
+        { href: "/redes", texto: "Instagram", activo: vista === "instagram" },
+        { href: "/redes?red=tiktok", texto: "TikTok", activo: vista === "tiktok" },
+        { href: "/redes?red=las-dos", texto: "Las dos", activo: vista === "las-dos" },
+      ]}
+    />
+  );
+
+  if (vista === "las-dos") {
+    const c = comparar(ig.reels, tt.reels, pareja);
+    const ideas = conclusionesComparar(c);
+    if (!ig.foto || !tt.foto) {
+      return (
+        <Pantalla titulo="Redes" subtitulo="Instagram frente a TikTok">
+          {selector}
+          <Vacio titulo="Falta una de las dos" texto="Hacen falta la foto de Instagram y la de TikTok: llegan cada mañana." icono="reloj" tono="neutro" />
+        </Pantalla>
+      );
+    }
+    return (
+      <Pantalla titulo="Redes" subtitulo={`Instagram frente a TikTok · ${plural(c.parejas.length, "vídeo")} en las dos · cifras del ${dia(tt.foto)}`}>
+        {selector}
+        <Indicadores>
+          <Indicador
+            valor={c.ratio === null ? "–" : `×${coma(c.ratio)}`}
+            texto="Vistas TikTok ÷ Instagram"
+            comparacion={`mediana del mismo vídeo · ${plural(c.maduras, "vídeo")} con 7 días o más`}
+            tono="info"
+          />
+          <Indicador valor={c.vistasIg === null ? "–" : miles(c.vistasIg)} texto="Vistas en Instagram" comparacion="mediana por vídeo" />
+          <Indicador valor={c.vistasTt === null ? "–" : miles(c.vistasTt)} texto="Vistas en TikTok" comparacion="mediana por vídeo" />
+          <Indicador valor={`${c.seguidoresTt}`} texto="Seguidores nuevos por TikTok" comparacion="lo que han traído los vídeos (90 días)" tono="bien" />
+        </Indicadores>
+
+        <Seccion titulo="Qué dicen las dos juntas">
+          {ideas.length ? ideas.map((x) => <TarjetaConclusion key={x.titulo} c={x} />) : <p className="suave">Aún hay pocos vídeos en las dos redes.</p>}
+          <p className="suave pequeno">
+            Se emparejan por la hora de publicación y el texto. Instagram mide «se van en 3 s»; TikTok, «lo ven entero»: no son la misma cifra.
+          </p>
+        </Seccion>
+
+        <Seccion titulo="Vídeo a vídeo" cuenta={c.parejas.length}>
+          {c.parejas.map((p) => (
+            <TarjetaPareja key={p.tt.permalink} p={p} />
+          ))}
+        </Seccion>
+      </Pantalla>
+    );
+  }
+
+  const { reels, foto, diasSemana } = vista === "tiktok" ? tt : ig;
+  const nombre = NOMBRE_RED[vista];
 
   if (!foto || !reels.length) {
     return (
       <Pantalla titulo="Redes">
-        <Vacio titulo="Todavía no hay datos" texto="Las cifras llegan cada mañana con la foto de Instagram." icono="reloj" tono="neutro" />
+        {selector}
+        <Vacio titulo="Todavía no hay datos" texto={`Las cifras llegan cada mañana con la foto de ${nombre}.`} icono="reloj" tono="neutro" />
       </Pantalla>
     );
   }
@@ -34,10 +109,11 @@ export default async function Redes() {
   const vieja = Date.parse(`${hoyISO}T12:00:00Z`) - Date.parse(`${foto}T12:00:00Z`) > 864e5;
 
   return (
-    <Pantalla titulo="Redes" subtitulo={`Instagram · ${plural(reels.length, "reel")} de ELSA · cifras del ${dia(foto)}`}>
+    <Pantalla titulo="Redes" subtitulo={`${nombre} · ${plural(reels.length, vista === "tiktok" ? "vídeo" : "reel")} de ELSA · cifras del ${dia(foto)}`}>
+      {selector}
       {vieja && (
         <Aviso tono="ojo">
-          Las cifras son del {dia(foto)}: la foto diaria de Instagram de hoy no ha llegado todavía.
+          Las cifras son del {dia(foto)}: la foto diaria de {nombre} de hoy no ha llegado todavía.
         </Aviso>
       )}
 
@@ -45,21 +121,30 @@ export default async function Redes() {
         <Indicador
           valor={r.vistasSemana === null ? "–" : miles(r.vistasSemana)}
           texto="Vistas esta semana"
-          comparacion={diasSemana ? `en ${diasSemana} días, sumando todos los reels` : "falta la foto de hace 7 días"}
+          comparacion={diasSemana ? `en ${diasSemana} días, sumando todos los ${vista === "tiktok" ? "vídeos" : "reels"}` : "falta la foto de hace 7 días"}
           tono="info"
         />
         <Indicador
           valor={`${r.reelsMes}`}
-          texto="Reels en 30 días"
+          texto={vista === "tiktok" ? "Vídeos en 30 días" : "Reels en 30 días"}
           comparacion="objetivo: 8 (2 por semana)"
           tono={r.reelsMes >= 6 ? "bien" : r.reelsMes >= 3 ? "ojo" : "mal"}
         />
-        <Indicador
-          valor={pct(r.saltoReciente)}
-          texto="Se van al empezar"
-          comparacion={`últimos 5 · la cuenta: ${pct(r.saltoTotal)}`}
-          tono={r.saltoReciente === null || r.saltoTotal === null ? "neutro" : r.saltoReciente <= r.saltoTotal ? "bien" : "ojo"}
-        />
+        {vista === "tiktok" ? (
+          <Indicador
+            valor={pct(r.completoReciente)}
+            texto="Lo ven entero"
+            comparacion={`últimos 5 · la cuenta: ${pct(r.completoTotal)}`}
+            tono={r.completoReciente === null || r.completoTotal === null ? "neutro" : r.completoReciente >= r.completoTotal ? "bien" : "ojo"}
+          />
+        ) : (
+          <Indicador
+            valor={pct(r.saltoReciente)}
+            texto="Se van al empezar"
+            comparacion={`últimos 5 · la cuenta: ${pct(r.saltoTotal)}`}
+            tono={r.saltoReciente === null || r.saltoTotal === null ? "neutro" : r.saltoReciente <= r.saltoTotal ? "bien" : "ojo"}
+          />
+        )}
         <Indicador
           valor={coma(r.socialReciente)}
           texto="Guardados + compartidos por mil"
@@ -73,8 +158,8 @@ export default async function Redes() {
           <TarjetaConclusion key={c.titulo} c={c} />
         ))}
         <p className="suave pequeno">
-          Sale de {plural(reels.length, "reel")} de los últimos 90 días: son indicios, no reglas. Lo que se repita en 3 vídeos o más, el analista lo
-          propone en Aprende.
+          Sale de {plural(reels.length, vista === "tiktok" ? "vídeo" : "reel")} de los últimos 90 días: son indicios, no reglas. Lo que se repita en 3
+          vídeos o más, el analista lo propone en Aprende.
         </p>
       </Seccion>
 
@@ -107,28 +192,36 @@ export default async function Redes() {
         </Seccion>
       )}
 
-      <Seccion titulo="Vistas por reel">
+      <Seccion titulo={vista === "tiktok" ? "Vistas por vídeo" : "Vistas por reel"}>
         <GraficaVistas reels={reels} />
         <p className="suave pequeno">En naranja, el último. Toca uno para ver su ficha.</p>
       </Seccion>
 
-      <Seccion titulo="Reel a reel" cuenta={reels.length}>
+      <Seccion titulo={vista === "tiktok" ? "Vídeo a vídeo" : "Reel a reel"} cuenta={reels.length}>
         {reels.map((x) => (
           <TarjetaReel key={x.permalink} r={x} />
         ))}
       </Seccion>
 
       <Desplegable titulo="Cómo leer estos números">
-        <p className="suave pequeno">
-          <b>Se van al empezar</b>: de cada 100 que empiezan a verlo, cuántos lo pasan en los 3 primeros segundos. Por debajo del 30 % el
-          gancho funciona; por encima del 35 %, el primer plano no engancha.
-        </p>
+        {vista === "tiktok" ? (
+          <p className="suave pequeno">
+            <b>Lo ven entero</b>: de cada 100 que lo empiezan, cuántos llegan al final. TikTok no da el «se van en 3 s» de Instagram; esta es su
+            mejor señal de que el vídeo engancha. Los vídeos cortos lo tienen más fácil.
+          </p>
+        ) : (
+          <p className="suave pequeno">
+            <b>Se van al empezar</b>: de cada 100 que empiezan a verlo, cuántos lo pasan en los 3 primeros segundos. Por debajo del 30 % el
+            gancho funciona; por encima del 35 %, el primer plano no engancha.
+          </p>
+        )}
         <p className="suave pequeno">
           <b>Lo miran de media</b>: segundos que se queda cada persona. Si sabemos lo que dura el montaje, sale también el % visto.
         </p>
         <p className="suave pequeno">
-          <b>Guardados y compartidos por mil vistas</b>: lo que hace que Instagram lo enseñe a más gente. Se comparan por mil para que un reel con
+          <b>Guardados y compartidos por mil vistas</b>: lo que hace que {nombre} lo enseñe a más gente. Se comparan por mil para que un vídeo con
           muchas vistas no gane solo por eso.
+          {vista === "tiktok" && " En TikTok, «guardados» son los favoritos."}
         </p>
       </Desplegable>
     </Pantalla>

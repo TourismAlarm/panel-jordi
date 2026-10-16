@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conclusiones, construirReels, leerApuestas, mediana, tituloDe, type Foto, type ReelWindsor } from "./redes";
+import { comparar, conclusiones, conclusionesComparar, construirReels, deTikTok, emparejar, infoTikTok, leerApuestas, mediana, tituloDe, type Foto, type ReelWindsor, type VideoTikTok } from "./redes";
 
 const reel = (url: string, ts: string, vistas: number, salto: number, extra: Partial<ReelWindsor> = {}): ReelWindsor => ({
   timestamp: ts,
@@ -87,5 +87,59 @@ describe("redes", () => {
     expect(a).toHaveLength(2);
     expect(a[0]).toEqual({ id: "A01", texto: "Cierre con la cifra final", medida: "≥ 1,0 compartidos por mil a 7 d", desde: "2026-10-13", cerrada: false });
     expect(a[1].cerrada).toBe(true);
+  });
+
+  it("TikTok: se pasa a la forma de Instagram y se empareja con su reel (hora o texto)", () => {
+    const tk = (id: string, ts: string, vistas: number, caption: string, entero = 0.1, dur = 90): VideoTikTok => ({
+      video_id: id,
+      video_create_datetime: ts,
+      video_caption: caption,
+      video_share_url: `https://www.tiktok.com/@jordielias5/video/${id}?utm_campaign=x`,
+      video_views_count: vistas,
+      video_reach: vistas * 0.9,
+      video_average_time_watched: 20.5,
+      video_full_watched_rate: entero,
+      video_favorites: 2,
+      video_shares: 1,
+      video_duration: dur,
+      video_new_followers: 3,
+    });
+    const ig: ReelWindsor[] = [
+      reel("ig1", "2026-09-09T05:23:54+0000", 6204, 0.33, { media_caption: "Comprar una máquina industrial de [X] toneladas y luego acordarte de que hay que llevársela 💀" }),
+      reel("ig2", "2026-09-21T19:02:03+0000", 4202, 0.3, { media_caption: "Se acabó el verano y el chiringuito también 🏖️" }),
+      reel("ig3", "2026-08-13T15:27:20+0000", 5151, 0.45, { media_caption: "Montaje del xiringuito Oblikue en la playa de Vilassar 🏖️" }),
+    ];
+    const tt = [
+      tk("1", "2026-09-08T19:53:08", 4274, "Comprar una máquina industrial de 18 toneladas y luego acordarte de que hay que llevársela 💀", 0.3, 42), // 9 h, mismo texto
+      tk("2", "2026-09-21T19:04:50", 3206, "Un chiringuito no se va solo de la playa 🏖️"), // otro texto, 2 min
+      tk("3", "2026-08-13T15:28:55", 806, "Montaje del xiringuito Oblikue en la playa de Vilassar 🏖️"),
+      tk("4", "2026-08-16T09:15:51", 831, "Montaje del xiringuito Oblikue en la playa de Vilassar 🏖️"), // repetido: sin pareja
+    ].map(deTikTok);
+    expect(tt[0].media_permalink).toBe("https://www.tiktok.com/@jordielias5/video/1");
+    expect(tt[0].media_reel_avg_watch_time).toBe(20500);
+    expect(tt[0].timestamp).toBe("2026-09-08T19:53:08Z");
+    const par = emparejar(ig, tt);
+    expect(par.get(tt[0].media_permalink)).toBe("ig1");
+    expect(par.get(tt[1].media_permalink)).toBe("ig2");
+    expect(par.get(tt[2].media_permalink)).toBe("ig3");
+    expect(par.has(tt[3].media_permalink)).toBe(false);
+
+    const info = [{ permalink: "ig1", ge: "GE_001", tema: "nave/tanquetas", gancho: null, duracion_s: null, elsa: true, tipo_gancho: null, prueba: null }];
+    const t = construirReels([{ fecha: "2026-10-16", reels: tt }], infoTikTok(par, info), "tiktok");
+    const maquina = t.reels.find((r) => r.permalink.endsWith("/1"))!;
+    expect(maquina.ge).toBe("GE_001");
+    expect(maquina.red).toBe("tiktok");
+    expect(maquina.salto).toBeNull();
+    expect(maquina.completo).toBe(30);
+    expect(maquina.duracion).toBe(42);
+    expect(Math.round(maquina.pctVisto!)).toBe(49);
+    expect(maquina.senales.some((x) => x.texto.startsWith("Lo ven entero el 30"))).toBe(true);
+
+    const i = construirReels([{ fecha: "2026-10-16", reels: ig }], [], "instagram");
+    const c = comparar(i.reels, t.reels, par);
+    expect(c.parejas).toHaveLength(3);
+    expect(c.soloTt).toBe(1);
+    expect(c.ratio).toBeLessThan(0.8);
+    expect(conclusionesComparar(c)[0].titulo).toBe("Con el mismo vídeo, Instagram saca más vistas");
   });
 });

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Etiqueta, Tarjeta, type Tono } from "@/components/ui";
 import { dia } from "@/lib/formato";
-import { miles, type Apuesta, type Conclusion, type Reel } from "@/lib/redes";
+import { miles, NOMBRE_RED, type Apuesta, type Conclusion, type Pareja, type Reel } from "@/lib/redes";
 import s from "./Redes.module.css";
 
 const coma = (x: number, d = 1) => x.toFixed(d).replace(".", ",");
@@ -33,7 +33,7 @@ export function GraficaVistas({ reels }: { reels: Reel[] }) {
           href={`#${ancla(r)}`}
           role="listitem"
           className={s.barraFila}
-          title={`${r.titulo} · ${dia(r.publicado)} · ${miles(r.vistas)} vistas · salto ${pct(r.salto)}`}
+          title={`${r.titulo} · ${dia(r.publicado)} · ${miles(r.vistas)} vistas${r.salto !== null ? ` · salto ${pct(r.salto)}` : ""}${r.completo !== null ? ` · entero ${pct(r.completo)}` : ""}`}
         >
           <span className={s.barraTexto}>
             <span className={s.barraFecha}>{dia(r.publicado)}</span>
@@ -58,7 +58,7 @@ export function TarjetaReel({ r }: { r: Reel }) {
     <div id={ancla(r)} className={s.ancla}>
       <Tarjeta tono={malo ? "mal" : r.senales.some((x) => x.tono === "bien") ? "bien" : undefined}>
         <div className={s.reel}>
-          {/* Portada del propio Instagram (la URL caduca, pero cada día llega una nueva con la foto).
+          {/* Portada de la propia red (la URL caduca, pero cada día llega una nueva con la foto).
               De fondo y no <img>: si Instagram no la sirve, queda el hueco gris en vez del icono roto. */}
           <span className={s.portada} style={r.portada ? { backgroundImage: `url("${r.portada}")` } : undefined} aria-hidden />
           <div className={s.reelTextos}>
@@ -75,12 +75,14 @@ export function TarjetaReel({ r }: { r: Reel }) {
           </div>
         </div>
         <dl className={s.datos}>
-          <Dato nombre="Se van al empezar" valor={pct(r.salto)} />
+          {r.red === "instagram" && <Dato nombre="Se van al empezar" valor={pct(r.salto)} />}
+          {r.completo !== null && <Dato nombre="Lo ven entero" valor={pct(r.completo)} />}
           <Dato nombre="Lo miran de media" valor={r.tiempoMedio === null ? "sin dato" : `${coma(r.tiempoMedio)} s`} />
           {r.pctVisto !== null && <Dato nombre="Visto del vídeo" valor={pct(r.pctVisto)} />}
           <Dato nombre="Personas" valor={miles(r.alcance)} />
           <Dato nombre="Guardados" valor={`${r.guardados}`} />
           <Dato nombre="Compartidos" valor={`${r.compartidos}`} />
+          {r.seguidores !== null && <Dato nombre="Seguidores nuevos" valor={`${r.seguidores}`} />}
         </dl>
         {(r.prueba || r.tipoGancho) && (
           <p className={s.probaba}>
@@ -103,7 +105,7 @@ export function TarjetaReel({ r }: { r: Reel }) {
           </div>
         )}
         <a className={s.enlace} href={r.permalink} target="_blank" rel="noreferrer">
-          Ver en Instagram
+          Ver en {NOMBRE_RED[r.red]}
         </a>
       </Tarjeta>
     </div>
@@ -152,6 +154,42 @@ export function TarjetaApuesta({ a, reels }: { a: Apuesta; reels: Reel[] }) {
         {reels.length
           ? `La llevan: ${reels.map((r) => r.ge ?? r.titulo).join(", ")}`
           : "Ningún reel publicado la lleva todavía: entra en los próximos guiones."}
+      </p>
+    </Tarjeta>
+  );
+}
+
+// Un mismo vídeo en las dos redes: vistas lado a lado y quién gana.
+export function TarjetaPareja({ p }: { p: Pareja }) {
+  const max = Math.max(1, p.ig.vistas, p.tt.vistas);
+  const fila = (nombre: string, r: Reel) => (
+    <a className={s.barraFila} href={r.permalink} target="_blank" rel="noreferrer">
+      <span className={s.barraTexto}>
+        <span className={s.barraTitulo}>{nombre}</span>
+      </span>
+      <span className={s.barraPista}>
+        <span className={s.barra} data-nuevo={r.vistas === max || undefined} style={{ width: `${Math.max(2, (r.vistas / max) * 100)}%` }} />
+      </span>
+      <span className={s.barraValor}>{miles(r.vistas)}</span>
+    </a>
+  );
+  return (
+    <Tarjeta>
+      <span className="codigo">
+        {dia(p.publicado)}
+        {p.ge ? ` · ${p.ge}` : ""}
+        {p.ig.tema ? ` · ${p.ig.tema}` : ""}
+      </span>
+      <strong className={s.reelTitulo}>{p.titulo}</strong>
+      <div className={s.grafica}>
+        {fila("Instagram", p.ig)}
+        {fila("TikTok", p.tt)}
+      </div>
+      <p className="suave pequeno">
+        Lo miran de media {p.ig.tiempoMedio === null ? "–" : `${coma(p.ig.tiempoMedio)} s`} en Instagram y{" "}
+        {p.tt.tiempoMedio === null ? "–" : `${coma(p.tt.tiempoMedio)} s`} en TikTok
+        {p.tt.completo !== null ? ` · en TikTok lo ve entero el ${pct(p.tt.completo)}` : ""}
+        {p.ig.salto !== null ? ` · en Instagram se va el ${pct(p.ig.salto)} al empezar` : ""}.
       </p>
     </Tarjeta>
   );

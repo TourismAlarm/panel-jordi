@@ -2,10 +2,10 @@ import "server-only";
 import { cache } from "react";
 import { supabaseServidor } from "@/lib/supabase/server";
 import type { Fila } from "@/lib/supabase/tipos";
-import type { Foto, InfoReel, ReelWindsor } from "@/lib/redes";
+import { deTikTok, type Foto, type InfoReel, type ReelWindsor, type VideoTikTok } from "@/lib/redes";
 import { comprobar } from "./comun";
 
-// Redes: fotos diarias de Instagram (las toma la tarea en la nube «ELSA - windsor») y lo que el PC
+// Redes: fotos diarias de Instagram y TikTok (las toma la tarea en la nube «ELSA - windsor») y lo que el PC
 // sabe de cada reel (GE, tema, duración) y el informe del analista (los sube sync_panel.py).
 export type Informe = Fila<"informes_redes">;
 
@@ -16,6 +16,16 @@ export const fotosRecientes = cache(async (dias = 12): Promise<Foto[]> => {
   return comprobar(r, "las estadísticas de Instagram").map((f) => ({
     fecha: f.fecha,
     reels: Array.isArray(f.datos) ? (f.datos as unknown as ReelWindsor[]) : [],
+  }));
+});
+
+// Lo mismo de TikTok (tabla aparte: una fila por día y red). Se pasa a la forma de Instagram.
+export const fotosTikTok = cache(async (dias = 12): Promise<Foto[]> => {
+  const supabase = await supabaseServidor();
+  const r = await supabase.from("windsor_fotos_tiktok").select("fecha, datos").order("fecha", { ascending: false }).limit(dias);
+  return comprobar(r, "las estadísticas de TikTok").map((f) => ({
+    fecha: f.fecha,
+    reels: Array.isArray(f.datos) ? (f.datos as unknown as VideoTikTok[]).map(deTikTok) : [],
   }));
 });
 
