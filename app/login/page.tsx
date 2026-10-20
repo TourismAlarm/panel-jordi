@@ -1,9 +1,13 @@
-import Image from "next/image";
-import { entrarConGoogle } from "@/lib/acciones";
-import { Button } from "@/components/shadcn/button";
+"use client";
 
-export default async function Login({ searchParams }: PageProps<"/login">) {
-  const { error } = await searchParams;
+import Image from "next/image";
+import { useActionState } from "react";
+import { entrar } from "@/lib/acciones";
+import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
+
+export default function Login() {
+  const [estado, accion, enviando] = useActionState(entrar, null);
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 px-4 py-10">
       <div className="flex flex-col items-center gap-3 text-center">
@@ -11,9 +15,11 @@ export default async function Login({ searchParams }: PageProps<"/login">) {
         <h1 className="text-2xl font-bold">Panel Jordi</h1>
         <p className="text-muted-foreground">Acceso privado</p>
       </div>
-      <form action={entrarConGoogle} className="flex flex-col gap-3">
-        <Button size="lg" type="submit">Entrar con Google</Button>
-        {error && <p role="alert" className="text-center text-sm font-medium text-destructive">No se ha podido entrar. Prueba otra vez.</p>}
+      <form action={accion} className="flex flex-col gap-3">
+        <Input name="email" type="email" autoComplete="username" inputMode="email" placeholder="Email" aria-label="Email" required />
+        <Input name="password" type="password" autoComplete="current-password" placeholder="Contraseña" aria-label="Contraseña" required />
+        {estado?.error && <p role="alert" className="font-medium text-destructive">{estado.error}</p>}
+        <Button size="lg" type="submit" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</Button>
       </form>
     </main>
   );

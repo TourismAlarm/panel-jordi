@@ -2,9 +2,9 @@
 
 // Todo lo que la app escribe pasa por aquí: los formularios llaman a estas funciones.
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { correoPermitido } from "@/lib/acceso";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
@@ -15,18 +15,17 @@ import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 
 export type Resultado = { error?: string; ok?: boolean } | null;
 
-// Login único: Google. Solo entra el correo de ALLOWED_EMAIL (se comprueba en /auth/callback y en el proxy).
-export async function entrarConGoogle() {
-  const cab = await headers();
-  const host = cab.get("x-forwarded-host") ?? cab.get("host");
-  const proto = cab.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+// Login con email y contraseña de Supabase. Solo entra el correo de ALLOWED_EMAIL (también lo comprueba el proxy).
+export async function entrar(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const email = String(form.get("email") ?? "").trim();
   const supabase = await supabaseServidor();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${proto}://${host}/auth/callback`, queryParams: { prompt: "select_account" } },
-  });
-  if (error || !data.url) redirect("/login?error=google");
-  redirect(data.url);
+  const { error } = await supabase.auth.signInWithPassword({ email, password: String(form.get("password") ?? "") });
+  if (error) return { error: "Email o contraseña incorrectos." };
+  if (!correoPermitido(email)) {
+    await supabase.auth.signOut();
+    redirect("/acceso-denegado");
+  }
+  redirect("/");
 }
 
 export async function salir() {
