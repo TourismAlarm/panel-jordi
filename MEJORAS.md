@@ -6,3 +6,7 @@
 - Renombrar las tablas de ELSA a `elsa_*` cuando se actualice `sync_panel.py`.
 - Activar «Leaked password protection» en Supabase Auth (aviso del linter; hoy no se usan contraseñas).
 - `es_permitido()` es ejecutable por `authenticated` vía RPC (aviso del linter); es inocuo, se puede revocar si se usa otra comprobación.
+- Finanzas: las rutas API usan service_role filtrando por user_id (como la app original). Se podría pasar a la sesión del usuario con RLS; hoy RLS protege al navegador y a la prueba automática.
+- Finanzas: «Proyección» (regresión a 3 meses), presupuestos por categoría, metas y recurrentes existían en código pero sin pantalla en la app real; no se han portado.
+- Finanzas: el offline (cola de movimientos) no se ha portado; la app del móvil necesita conexión.
+- Finanzas: los movimientos nuevos del banco deberían pasar por la IA solo si Jordi lo pide (hoy categorización por reglas).

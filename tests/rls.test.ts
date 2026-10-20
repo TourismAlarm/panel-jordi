@@ -32,10 +32,17 @@ describe.skipIf(!listo)("RLS", () => {
     // A está permitido y tiene una fila; B no está en «permitidos».
     await admin.from("permitidos").insert({ user_id: ids[0] });
     await admin.from("bandeja").insert({ user_id: ids[0], modulo: "sistema", tipo: "aviso", titulo: "solo de A" });
+    // Finanzas: A tiene perfil (el trigger crea sus categorías), una cuenta y un enlace bancario.
+    await admin.from("fin_profiles").insert({ id: ids[0], email: A.email });
+    await admin.from("fin_accounts").insert({ user_id: ids[0], name: "cuenta de A", type: "bank" });
+    await admin.from("fin_bank_links").insert({ user_id: ids[0], aspsp_name: "X", aspsp_country: "ES", session_id: "s", account_uid: "u" });
   });
 
   afterAll(async () => {
     await admin.from("bandeja").delete().in("user_id", ids);
+    await admin.from("fin_bank_links").delete().in("user_id", ids);
+    await admin.from("fin_accounts").delete().in("user_id", ids);
+    await admin.from("fin_profiles").delete().in("id", ids);
     await admin.from("permitidos").delete().in("user_id", ids);
     for (const id of ids) await admin.auth.admin.deleteUser(id);
   });
@@ -55,6 +62,29 @@ describe.skipIf(!listo)("RLS", () => {
     await b.from("bandeja").update({ estado: "leido" }).eq("user_id", ids[0]);
     const { data } = await admin.from("bandeja").select("estado").eq("user_id", ids[0]);
     expect(data).toEqual([{ estado: "nuevo" }]);
+  });
+
+  it("Finanzas: el dueño ve lo suyo y otro usuario no ve nada de A", async () => {
+    const a = await sesion(A);
+    expect((await a.from("fin_accounts").select("name")).data).toEqual([{ name: "cuenta de A" }]);
+    expect(((await a.from("fin_categories").select("id")).data ?? []).length).toBeGreaterThan(0);
+    const b = await sesion(B);
+    for (const t of ["fin_accounts", "fin_categories", "fin_profiles", "fin_transactions"]) {
+      expect((await b.from(t).select("*")).data, t).toEqual([]);
+    }
+  });
+
+  it("Finanzas: ni el dueño puede leer los enlaces bancarios desde el navegador (solo el servidor)", async () => {
+    const { data } = await (await sesion(A)).from("fin_bank_links").select("*");
+    expect(data ?? []).toEqual([]);
+  });
+
+  it("Finanzas: otro usuario no puede escribir en cuentas ajenas", async () => {
+    const b = await sesion(B);
+    await b.from("fin_accounts").update({ name: "hackeada" }).eq("user_id", ids[0]);
+    await b.from("fin_accounts").insert({ user_id: ids[0], name: "intrusa", type: "bank" });
+    const { data } = await admin.from("fin_accounts").select("name").eq("user_id", ids[0]);
+    expect(data).toEqual([{ name: "cuenta de A" }]);
   });
 
   it("sin sesión no se lee nada", async () => {

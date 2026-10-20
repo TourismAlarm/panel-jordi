@@ -22,6 +22,23 @@ npm run typecheck && npm test && npm run build
 
 Ver `.env.example`. Solo en Vercel o `.env.local`, nunca en el código.
 
+## Finanzas: migrar los datos de Control-Financiero
+
+El módulo funciona vacío desde ya. Para traer tus datos (nada se escribe sin tu orden):
+
+```bash
+# en .env.local: ORIGEN_SUPABASE_URL, ORIGEN_SUPABASE_SERVICE_ROLE_KEY (proyecto viejo, solo se lee),
+# NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Panel-jordi) e IBAN_HASH_SECRET (la misma que en Vercel)
+npx tsx scripts/finanzas/migrar.ts backup           # copia completa en backups/ (guárdala también fuera del equipo)
+npx tsx scripts/finanzas/migrar.ts dry-run          # cuenta y comprueba, no escribe
+npx tsx scripts/finanzas/migrar.ts ejecutar --confirmo
+npx tsx scripts/finanzas/migrar.ts comparar         # filas e importes por cuenta y mes, origen vs destino
+```
+
+Es idempotente (conserva los id originales: repetirlo no duplica). Las dos apps pueden usarse en paralelo; el cron de bancos del panel corre a las 05:47 UTC, el de la app vieja a las 05:17.
+
+Enable Banking: usa las mismas credenciales que la app vieja (`ENABLE_BANKING_APP_ID`/`PRIVATE_KEY`); en su panel añade como redirect URL `https://<tu-dominio>/api/finanzas/banking/callback`. Las sesiones de banco ya existentes se copian con la migración.
+
 ## Despliegue (pasos manuales)
 
 1. **Vercel** → importar el repo y añadir las variables de `.env.example` (entornos Production y Preview). Sin `ALLOWED_EMAIL` nadie entra.
