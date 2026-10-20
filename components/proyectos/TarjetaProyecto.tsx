@@ -30,7 +30,7 @@ export function TarjetaProyecto({ p, pasos, conFecha = true }: Props) {
         <span className="codigo">{p.id}</span>
       </div>
 
-      <Link href={`/videos/${p.id}`} className={s.titulo}>
+      <Link href={`/elsa/videos/${p.id}`} className={s.titulo}>
         {p.titulo ?? p.id}
       </Link>
 
@@ -68,7 +68,7 @@ export function TarjetaProyecto({ p, pasos, conFecha = true }: Props) {
             </BotonEnlace>
           )}
           {p.tieneGuion && (
-            <BotonEnlace href={`/videos/${p.id}/guion`} variante="secundario" compacto>
+            <BotonEnlace href={`/elsa/videos/${p.id}/guion`} variante="secundario" compacto>
               <Icono nombre="guion" tamano={18} />
               Guion
             </BotonEnlace>

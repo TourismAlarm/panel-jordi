@@ -21,7 +21,7 @@ export function Registro({ filas, conVideo = false }: { filas: Ejecucion[]; conV
               return (
                 <Fila
                   key={f.id}
-                  href={conVideo && f.video_id ? `/videos/${f.video_id}` : undefined}
+                  href={conVideo && f.video_id ? `/elsa/videos/${f.video_id}` : undefined}
                   inicio={<Punto tono={r.tono} titulo={r.texto} />}
                   titulo={
                     <>

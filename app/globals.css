@@ -5,57 +5,100 @@
    Cada pieza de components/ui tiene su propio .module.css.
    ───────────────────────────────────────────────────────────── */
 
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Tailwind (sin su reset: el reset de abajo ya existía) lee los mismos tokens que el resto de la app. */
+@theme inline {
+  --color-background: var(--fondo);
+  --color-foreground: var(--texto);
+  --color-card: var(--superficie);
+  --color-muted: var(--superficie-2);
+  --color-muted-foreground: var(--texto-suave);
+  --color-border: var(--borde);
+  --color-primary: var(--acento);
+  --color-primary-foreground: var(--acento-texto);
+  --color-destructive: var(--mal);
+  --color-ring: var(--acento);
+  --radius-lg: var(--radio);
+  --radius-md: var(--radio-s);
+}
+
 :root {
   color-scheme: light dark;
 
-  /* Superficies y texto */
-  --fondo: #f4f3ef;
+  /* Paleta neutra: negro, grises, blanco. El rojo solo es para «excedido» y errores. */
+  --fondo: #f5f5f5;
   --superficie: #ffffff;
-  --superficie-2: #ecebe6;
-  --texto: #1a1a1a;
-  --texto-suave: #67645f;
-  --borde: #e0ddd6;
+  --superficie-2: #ebebeb;
+  --texto: #0a0a0a;
+  --texto-suave: #5c5c5c;
+  --borde: #e2e2e2;
 
-  /* Marca ELSA */
-  --acento: #d9560b;
+  /* Botón principal = negro (blanco en oscuro) */
+  --acento: #0a0a0a;
   --acento-texto: #ffffff;
-  --acento-letra: #b04506; /* naranja para texto pequeño: 5,1:1 sobre el fondo claro */
+  --acento-letra: #0a0a0a;
 
   /* Tonos con significado: bien · ojo · mal · info · neutro */
   --bien: #1f7a3d;
-  --ojo: #a86a00;
-  --mal: #b3261e;
-  --info: #2458b3;
+  --ojo: #8a5a00;
+  --mal: #c4251c;
+  --info: #3d3d3d;
   --neutro: #75726c;
 
   /* Medidas */
   --radio: 16px;
-  --radio-s: 10px;
+  --radio-s: 12px;
   --hueco: 16px;
   --ancho: 640px;
-  --alto-pestanas: 62px;
+  --alto-pestanas: 72px;
   --sombra: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px rgb(0 0 0 / 0.03);
   --rapido: 140ms;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: #121212;
-    --superficie: #1d1d1d;
-    --superficie-2: #292929;
-    --texto: #f0efec;
-    --texto-suave: #a5a39f;
-    --borde: #313131;
-    --acento: #ff7a2e;
-    --acento-texto: #141414;
-    --acento-letra: #ff7a2e;
+  :root:not([data-theme="light"]) {
+    --fondo: #0a0a0a;
+    --superficie: #161616;
+    --superficie-2: #232323;
+    --texto: #fafafa;
+    --texto-suave: #a3a3a3;
+    --borde: #2c2c2c;
+    --acento: #fafafa;
+    --acento-texto: #0a0a0a;
+    --acento-letra: #fafafa;
     --bien: #5cc07f;
     --ojo: #e3b341;
-    --mal: #ff8a80;
-    --info: #7aa7ff;
+    --mal: #ff6b60;
+    --info: #c8c8c8;
     --neutro: #a3a3a3;
     --sombra: none;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fondo: #0a0a0a;
+  --superficie: #161616;
+  --superficie-2: #232323;
+  --texto: #fafafa;
+  --texto-suave: #a3a3a3;
+  --borde: #2c2c2c;
+  --acento: #fafafa;
+  --acento-texto: #0a0a0a;
+  --acento-letra: #fafafa;
+  --bien: #5cc07f;
+  --ojo: #e3b341;
+  --mal: #ff6b60;
+  --info: #c8c8c8;
+  --neutro: #a3a3a3;
+  --sombra: none;
 }
 
 /* ── Reset ─────────────────────────────────────────────────── */

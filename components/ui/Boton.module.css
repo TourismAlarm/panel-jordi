@@ -4,8 +4,9 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  min-height: 50px;
-  padding: 12px 18px;
+  min-height: 56px;
+  padding: 14px 20px;
+  font-size: 1.05rem;
   border: 1px solid transparent;
   border-radius: var(--radio-s);
   font-weight: 700;
@@ -46,9 +47,9 @@
 /* Más pequeño y a su medida, para dentro de tarjetas */
 .compacto {
   width: auto;
-  min-height: 40px;
-  padding: 8px 14px;
-  font-size: 0.9rem;
+  min-height: 48px;
+  padding: 10px 18px;
+  font-size: 1rem;
   border-radius: 999px;
 }
 

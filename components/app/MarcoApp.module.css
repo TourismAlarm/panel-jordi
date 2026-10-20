@@ -1,5 +1,0 @@
-/* Deja sitio abajo para que la barra de pestañas no tape el final de la pantalla. */
-.marco {
-  min-height: 100dvh;
-  padding-bottom: calc(var(--alto-pestanas) + env(safe-area-inset-bottom));
-}

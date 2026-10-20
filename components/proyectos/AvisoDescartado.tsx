@@ -21,7 +21,7 @@ export function AvisoDescartado({ p }: { p: Peticion }) {
       <span className="suave pequeno">
         {p.estado === "hecha" ? "Hecho: el PC ya no trabaja más en él." : estadoPeticion(p).texto + "."}
       </span>
-      <Link href="/nuevo" className={s.enlace}>
+      <Link href="/elsa/nuevo" className={s.enlace}>
         ¿Hacemos un guion para otro trabajo? →
       </Link>
     </Tarjeta>

@@ -1,29 +1,19 @@
-"use client";
-
 import Image from "next/image";
-import { useActionState } from "react";
-import { BotonEnviar, Campo, Entrada, ErrorCampo } from "@/components/ui";
-import { entrar } from "@/lib/acciones";
-import s from "./login.module.css";
+import { entrarConGoogle } from "@/lib/acciones";
+import { Button } from "@/components/shadcn/button";
 
-export default function Login() {
-  const [estado, accion] = useActionState(entrar, null);
+export default async function Login({ searchParams }: PageProps<"/login">) {
+  const { error } = await searchParams;
   return (
-    <main className={s.login}>
-      <div className={s.marca}>
-        <Image src="/icon-192.png" alt="" width={64} height={64} className={s.logo} priority />
-        <h1>Panel ELSA</h1>
-        <p className="suave">Preguntas y guiones de los vídeos</p>
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 px-4 py-10">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <Image src="/icon-192.png" alt="" width={72} height={72} className="rounded-2xl" priority />
+        <h1 className="text-2xl font-bold">Panel Jordi</h1>
+        <p className="text-muted-foreground">Acceso privado</p>
       </div>
-      <form action={accion} className={s.form}>
-        <Campo etiqueta="Email">
-          <Entrada name="email" type="email" autoComplete="username" inputMode="email" required />
-        </Campo>
-        <Campo etiqueta="Contraseña">
-          <Entrada name="password" type="password" autoComplete="current-password" required />
-        </Campo>
-        {estado?.error && <ErrorCampo>{estado.error}</ErrorCampo>}
-        <BotonEnviar texto="Entrar" enviando="Entrando…" />
+      <form action={entrarConGoogle} className="flex flex-col gap-3">
+        <Button size="lg" type="submit">Entrar con Google</Button>
+        {error && <p role="alert" className="text-center text-sm font-medium text-destructive">No se ha podido entrar. Prueba otra vez.</p>}
       </form>
     </main>
   );

@@ -2,25 +2,31 @@
 
 // Todo lo que la app escribe pasa por aquí: los formularios llaman a estas funciones.
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { guardarDecision } from "@/lib/datos/reglas";
+import { guardarRespuestaBandeja, marcarLeido } from "@/lib/datos/bandeja";
 import { esMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 
 export type Resultado = { error?: string; ok?: boolean } | null;
 
-export async function entrar(_prev: Resultado, form: FormData): Promise<Resultado> {
+// Login único: Google. Solo entra el correo de ALLOWED_EMAIL (se comprueba en /auth/callback y en el proxy).
+export async function entrarConGoogle() {
+  const cab = await headers();
+  const host = cab.get("x-forwarded-host") ?? cab.get("host");
+  const proto = cab.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
   const supabase = await supabaseServidor();
-  const { error } = await supabase.auth.signInWithPassword({
-    email: String(form.get("email") ?? "").trim(),
-    password: String(form.get("password") ?? ""),
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${proto}://${host}/auth/callback`, queryParams: { prompt: "select_account" } },
   });
-  if (error) return { error: "Email o contraseña incorrectos." };
-  redirect("/");
+  if (error || !data.url) redirect("/login?error=google");
+  redirect(data.url);
 }
 
 export async function salir() {
@@ -39,8 +45,8 @@ export async function responder(_prev: Resultado, form: FormData): Promise<Resul
   if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
   if (r === "recogida") return { error: "El PC ya ha recogido esta respuesta y no se puede cambiar." };
 
-  revalidatePath(`/videos/${videoId}`);
-  revalidatePath("/");
+  revalidatePath(`/elsa/videos/${videoId}`);
+  revalidatePath("/elsa");
   return { ok: true };
 }
 
@@ -70,7 +76,7 @@ export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resu
 
   if (!(await pedirGuionNuevo(texto, fecha))) return { error: "No se ha podido guardar. Prueba otra vez." };
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect("/elsa");
 }
 
 // «Ya lo he grabado»: una urgencia sin guion. El PC crea el proyecto con su carpeta para subir el material.
@@ -83,7 +89,7 @@ export async function pedirEdicion(_prev: Resultado, form: FormData): Promise<Re
 
   if (!(await pedirEdicionSinGuion(texto, fecha))) return { error: "No se ha podido guardar. Prueba otra vez." };
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect("/elsa");
 }
 
 // Revisar el montaje sin salir del panel: «Corte OK» (el corte), aprobar (el acabado), o pedir cambios con el texto de qué cambiar.
@@ -99,8 +105,8 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
     return { error: "No se ha podido guardar. Prueba otra vez." };
   }
-  revalidatePath(`/videos/${videoId}`);
-  revalidatePath("/");
+  revalidatePath(`/elsa/videos/${videoId}`);
+  revalidatePath("/elsa");
   return { ok: true };
 }
 
@@ -109,8 +115,8 @@ export async function materialListo(_prev: Resultado, form: FormData): Promise<R
   const videoId = String(form.get("video_id") ?? "");
   if (!videoId) return { error: "Falta el proyecto." };
   if (!(await confirmarMaterial(videoId))) return { error: "No se ha podido guardar. Prueba otra vez." };
-  revalidatePath(`/videos/${videoId}`);
-  revalidatePath("/");
+  revalidatePath(`/elsa/videos/${videoId}`);
+  revalidatePath("/elsa");
   return { ok: true };
 }
 
@@ -124,8 +130,8 @@ export async function decidirRegla(_prev: Resultado, form: FormData): Promise<Re
   const r = await guardarDecision(id, que === "deshacer" ? null : que, que === "si" ? texto : null);
   if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
   if (r === "recogida") return { error: "El PC ya la ha aplicado: no se puede cambiar desde aquí." };
-  revalidatePath("/aprendizaje");
-  revalidatePath("/");
+  revalidatePath("/elsa/aprendizaje");
+  revalidatePath("/elsa");
   return { ok: true };
 }
 
@@ -134,6 +140,23 @@ export async function deshacer(_prev: Resultado, form: FormData): Promise<Result
   const r = await borrarPeticion(String(form.get("id") ?? ""));
   if (r === "error") return { error: "No se ha podido deshacer. Prueba otra vez." };
   if (r === "recogida") return { error: "El PC ya lo ha recogido: díselo al guionista." };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+// ── Bandeja común ─────────────────────────────────────────────
+export async function leerAviso(form: FormData) {
+  const id = String(form.get("id") ?? "");
+  if (id) await marcarLeido(id);
+  revalidatePath("/", "layout");
+}
+
+export async function responderAviso(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const id = String(form.get("id") ?? "");
+  const respuesta = String(form.get("respuesta") ?? "").trim();
+  if (!id) return { error: "Falta el aviso." };
+  if (!respuesta) return { error: "Escribe algo antes de enviar." };
+  if (!(await guardarRespuestaBandeja(id, respuesta))) return { error: "No se ha podido guardar. Prueba otra vez." };
   revalidatePath("/", "layout");
   return { ok: true };
 }

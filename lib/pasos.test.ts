@@ -53,14 +53,14 @@ describe("pasosDe", () => {
 
   it("revision_jordi: el botón lleva a revisar dentro del panel, no a Gmail", () => {
     const accion = por(pasosDe(video("revision_jordi"), preguntas(0, 0, 0)), "revisar")?.accion;
-    expect(accion?.href).toBe("/videos/GE_001#montaje");
+    expect(accion?.href).toBe("/elsa/videos/GE_001#montaje");
     expect(accion?.externo).toBeUndefined();
   });
 
   it("corte_listo: revisar el corte es tuyo y lleva a la ficha", () => {
     const r = por(pasosDe(video("corte_listo"), preguntas(0, 0, 0)), "revisar");
     expect(r).toMatchObject({ estado: "tuyo", titulo: "Revisar el corte" });
-    expect(r?.accion?.href).toBe("/videos/GE_001#montaje");
+    expect(r?.accion?.href).toBe("/elsa/videos/GE_001#montaje");
   });
 
   it("acabado_pendiente: el corte está hecho y el acabado es del PC", () => {

@@ -17,6 +17,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      bandeja: {
+        Row: {
+          created_at: string
+          cuerpo: string | null
+          estado: string
+          id: string
+          modulo: string
+          respuesta: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cuerpo?: string | null
+          estado?: string
+          id?: string
+          modulo: string
+          respuesta?: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cuerpo?: string | null
+          estado?: string
+          id?: string
+          modulo?: string
+          respuesta?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ejecuciones_agentes: {
         Row: {
           agente: string
@@ -372,6 +408,7 @@ export type Database = {
     }
     Functions: {
       es_permitido: { Args: never; Returns: boolean }
+      rls_auditoria: { Args: never; Returns: { tabla: string }[] }
     }
     Enums: {
       [_ in never]: never

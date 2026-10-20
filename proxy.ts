@@ -1,10 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { correoPermitido } from "@/lib/acceso";
 import { configSupabase } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/tipos";
 
-// Refresca la sesión en cada petición y manda a /login a quien no la tenga.
+// Refresca la sesión en cada petición. Sin sesión → /login. Con sesión de otro correo → /acceso-denegado.
+// /api/cron/* no usa sesión: cada ruta valida CRON_SECRET (lib/cron-auth.ts).
+const PUBLICAS = ["/login", "/auth/callback", "/acceso-denegado", "/api/cron/"];
+
 export async function proxy(request: NextRequest) {
+  const ruta = request.nextUrl.pathname;
+  if (ruta.startsWith("/api/cron/")) return NextResponse.next({ request });
+
   let response = NextResponse.next({ request });
   const { url, clave } = configSupabase();
 
@@ -22,17 +29,21 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getClaims();
-  const enLogin = request.nextUrl.pathname.startsWith("/login");
+  const email = data?.claims?.email as string | undefined;
+  const publica = PUBLICAS.some((p) => ruta.startsWith(p));
 
-  if (!data?.claims && !enLogin) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!data?.claims) {
+    return publica ? response : NextResponse.redirect(new URL("/login", request.url));
   }
-  if (data?.claims && enLogin) {
+  if (!correoPermitido(email)) {
+    return ruta.startsWith("/acceso-denegado") ? response : NextResponse.redirect(new URL("/acceso-denegado", request.url));
+  }
+  if (ruta.startsWith("/login") || ruta.startsWith("/acceso-denegado")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.png$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.png$).*)"],
 };

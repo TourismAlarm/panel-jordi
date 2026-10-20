@@ -53,7 +53,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       titulo: `Contestar ${plural(q.sinContestar, "pregunta")}`,
       estado: "tuyo",
       detalle: "Desde aquí mismo",
-      accion: { texto: "Contestar", href: `/videos/${p.id}#preguntas` },
+      accion: { texto: "Contestar", href: `/elsa/videos/${p.id}#preguntas` },
     });
   } else if (q.enviadas) {
     pasos.push({ clave: "preguntas", titulo: "Enviadas · esperando al PC", estado: "sistema" });
@@ -73,7 +73,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       titulo: p.sin_guion || !p.fecha_trabajo ? "Subir lo grabado" : `Subir lo grabado (fue ${diaCercano(p.fecha_trabajo).toLowerCase()})`,
       estado: "tuyo",
       detalle: "Cuando esté todo subido, pulsa «Ya he subido todo»: hasta entonces no se monta",
-      accion: { texto: "Ya he subido todo", href: `/videos/${p.id}#material` },
+      accion: { texto: "Ya he subido todo", href: `/elsa/videos/${p.id}#material` },
     });
   } else {
     pasos.push({
@@ -81,7 +81,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       titulo: `Grabar · ${cuando}`,
       estado: "tuyo",
       detalle: p.tieneGuion ? "Antes, mira las notas del guion" : undefined,
-      accion: p.tieneGuion ? { texto: "Notas", href: `/videos/${p.id}/guion?ver=notas` } : undefined,
+      accion: p.tieneGuion ? { texto: "Notas", href: `/elsa/videos/${p.id}/guion?ver=notas` } : undefined,
     });
     pasos.push({ clave: "subir", titulo: "Subir lo grabado", estado: "pendiente", detalle: "Súbelo todo y pulsa «Ya he subido todo»: hasta entonces no se monta" });
   }
@@ -105,7 +105,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       titulo: "Revisar el corte",
       estado: "tuyo",
       detalle: "Sin subtítulos ni título: mira cortes y ritmo. Dale «Corte OK» o pide cambios",
-      accion: { texto: "Revisar", href: `/videos/${p.id}#montaje` },
+      accion: { texto: "Revisar", href: `/elsa/videos/${p.id}#montaje` },
     });
   } else if (enAcabado) {
     pasos.push({ clave: "corte", titulo: "Corte OK", estado: "hecho" });
@@ -118,7 +118,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
         titulo: "Revisar el acabado",
         estado: "tuyo",
         detalle: "En ChatCut: apruébalo o pide cambios",
-        accion: { texto: "Revisar", href: `/videos/${p.id}#montaje` },
+        accion: { texto: "Revisar", href: `/elsa/videos/${p.id}#montaje` },
       });
     } else {
       pasos.push({ clave: "revisar", titulo: "Acabado aprobado", estado: "hecho" });
@@ -129,7 +129,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       titulo: "Revisar el montaje",
       estado: "tuyo",
       detalle: "Míralo, y aprueba o pide cambios aquí mismo",
-      accion: { texto: "Revisar", href: `/videos/${p.id}#montaje` },
+      accion: { texto: "Revisar", href: `/elsa/videos/${p.id}#montaje` },
     });
   } else {
     pasos.push({ clave: "revisar", titulo: "Revisar el montaje", estado: "pendiente" });
