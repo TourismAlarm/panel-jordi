@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FilePlus2, Search } from "lucide-react";
+import { FilePlus2, MessageCircle, Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { buscarEnDocumentos, listarDocumentos } from "@/lib/documentos/datos";
@@ -44,12 +44,15 @@ export default async function Documentos({ searchParams }: PageProps<"/documento
       <header className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">Documentos</h1>
-          <p className="text-muted-foreground">{docs.length} guardados{pendientes ? ` · ${pendientes} esperando a Claude` : ""}</p>
+          <p className="text-muted-foreground">{docs.length} guardados{pendientes ? ` · ${pendientes} sin leer` : ""}</p>
         </div>
         <Button asChild size="sm">
           <Link href="/documentos/nuevo"><FilePlus2 size={20} />Añadir</Link>
         </Button>
       </header>
+      <Button asChild variant="outline" size="lg">
+        <Link href="/documentos/preguntar"><MessageCircle size={20} />Preguntar a mis documentos</Link>
+      </Button>
 
       <form action="/documentos" className="flex gap-2" role="search">
         <input name="q" defaultValue={q} placeholder="Buscar dentro de los documentos" aria-label="Buscar" className="min-h-14 min-w-0 flex-1 rounded-md border border-border bg-card px-4 text-base" />
@@ -66,7 +69,7 @@ export default async function Documentos({ searchParams }: PageProps<"/documento
         <section className="flex flex-col gap-2" aria-label="Resultados">
           <h2 className="text-xl font-bold">Resultados para «{q}»</h2>
           {coincidencias.length === 0 ? (
-            <Card><p className="font-semibold">No aparece en ningún documento.</p><p className="text-muted-foreground">Si debería estar, sube el documento o revisa que Claude ya lo haya leído.</p></Card>
+            <Card><p className="font-semibold">No aparece en ningún documento.</p><p className="text-muted-foreground">Si debería estar, sube el documento o revisa que ya esté leído.</p></Card>
           ) : (
             <Card className="flex flex-col divide-y divide-border py-1">
               {coincidencias.map((c, i) => {

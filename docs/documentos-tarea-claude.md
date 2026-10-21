@@ -1,4 +1,4 @@
-# Documentos: tarea de Claude que lee lo que subes
+# Documentos: tarea de Claude (alternativa a la lectura con IA del panel)
 
 Subes PDF, fotos o texto en **Documentos → Añadir** (se guardan privados en tu carpeta del bucket `documentos`). Una tarea programada de Claude los lee y rellena categoría, tipo, texto por página y ficha. Sin API de pago. Auth de ambas rutas: `Authorization: Bearer <DOCS_TAREA_SECRET>`.
 

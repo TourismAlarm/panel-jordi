@@ -47,7 +47,7 @@ Opcional: conectar Gmail y Calendar directamente desde el panel (solo lectura). 
 
 ## Documentos
 
-Subes archivos en **Documentos → Añadir**; una tarea programada de Claude los lee y rellena la ficha (`docs/documentos-tarea-claude.md`, con el prompt). Variable en Vercel: `DOCS_TAREA_SECRET` (16+ caracteres aleatorios). Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas). Sin la tarea, los documentos se guardan igual y la ficha se rellena a mano.
+Subes archivos en **Documentos → Añadir**; la IA (API de Anthropic) los lee y rellena la ficha y el texto por página; el chat responde con citas. Variables en Vercel: `ANTHROPIC_API_KEY` (y `ANTHROPIC_MODEL` si quieres otro modelo; por defecto `claude-sonnet-5-5`). Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas). Alternativa sin API: la tarea de Claude de `docs/documentos-tarea-claude.md` (`DOCS_TAREA_SECRET`).
 
 ## Despliegue (pasos manuales)
 

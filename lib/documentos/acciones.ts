@@ -6,8 +6,10 @@ import { z } from "zod";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { CATEGORIAS } from "./categorias";
 import { ultimos4 } from "./contrato";
+import { leerDocumento } from "./leer";
+import { responderPregunta, type Respuesta, type Turno } from "./chat";
 
-export type Resultado = { ok?: boolean; error?: string } | null;
+export type Resultado = { ok?: boolean; error?: string; ids?: string[] } | null;
 
 async function usuario() {
   const supabase = await supabaseServidor();
@@ -27,10 +29,10 @@ export async function registrarSubidos(items: unknown, categoria: string): Promi
   if (!parsed.success) return { error: "Algún archivo no es válido." };
   if (parsed.data.some((x) => !x.ruta.startsWith(`${id}/`) || x.ruta.includes(".."))) return { error: "Ruta no válida." };
   const cat = (CATEGORIAS as readonly string[]).includes(categoria) ? categoria : "Sin clasificar";
-  const { error } = await supabase.from("doc_documentos").insert(parsed.data.map((x) => ({ user_id: id, nombre: x.nombre, ruta: x.ruta, mime: x.mime, tamano: x.tamano, categoria: cat, estado: "pendiente" })));
+  const { data, error } = await supabase.from("doc_documentos").insert(parsed.data.map((x) => ({ user_id: id, nombre: x.nombre, ruta: x.ruta, mime: x.mime, tamano: x.tamano, categoria: cat, estado: "pendiente" }))).select("id");
   if (error) return { error: "No se han podido registrar los archivos." };
   revalidatePath("/documentos");
-  return { ok: true };
+  return { ok: true, ids: (data ?? []).map((x) => x.id) };
 }
 
 // Nota de texto: no necesita archivo ni Claude; ya es buscable.
@@ -104,4 +106,34 @@ export async function borrarDocumento(form: FormData): Promise<void> {
   revalidatePath("/documentos", "layout");
   revalidatePath("/");
   redirect("/documentos");
+}
+
+// Lee un documento con la IA (texto por página + ficha). Se llama tras subirlo y desde «Leer ahora».
+export async function leerAhora(docId: string): Promise<Resultado> {
+  const { supabase, id } = await usuario();
+  if (!id) return { error: "No autorizado." };
+  if (!/^[0-9a-f-]{36}$/.test(docId)) return { error: "Documento no válido." };
+  if (!process.env.ANTHROPIC_API_KEY) return { error: "Falta ANTHROPIC_API_KEY en Vercel." };
+  const fallo = await leerDocumento(supabase, id, docId);
+  revalidatePath("/documentos", "layout");
+  revalidatePath("/");
+  return fallo ? { error: fallo } : { ok: true };
+}
+
+export type ResultadoChat = { respuesta?: Respuesta; error?: string };
+
+// Chat: responde solo con fragmentos de tus documentos, citando documento y página.
+export async function preguntarDocumentos(pregunta: string, historial: Turno[]): Promise<ResultadoChat> {
+  const { supabase, id } = await usuario();
+  if (!id) return { error: "No autorizado." };
+  const q = String(pregunta ?? "").trim().slice(0, 500);
+  if (!q) return { error: "Escribe una pregunta." };
+  if (!process.env.ANTHROPIC_API_KEY) return { error: "Falta ANTHROPIC_API_KEY en Vercel." };
+  const h = (Array.isArray(historial) ? historial : []).slice(-4).map((t) => ({ pregunta: String(t.pregunta ?? "").slice(0, 500), respuesta: String(t.respuesta ?? "").slice(0, 1000) }));
+  try {
+    return { respuesta: await responderPregunta(supabase, id, q, h) };
+  } catch (e) {
+    console.error("Documentos · chat:", e instanceof Error ? e.message : e);
+    return { error: "No he podido responder ahora. Prueba otra vez." };
+  }
 }

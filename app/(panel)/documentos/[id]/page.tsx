@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { BotonLeer } from "@/components/documentos/BotonLeer";
 import { FormFicha } from "@/components/documentos/FormFicha";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
@@ -12,6 +13,7 @@ import { aISODia, formatearDia } from "@/lib/fechas";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Documento" };
+export const maxDuration = 60;
 
 const NO = <span className="text-muted-foreground">No especificado</span>;
 
@@ -42,8 +44,9 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
         <p className="text-muted-foreground">{doc.categoria}{doc.tipo ? ` · ${doc.tipo}` : ""}</p>
       </header>
 
-      {doc.estado === "pendiente" && <p className="rounded-md border border-border bg-card px-4 py-3 font-semibold">Pendiente: la tarea de Claude aún no lo ha leído. Mientras, puedes rellenar la ficha a mano.</p>}
-      {doc.estado === "error" && <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">No se pudo leer: {doc.error ?? "motivo desconocido"}. Puedes rellenar la ficha a mano.</p>}
+      {doc.estado === "pendiente" && <div className="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3"><p className="font-semibold">Todavía no se ha leído.</p><BotonLeer id={doc.id} /></div>}
+      {doc.estado === "error" && <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">No se pudo leer: {doc.error ?? "motivo desconocido"}. Puedes reintentarlo o rellenar la ficha a mano.</p>}
+      {doc.estado === "error" && <BotonLeer id={doc.id} />}
 
       {v && (
         <p className={cn("rounded-md border px-4 py-3 text-lg font-bold", v.nivel === "vencido" || v.nivel === "urgente" ? "border-destructive/50 text-destructive" : "border-border bg-card")}>
@@ -60,7 +63,7 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
         <Dato titulo="Condiciones clave">{ficha?.condiciones.length ? <ul className="list-disc pl-5">{ficha.condiciones.map((c, k) => <li key={k}>{c}</li>)}</ul> : NO}</Dato>
         <Dato titulo="Contacto">{ficha?.contacto ?? NO}</Dato>
       </Card>
-      {ficha && <p className="text-sm text-muted-foreground">Ficha {ficha.origen === "claude" ? "leída por Claude: revísala" : "escrita por ti"}. El panel explica el contenido pero no da interpretaciones legales.</p>}
+      {ficha && <p className="text-sm text-muted-foreground">Ficha {ficha.origen === "claude" ? "leída por la IA: revísala" : "escrita por ti"}. El panel explica el contenido pero no da interpretaciones legales.</p>}
 
       {url && (
         <section className="flex flex-col gap-2" aria-label="Documento">
