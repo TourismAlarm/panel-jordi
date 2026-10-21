@@ -1,12 +1,13 @@
 # CHANGELOG
 
-## Fase 2 — Finanzas (2026-10-20) · pendiente de migrar datos y probar en paralelo
+## Fase 2 — Finanzas (2026-10-20) · datos migrados el 21-10-2026; falta probar en paralelo
 - Módulo `/finanzas` con las 4 pantallas que tiene hoy Control-Financiero: **Inicio** (lo que te queda y cuánto al día hasta la nómina, gasto real por cuenta, traspasos, ritmo frente a los 3 meses anteriores, en qué se va, sin categoría), **Movimientos**, **Deudas** y **Ajustes** (mes financiero, bancos conectados, cuentas y papeles, categorías, importar CSV, exportar, borrar datos de prueba). Se ha portado la lógica y los componentes existentes; solo se han adaptado sesión, tablas y colores.
 - Tablas `fin_*` en Panel-jordi (migración `20261020120000_finanzas.sql`, aplicada, vacías) con `user_id` uuid, RLS por usuario y trigger de categorías por defecto. `fin_bank_links` y `fin_bank_auth_states` solo las toca el servidor.
 - Rutas API en `/api/finanzas/*` (el servidor usa service_role filtrando por user_id, como la app original; el navegador usa su sesión y RLS). Cron diario `/api/cron/finanzas-bancos` (05:47 UTC, protegido con `CRON_SECRET`).
 - IBAN: nunca completo. Solo últimos 4 + huella HMAC (`IBAN_HASH_SECRET`) para reconocer traspasos propios. Los números largos (IBAN, tarjetas) en textos se guardan como «···1234» (sincronización, alta/edición de movimientos y migración).
 - Script de migración `scripts/finanzas/migrar.ts`: `backup` → `dry-run` → `ejecutar --confirmo` → `comparar` (filas e importes por cuenta y mes).
 - Pruebas: 95 (banca, deudas, flujo de gasto, presupuesto por día, ritmo de gasto, próxima nómina, enmascarado, huella de IBAN, transformación de la migración) + RLS real de `fin_*`.
+- **Datos migrados (21-10-2026)**: 341 movimientos, 4 cuentas, 26 categorías, 28 reglas, 4 bancos (sesiones incluidas), 2 deudas, 9 pagos de deuda, 4 devoluciones enlazadas y el perfil (día de cobro 25). Se hizo por SQL desde el panel de Supabase (no con `scripts/finanzas/migrar.ts`, que queda como alternativa): carga a tablas temporales, huella por mes idéntica al archivo origen, ensayo deshecho y carga real con comprobación interna (32/32 grupos cuenta·mes·tipo coinciden en filas e importes). 3 textos con un número de 16 dígitos quedaron como «···3831». Los `created_at` originales no se conservan (son de la fecha de migración).
 - Quitado (no tenía pantalla en la app real): presupuestos, metas de ahorro, recurrentes, panel clásico, gráficas, agentes de notificaciones, módulo de préstamos antiguo, `/api/db`, NextAuth, offline. Sus tablas (budgets, savings_goals, recurring_rules, transfers) sí existen en `fin_*` para no perder datos.
 
 ## Fase 1 — Carcasa (2026-10-20)
