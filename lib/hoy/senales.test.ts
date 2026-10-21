@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ordenar, senalesBandeja, senalesElsa, senalesFinanzas, senalesSalud } from "./senales";
+import { ordenar, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud } from "./senales";
 
 const hoy = "2026-10-21";
 const ahora = new Date("2026-10-21T08:00:00Z").getTime();
@@ -59,5 +59,17 @@ describe("ordenar", () => {
   it("urgente primero, luego hoy, luego saber", () => {
     const o = ordenar([...senalesBandeja(1), ...senalesSalud({ hoy, ultimoDato: hoy, lineas: ["Dormiste bien"], avisoMedico: false }), ...senalesFinanzas({ hoy, enlaces: [], prestamos: [{ nombre: "X", importe: 1, dia: 21 }], sinCategoria: 0, restante: null, porDia: null, diasNomina: null })]);
     expect(o.map((x) => x.nivel)).toEqual(["urgente", "hoy", "saber"]);
+  });
+});
+
+describe("senalesDocumentos", () => {
+  it("vencido y hasta 7 días: urgente; hasta 29: para saber; más lejos no sale", () => {
+    const s = senalesDocumentos({ hoy, docs: [
+      { id: "a", nombre: "ITV", vencimiento: "2026-10-15" },
+      { id: "b", nombre: "Seguro", vencimiento: "2026-10-28" },
+      { id: "c", nombre: "Permiso", vencimiento: "2026-11-15" },
+      { id: "d", nombre: "DNI", vencimiento: "2027-03-01" },
+    ] });
+    expect(s.map((x) => [x.titulo, x.nivel])).toEqual([["ITV", "urgente"], ["Seguro", "urgente"], ["Permiso", "saber"]]);
   });
 });

@@ -4,7 +4,7 @@ import { Card } from "@/components/shadcn/card";
 import type { Senal } from "@/lib/hoy/senales";
 import { cn } from "@/lib/utils";
 
-const ROTULO = { elsa: "ELSA", finanzas: "Finanzas", salud: "Salud", agenda: "Agenda", correo: "Correo", sistema: "Sistema" } as const;
+const ROTULO = { documentos: "Documentos", elsa: "ELSA", finanzas: "Finanzas", salud: "Salud", agenda: "Agenda", correo: "Correo", sistema: "Sistema" } as const;
 
 function Fila({ s, urgente }: { s: Senal; urgente?: boolean }) {
   const cuerpo = (

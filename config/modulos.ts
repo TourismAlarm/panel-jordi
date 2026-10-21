@@ -18,7 +18,7 @@ export const MODULOS: Modulo[] = [
   { id: "finanzas", nombre: "Finanzas", href: "/finanzas", icono: Wallet, descripcion: "Gasto, presupuesto y deudas", estado: "activo", barra: true },
   { id: "salud", nombre: "Salud", href: "/salud", icono: HeartPulse, descripcion: "Tu estado de un vistazo", estado: "activo", barra: true },
   { id: "elsa", nombre: "ELSA", href: "/elsa", icono: Truck, descripcion: "Panel de contenido", estado: "activo", barra: true },
-  { id: "documentos", nombre: "Documentos", href: "/documentos", icono: FileText, descripcion: "Archivo con vencimientos", estado: "proximamente", barra: true },
+  { id: "documentos", nombre: "Documentos", href: "/documentos", icono: FileText, descripcion: "Archivo con vencimientos", estado: "activo", barra: true },
 ];
 
 // Páginas del sistema (no son módulos): salen en el lateral y en la cabecera del móvil.

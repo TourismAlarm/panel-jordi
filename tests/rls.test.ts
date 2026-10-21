@@ -14,6 +14,7 @@ describe.skipIf(!listo)("RLS", () => {
   const A = { email: `rls-a-${sufijo}@prueba.invalid`, password: `Pw-${sufijo}-aA1!` };
   const B = { email: `rls-b-${sufijo}@prueba.invalid`, password: `Pw-${sufijo}-bB2!` };
   const ids: string[] = [];
+  const DOC_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
   async function sesion(c: { email: string; password: string }) {
     const cli = createClient(url!, publica!, { auth: { persistSession: false } });
@@ -37,6 +38,9 @@ describe.skipIf(!listo)("RLS", () => {
     await admin.from("fin_accounts").insert({ user_id: ids[0], name: "cuenta de A", type: "bank" });
     await admin.from("sal_metricas").insert({ user_id: ids[0], fecha: "2026-10-20", metrica: "pasos", valor: 8000, fuente: "garmin" });
     await admin.from("sal_registros").insert({ user_id: ids[0], fecha: "2026-10-20", tipo: "nota", texto: "solo de A" });
+    await admin.from("doc_documentos").insert({ id: DOC_A, user_id: ids[0], nombre: "solo de A", estado: "procesado" });
+    await admin.from("doc_paginas").insert({ documento_id: DOC_A, user_id: ids[0], pagina: 1, texto: "contrato de alquiler de la nave" });
+    await admin.from("doc_fichas").insert({ documento_id: DOC_A, user_id: ids[0], vencimiento: "2027-01-01" });
     await admin.from("resumenes_diarios").insert({ user_id: ids[0], fecha: "2026-10-21", resumen: "solo de A" });
     await admin.from("google_tokens").insert({ user_id: ids[0], refresh_cifrado: "x.y.z", scopes: "s" });
     await admin.from("fin_bank_links").insert({ user_id: ids[0], aspsp_name: "X", aspsp_country: "ES", session_id: "s", account_uid: "u" });
@@ -44,6 +48,7 @@ describe.skipIf(!listo)("RLS", () => {
 
   afterAll(async () => {
     await admin.from("bandeja").delete().in("user_id", ids);
+    await admin.from("doc_documentos").delete().in("user_id", ids); // borra también páginas y fichas (cascada)
     await admin.from("resumenes_diarios").delete().in("user_id", ids);
     await admin.from("google_tokens").delete().in("user_id", ids);
     await admin.from("sal_metricas").delete().in("user_id", ids);
@@ -119,6 +124,29 @@ describe.skipIf(!listo)("RLS", () => {
     expect((await a.from("resumenes_diarios").insert({ user_id: ids[0], fecha: "2026-10-22", resumen: "falso" })).error).not.toBeNull();
     const t = await a.from("google_tokens").select("refresh_cifrado");
     expect(t.error !== null || (t.data ?? []).length === 0).toBe(true);
+  });
+
+  it("Documentos: B no ve ni busca lo de A, y no puede suplantarlo", async () => {
+    const a = await sesion(A);
+    const b = await sesion(B);
+    expect((await a.from("doc_documentos").select("nombre")).data).toEqual([{ nombre: "solo de A" }]);
+    expect((await a.rpc("doc_buscar", { q: "alquiler nave" })).data?.length).toBe(1);
+    expect((await b.from("doc_documentos").select("nombre")).data ?? []).toEqual([]);
+    expect((await b.rpc("doc_buscar", { q: "alquiler nave" })).data ?? []).toEqual([]);
+    expect((await b.from("doc_fichas").select("*")).data ?? []).toEqual([]);
+    expect((await b.from("doc_documentos").insert({ user_id: ids[0], nombre: "falso" })).error).not.toBeNull();
+  });
+
+  it("Documentos: el bucket es privado y cada uno solo sube a su carpeta", async () => {
+    const a = await sesion(A);
+    const b = await sesion(B);
+    const contenido = new Blob(["hola"], { type: "text/plain" });
+    const propio = await a.storage.from("documentos").upload(`${ids[0]}/prueba-${sufijo}.txt`, contenido);
+    expect(propio.error).toBeNull();
+    expect((await a.storage.from("documentos").upload(`${ids[1]}/ajeno-${sufijo}.txt`, contenido)).error).not.toBeNull();
+    expect((await b.storage.from("documentos").download(`${ids[0]}/prueba-${sufijo}.txt`)).error).not.toBeNull();
+    expect((await createClient(url!, publica!).storage.from("documentos").download(`${ids[0]}/prueba-${sufijo}.txt`)).error).not.toBeNull();
+    await admin.storage.from("documentos").remove([`${ids[0]}/prueba-${sufijo}.txt`]);
   });
 
   it("sin sesión no se lee nada", async () => {

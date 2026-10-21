@@ -45,6 +45,10 @@ La portada **Hoy** funciona sola con ELSA, Finanzas, Salud y Bandeja. El **resum
 
 Opcional: conectar Gmail y Calendar directamente desde el panel (solo lectura). Necesita un cliente OAuth de Google Cloud con `gmail.readonly` y `calendar.readonly`, URI de redirección `https://panel-jordi.vercel.app/api/google/callback`, y `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_TOKEN_KEY` (`openssl rand -hex 32`) en Vercel; luego **Ajustes → Conectar Google**. Con la app de Google en modo *Pruebas* el permiso caduca a los 7 días; en *Producción* sin verificar no caduca (aviso de «app no verificada» al conectar). Si usas la tarea de Claude, esto no hace falta.
 
+## Documentos
+
+Subes archivos en **Documentos → Añadir**; una tarea programada de Claude los lee y rellena la ficha (`docs/documentos-tarea-claude.md`, con el prompt). Variable en Vercel: `DOCS_TAREA_SECRET` (16+ caracteres aleatorios). Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas). Sin la tarea, los documentos se guardan igual y la ficha se rellena a mano.
+
 ## Despliegue (pasos manuales)
 
 1. **Vercel** → importar el repo y añadir las variables de `.env.example` (entornos Production y Preview). Sin `ALLOWED_EMAIL` nadie entra.

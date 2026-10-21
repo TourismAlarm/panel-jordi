@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { aISODia } from "@/lib/fechas";
+import { aISODia, sumarDias } from "@/lib/fechas";
 import { resumenInicio } from "@/lib/finanzas/resumen-inicio";
 import { fichaDeGuion } from "@/lib/guion";
 import { eventosDeHoy, correosSinLeer } from "@/lib/google/agenda";
@@ -11,7 +11,7 @@ import { faseVideo } from "@/lib/estados";
 import { construirResumen } from "@/lib/salud/resumen";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
-import { senalesAgenda, senalesBandeja, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
+import { senalesAgenda, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
 
 export type Foto = {
   fecha: string;
@@ -44,7 +44,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
   // fin_* aún no está en los tipos generados. Los enlaces bancarios solo los lee el servidor (service_role), siempre filtrando por user_id.
   const sinTipos = supabaseAdmin() as unknown as SupabaseClient;
 
-  const [elsa, finanzas, salud, nuevos, google] = await Promise.all([
+  const [elsa, finanzas, salud, nuevos, documentos, google] = await Promise.all([
     intentar(fallos, "ELSA", async () => {
       const [v, p, q, pe, rg, sy] = await Promise.all([
         supabase.from("videos").select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, actualizado_en, guion_md").order("fecha_trabajo", { ascending: true, nullsFirst: false }),
@@ -110,6 +110,17 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
       return senalesBandeja(count ?? 0);
     }),
 
+    intentar(fallos, "Documentos", async () => {
+      const { data, error } = await supabase.from("doc_fichas").select("documento_id, vencimiento").eq("user_id", userId).not("vencimiento", "is", null).lte("vencimiento", sumarDias(hoy, 29));
+      if (error) throw new Error(error.message);
+      const ids = (data ?? []).map((x) => x.documento_id);
+      if (!ids.length) return [];
+      const n = await supabase.from("doc_documentos").select("id, nombre").eq("user_id", userId).in("id", ids);
+      if (n.error) throw new Error(n.error.message);
+      const nombre = new Map((n.data ?? []).map((x) => [x.id, x.nombre]));
+      return senalesDocumentos({ hoy, docs: (data ?? []).map((x) => ({ id: x.documento_id, nombre: nombre.get(x.documento_id) ?? "Documento", vencimiento: x.vencimiento as string })) });
+    }),
+
     (async () => {
       if (opciones.conGoogle === false) return { estado: "sin-conectar" as const, eventos: [] as Evento[], correos: [] as Correo[] };
       try {
@@ -130,6 +141,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     ...(finanzas ?? []),
     ...(salud?.senales ?? []),
     ...(nuevos ?? []),
+    ...(documentos ?? []),
     ...senalesAgenda(google.eventos, hora),
   ]);
   return { fecha: hoy, senales, eventos: google.eventos, correos: google.correos, google: google.estado, fallos, salud: salud?.lineas ?? [] };

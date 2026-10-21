@@ -3,7 +3,7 @@
 import { diasHasta } from "@/lib/fechas";
 
 export type Nivel = "urgente" | "hoy" | "saber";
-export type ModuloSenal = "agenda" | "correo" | "elsa" | "finanzas" | "salud" | "sistema";
+export type ModuloSenal = "agenda" | "correo" | "documentos" | "elsa" | "finanzas" | "salud" | "sistema";
 
 export type Senal = {
   id: string;
@@ -15,7 +15,7 @@ export type Senal = {
 };
 
 const ORDEN_NIVEL: Record<Nivel, number> = { urgente: 0, hoy: 1, saber: 2 };
-const ORDEN_MODULO: Record<ModuloSenal, number> = { agenda: 0, elsa: 1, finanzas: 2, salud: 3, correo: 4, sistema: 5 };
+const ORDEN_MODULO: Record<ModuloSenal, number> = { agenda: 0, elsa: 1, finanzas: 2, documentos: 3, salud: 4, correo: 5, sistema: 6 };
 
 export function ordenar(senales: Senal[]): Senal[] {
   return [...senales].sort((a, b) => ORDEN_NIVEL[a.nivel] - ORDEN_NIVEL[b.nivel] || ORDEN_MODULO[a.modulo] - ORDEN_MODULO[b.modulo]);
@@ -117,6 +117,21 @@ export function senalesSalud(p: { hoy: string; ultimoDato: string | null; lineas
     s.push({ id: "sal-viejo", modulo: "salud", nivel: "saber", titulo: `Sin datos del reloj desde hace ${atraso} días`, href: "/salud" });
   } else if (p.lineas.length) {
     s.push({ id: "sal-resumen", modulo: "salud", nivel: "saber", titulo: p.lineas[0], detalle: p.lineas.slice(1, 3).join(" · ") || undefined, href: "/salud" });
+  }
+  return s;
+}
+
+// ── Documentos ───────────────────────────────────────────────
+export type VencimientoDoc = { id: string; nombre: string; vencimiento: string };
+
+// Vencido o a 7 días o menos: urgente · hasta 29 días: para hoy si es esta semana…, si no, para saber.
+export function senalesDocumentos(p: { hoy: string; docs: VencimientoDoc[] }): Senal[] {
+  const s: Senal[] = [];
+  for (const d of p.docs) {
+    const dias = diasHasta(d.vencimiento, p.hoy);
+    if (dias >= 30) continue;
+    const cuando = dias < -1 ? `Venció hace ${-dias} días` : dias === -1 ? "Venció ayer" : dias === 0 ? "Vence hoy" : dias === 1 ? "Vence mañana" : `Vence en ${dias} días`;
+    s.push({ id: `doc-${d.id}`, modulo: "documentos", nivel: dias <= 7 ? "urgente" : "saber", titulo: d.nombre, detalle: cuando, href: `/documentos/${d.id}` });
   }
   return s;
 }

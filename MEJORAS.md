@@ -15,3 +15,7 @@
 - Salud: medicación, tensión arterial, agua u otras métricas si las pides (una línea en `lib/salud/metricas.ts`).
 - Hoy: marcar un correo como «ya contestado» o «ignorar remitente» (hoy la IA solo lo lee; el panel no toca el correo).
 - Hoy: avisar de vencimientos de Documentos cuando exista la Fase 6.
+- Documentos: chat de preguntas que responda solo con fragmentos y cite documento y página (necesita IA en el momento de preguntar; hoy hay búsqueda con cita). Podría hacerlo una tarea de Claude que lea la bandeja de preguntas.
+- Documentos: extraer el texto de los PDF con capa de texto al subirlos (sin esperar a Claude) y OCR de escaneos.
+- Documentos: avisos por correo a 30 y 7 días y lista mensual de lo que vence en 60 días (hoy, solo en Hoy y en el índice).
+- Documentos: el buscador rápido del escritorio («/») podría buscar también dentro de los documentos.

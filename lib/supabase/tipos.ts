@@ -17,6 +17,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      doc_documentos: {
+        Row: { id: string; user_id: string; nombre: string; categoria: string; tipo: string | null; ruta: string | null; mime: string | null; tamano: number | null; estado: string; error: string | null; subido_en: string; procesado_en: string | null }
+        Insert: { id?: string; user_id: string; nombre: string; categoria?: string; tipo?: string | null; ruta?: string | null; mime?: string | null; tamano?: number | null; estado?: string; error?: string | null; subido_en?: string; procesado_en?: string | null }
+        Update: { id?: string; user_id?: string; nombre?: string; categoria?: string; tipo?: string | null; ruta?: string | null; mime?: string | null; tamano?: number | null; estado?: string; error?: string | null; subido_en?: string; procesado_en?: string | null }
+        Relationships: []
+      }
+      doc_paginas: {
+        Row: { id: string; documento_id: string; user_id: string; pagina: number; texto: string }
+        Insert: { id?: string; documento_id: string; user_id: string; pagina: number; texto: string }
+        Update: { id?: string; documento_id?: string; user_id?: string; pagina?: number; texto?: string }
+        Relationships: []
+      }
+      doc_fichas: {
+        Row: { documento_id: string; user_id: string; partes: string[]; referencia: string | null; inicio: string | null; vencimiento: string | null; importes: Json; condiciones: string[]; contacto: string | null; origen: string; actualizado_en: string }
+        Insert: { documento_id: string; user_id: string; partes?: string[]; referencia?: string | null; inicio?: string | null; vencimiento?: string | null; importes?: Json; condiciones?: string[]; contacto?: string | null; origen?: string; actualizado_en?: string }
+        Update: { documento_id?: string; user_id?: string; partes?: string[]; referencia?: string | null; inicio?: string | null; vencimiento?: string | null; importes?: Json; condiciones?: string[]; contacto?: string | null; origen?: string; actualizado_en?: string }
+        Relationships: []
+      }
       google_tokens: {
         Row: { user_id: string; refresh_cifrado: string; scopes: string; correo: string | null; creado_en: string }
         Insert: { user_id: string; refresh_cifrado: string; scopes: string; correo?: string | null; creado_en?: string }
@@ -530,6 +548,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      doc_buscar: { Args: { q: string }; Returns: { documento_id: string; pagina: number; extracto: string; relevancia: number }[] }
       es_permitido: { Args: never; Returns: boolean }
       rls_auditoria: { Args: never; Returns: { tabla: string }[] }
     }

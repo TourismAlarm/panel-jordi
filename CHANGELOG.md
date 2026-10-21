@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## Fase 6 — Documentos (2026-10-21)
+- **Módulo `/documentos`**: índice maestro **ordenado por vencimiento** (vencido y ≤7 días en rojo, <30 días subrayado), filtro por categoría (Seguros, Contratos, Vehículos y maquinaria, Permisos y autorizaciones, Identidad y trámites, Salud, Hogar, Finanzas e impuestos, Notas), aviso de «N vencen en 60 días» y **búsqueda de texto completo en español** (Postgres `tsvector`) que devuelve documento, **página** y el fragmento con la coincidencia marcada.
+- **Subir varios archivos a la vez** (PDF, fotos, texto) directo del navegador a un **bucket privado** `documentos`, con políticas por carpeta de usuario (`<user_id>/…`). Notas de texto sin archivo, ya buscables. Detalle con ficha, visor de PDF/imagen (enlace que caduca a los 10 min), texto por página, edición manual de la ficha y borrado con confirmación.
+- **Ficha**: partes, nº de referencia (**solo los últimos 4 caracteres**), inicio, vencimiento, importes, hasta 3 condiciones y contacto. Lo que no aparece se guarda sin dato y se muestra «No especificado»: nunca se rellena con suposiciones.
+- **Lectura de los documentos sin API de pago**: una tarea programada de Claude pide los pendientes (`GET /api/documentos/pendientes`), los lee y deja categoría, tipo, texto y ficha (`POST /api/documentos/resultado`; `/fallo` si no puede). Auth `DOCS_TAREA_SECRET`. Prompt y contrato en `docs/documentos-tarea-claude.md`. Mientras tanto la ficha se puede rellenar a mano.
+- **«¿Qué me falta?»**: sugerencias por reglas simples (p. ej. vehículo sin seguro/ITV) sobre lo archivado; no es una obligación legal.
+- **Alertas de vencimiento sin correo**: aparecen en **Hoy** (urgente si ya venció o falta ≤7 días; «para saber» hasta 29 días).
+- Migración `20261021200000_documentos.sql` (aplicada): `doc_documentos`, `doc_paginas` (con `tsvector` español + GIN), `doc_fichas`, función `doc_buscar` (SECURITY INVOKER, respeta RLS), bucket y políticas de Storage. Todas con RLS; la prueba automática cubre tablas, búsqueda y bucket.
+- **Cambios respecto al encargo original** (por decisión de Jordi: sin API de pago y sin correo): no hay chat de preguntas con IA (en su lugar, la búsqueda con cita de documento y página), no hay correos a 30/7 días ni resumen mensual (están en Hoy y en el aviso de «vencen en 60 días»), y no hay tabla `doc_alertas` (se calcula al momento desde la ficha). Ver MEJORAS.md.
+
 ## Fase 5 — Hoy (2026-10-21)
 - **Portada «Hoy»** (`/`): lo **urgente** arriba en rojo, luego la agenda de hoy, «Para hoy», los correos sin leer y, plegado, «Para saber». Reúne ELSA (proyectos que te tocan, ordenados por fecha; reglas por decidir; PC sin sincronizar), Finanzas (conexiones bancarias caducadas, cuotas de deudas de los próximos 3 días, ritmo hasta la nómina, movimientos sin categoría), Salud (aviso médico, resumen, datos viejos) y Bandeja. Si un módulo falla se dice arriba («No se ha podido leer: …»), no se esconde.
 - Las señales y su orden son **lógica fija sin IA** (`lib/hoy/senales.ts`, con pruebas). **El panel no usa ninguna API de IA ni envía correos.**
