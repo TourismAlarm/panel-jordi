@@ -16,6 +16,23 @@ function admin(): SupabaseClient {
   return cliente;
 }
 
+// Si faltan las variables, las consultas no revientan con un 500 vacío: devuelven un error normal que la
+// pantalla enseña tal cual («Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY»).
+function consultaConError(mensaje: string): any {
+  const resultado = { data: null, count: null, error: { message: mensaje } };
+  const proxy: any = new Proxy(function () {}, {
+    get: (_o, prop) => (prop === 'then' ? (ok: (v: unknown) => unknown) => Promise.resolve(resultado).then(ok) : () => proxy),
+    apply: () => proxy,
+  });
+  return proxy;
+}
+
 export const supabaseAdmin = {
-  from: (tabla: string) => admin().from(`fin_${tabla}`),
+  from: (tabla: string): ReturnType<SupabaseClient['from']> => {
+    try {
+      return admin().from(`fin_${tabla}`);
+    } catch (e) {
+      return consultaConError(e instanceof Error ? e.message : 'Supabase no está configurado');
+    }
+  },
 };

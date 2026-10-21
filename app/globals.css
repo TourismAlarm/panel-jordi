@@ -101,7 +101,10 @@
   --sombra: none;
 }
 
-/* ── Reset ─────────────────────────────────────────────────── */
+/* ── Reset ───────────────────────────────────────────────────
+   Va en la capa «base» para que las clases de Tailwind (text-…, bg-…, text-3xl) puedan ganarle.
+   Los .module.css de ELSA no están en ninguna capa, así que siguen mandando sobre este reset. */
+@layer base {
 
 *,
 *::before,
@@ -158,6 +161,17 @@ select {
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--acento) 55%, transparent);
   outline-offset: 2px;
+}
+
+/* Campos y botones: sin el gris del navegador (lo que hacía el reset de Tailwind en la app original) */
+button,
+input,
+select,
+textarea {
+  background-color: transparent;
+  border-radius: 0;
+  border: 0 solid;
+}
 }
 
 /* ── Utilidades mínimas ────────────────────────────────────── */
