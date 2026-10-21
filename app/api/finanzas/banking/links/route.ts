@@ -18,8 +18,8 @@ export async function GET() {
     .order('created_at', { ascending: true });
 
   if (error) {
-    // Migración 011 sin aplicar todavía
-    return NextResponse.json({ configured: isEnableBankingConfigured(), migrated: false, links: [] });
+    console.error('❌ /api/banking/links:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({

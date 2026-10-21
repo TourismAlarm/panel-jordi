@@ -56,7 +56,7 @@ export function BankConnections() {
     queryKey: ['bank-links'],
     queryFn: async () => {
       const res = await fetch('/api/finanzas/banking/links');
-      if (!res.ok) throw new Error('No se pudieron cargar las cuentas');
+      if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error || 'No se pudieron cargar las cuentas'); }
       return res.json();
     },
   });

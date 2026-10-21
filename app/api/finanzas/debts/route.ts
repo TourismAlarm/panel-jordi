@@ -31,11 +31,11 @@ export async function GET() {
   const userId = await auth();
   if (!userId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  // ¿Está aplicada la migración 012?
+  // Comprobación rápida de que la base de datos responde (clave de servicio válida, tablas creadas)
   const probe = await supabaseAdmin.from('loans').select('id, bank_match').limit(1);
   if (probe.error) {
-    console.error('❌ /api/debts (¿falta la migración 012?):', probe.error.message);
-    return NextResponse.json({ migrated: false, detail: probe.error.message, loans: [], suggestions: [], accounts: [] });
+    console.error('❌ /api/debts:', probe.error.message);
+    return NextResponse.json({ error: probe.error.message }, { status: 500 });
   }
 
   const [loansRes, txRes, dismissedRes, accountsData] = await Promise.all([
