@@ -9,6 +9,7 @@ import { leerSalud } from "@/lib/datos/salud";
 import { pasosDe, pasoActual, teToca } from "@/lib/pasos";
 import { faseVideo } from "@/lib/estados";
 import { construirResumen } from "@/lib/salud/resumen";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
 import { senalesAgenda, senalesBandeja, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
 
@@ -40,7 +41,8 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
   const hoy = aISODia();
   const fallos: string[] = [];
   const ahora = Date.now();
-  const sinTipos = supabase as unknown as SupabaseClient; // fin_* aún no está en los tipos generados
+  // fin_* aún no está en los tipos generados. Los enlaces bancarios solo los lee el servidor (service_role), siempre filtrando por user_id.
+  const sinTipos = supabaseAdmin() as unknown as SupabaseClient;
 
   const [elsa, finanzas, salud, nuevos, google] = await Promise.all([
     intentar(fallos, "ELSA", async () => {
