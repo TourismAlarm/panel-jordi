@@ -41,13 +41,21 @@ Enable Banking: usa las mismas credenciales que la app vieja (`ENABLE_BANKING_AP
 
 ## Hoy: resumen de la mañana
 
-La portada **Hoy** funciona sola con ELSA, Finanzas, Salud y Bandeja. El **resumen redactado, la agenda y los correos** los deja cada mañana una **tarea programada de Claude** (sin API de pago ni correo electrónico): ver `docs/hoy-tarea-claude.md` (prompt incluido). Variable necesaria en Vercel: `HOY_RESUMEN_SECRET` (16+ caracteres aleatorios).
+La portada **Hoy** reúne ELSA, Finanzas, Salud, Documentos y Bandeja. El **resumen redactado** lo genera la API de Anthropic cada mañana (cron `/api/cron/resumen-diario`, 06:00 UTC) y se lee en la app; el botón «Actualizar el resumen» lo regenera. Sin correo. Necesita `ANTHROPIC_API_KEY` y `CRON_SECRET`.
 
-Opcional: conectar Gmail y Calendar directamente desde el panel (solo lectura). Necesita un cliente OAuth de Google Cloud con `gmail.readonly` y `calendar.readonly`, URI de redirección `https://panel-jordi.vercel.app/api/google/callback`, y `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_TOKEN_KEY` (`openssl rand -hex 32`) en Vercel; luego **Ajustes → Conectar Google**. Con la app de Google en modo *Pruebas* el permiso caduca a los 7 días; en *Producción* sin verificar no caduca (aviso de «app no verificada» al conectar). Si usas la tarea de Claude, esto no hace falta.
+Para ver también la **agenda** y los **correos sin leer** (solo lectura):
+
+1. En [Google Cloud Console](https://console.cloud.google.com) crea un proyecto → *APIs y servicios* → activa **Gmail API** y **Google Calendar API**.
+2. *Pantalla de consentimiento OAuth*: tipo **Externo**, añade tu correo como usuario de prueba y los permisos `gmail.readonly` y `calendar.readonly`.
+3. *Credenciales* → **ID de cliente OAuth** de tipo *Aplicación web*. URI de redirección: `https://panel-jordi.vercel.app/api/google/callback`.
+4. En Vercel (Production): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_TOKEN_KEY` (`openssl rand -hex 32`). Redeploy.
+5. En el panel: **Ajustes → Conectar Google**.
+
+**Aviso de Google**: `gmail.readonly` es un permiso «restringido». Con la app en modo *Pruebas* el permiso caduca a los **7 días** y hay que volver a pulsar «Conectar Google». Si la pasas a *En producción* sin verificar (solo la usas tú), no caduca y Google muestra «app no verificada» al conectar (*Avanzado → Continuar*). La verificación oficial no hace falta para uso personal.
 
 ## Documentos
 
-Subes archivos en **Documentos → Añadir**; la IA (API de Anthropic) los lee y rellena la ficha y el texto por página; el chat responde con citas. Variables en Vercel: `ANTHROPIC_API_KEY` (y `ANTHROPIC_MODEL` si quieres otro modelo; por defecto `claude-sonnet-5-5`). Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas). Alternativa sin API: la tarea de Claude de `docs/documentos-tarea-claude.md` (`DOCS_TAREA_SECRET`).
+Subes archivos en **Documentos → Añadir**; la IA (API de Anthropic) los lee y rellena la ficha y el texto por página; el chat responde con citas. Variables en Vercel: `ANTHROPIC_API_KEY` (y `ANTHROPIC_MODEL` si quieres otro modelo; por defecto `claude-sonnet-5-5`). Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas).
 
 ## Despliegue (pasos manuales)
 

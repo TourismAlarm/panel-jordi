@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { BotonResumen } from "@/components/hoy/BotonResumen";
 import { ListaSenales } from "@/components/hoy/ListaSenales";
 import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
-import { CuerpoResumen } from "@/lib/hoy/resumen";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
 
@@ -17,15 +18,9 @@ export default async function Hoy() {
   const userId = data?.claims?.sub as string;
   const foto = await reunirHoy(supabase, userId);
 
-  const { data: guardado } = await supabase.from("resumenes_diarios").select("resumen, prioridades, senales, generado_en").eq("fecha", foto.fecha).maybeSingle();
-  // Agenda y correos: de Google si está conectado; si no, los que deja la tarea de Claude junto al resumen.
-  const dejado = CuerpoResumen.pick({ agenda: true, correos: true }).safeParse(guardado?.senales ?? {});
-  const agenda =
-    foto.google === "conectado"
-      ? foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar ?? undefined }))
-      : dejado.success ? dejado.data.agenda : [];
-  const correos =
-    foto.google === "conectado" ? foto.correos.map((c) => ({ de: c.de, asunto: c.asunto })) : dejado.success ? dejado.data.correos : [];
+  const { data: guardado } = await supabase.from("resumenes_diarios").select("resumen, prioridades, generado_en").eq("fecha", foto.fecha).maybeSingle();
+  const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar ?? undefined }));
+  const correos = foto.correos.map((c) => ({ de: c.de, asunto: c.asunto }));
   const prioridades = Array.isArray(guardado?.prioridades) ? (guardado.prioridades as string[]) : [];
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
@@ -104,6 +99,16 @@ export default async function Hoy() {
       )}
 
       <ListaSenales titulo="Para saber" senales={saber} plegable abiertas={2} />
+
+      {foto.google === "sin-conectar" && (
+        <Card className="flex flex-col gap-2">
+          <p className="text-lg font-semibold">Añade tu agenda y tu correo</p>
+          <p className="text-muted-foreground">Conecta Google (solo lectura) para ver aquí tus citas de hoy y los correos sin leer.</p>
+          <Link href="/ajustes" className="min-h-12 content-center font-semibold underline">Ir a Ajustes</Link>
+        </Card>
+      )}
+
+      <BotonResumen />
     </main>
   );
 }

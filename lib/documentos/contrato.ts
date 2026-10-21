@@ -33,6 +33,3 @@ export const CuerpoResultado = z.object({
     .default({ partes: [], importes: [], condiciones: [] }),
 });
 export type CuerpoResultado = z.infer<typeof CuerpoResultado>;
-
-// Fallo: la tarea no pudo leer el documento (escaneo ilegible, archivo protegido…).
-export const CuerpoFallo = z.object({ id: z.string().uuid(), error: texto(300) });
