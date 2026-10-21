@@ -32,11 +32,13 @@ Cabecera: `Authorization: Bearer <SALUD_INGESTA_SECRET>` (la variable que pones 
 |---|---|---|
 | `sueno_horas` | Horas dormidas (la noche que termina en `fecha`) | h |
 | `sueno_puntuacion` | Calidad del sueño | /100 |
+| `hora_acostarse` | Hora de acostarse en horas decimales; pasada la medianoche suma 24 (22:32 → 22.53, 00:30 → 24.5) | h |
 | `pasos` | Pasos del día | — |
 | `minutos_activos` | Minutos de actividad | min |
 | `calorias_activas` | Calorías activas | kcal |
 | `fc_reposo` | Pulso en reposo | lpm |
 | `hrv` | Variabilidad cardíaca | ms |
+| `recuperacion` | Índice de recuperación (el +1.0 de tu correo) | índice |
 | `peso_kg` | Peso | kg |
 | `estres_medio` | Estrés medio del día | /100 |
 | `body_battery` | «Energía» del reloj | /100 |

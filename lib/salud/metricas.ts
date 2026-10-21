@@ -12,11 +12,13 @@ export type Metrica = {
 export const METRICAS: Metrica[] = [
   { id: "sueno_horas", nombre: "Sueño", unidad: "h", decimales: 1, mejor: "alto", manual: false, grupo: "sueno" },
   { id: "sueno_puntuacion", nombre: "Calidad del sueño", unidad: "/100", decimales: 0, mejor: "alto", manual: false, grupo: "sueno" },
+  { id: "hora_acostarse", nombre: "Hora de acostarse", unidad: "", decimales: 2, mejor: "bajo", manual: false, grupo: "sueno" },
   { id: "pasos", nombre: "Pasos", unidad: "", decimales: 0, mejor: "alto", manual: false, grupo: "actividad" },
   { id: "minutos_activos", nombre: "Minutos activos", unidad: "min", decimales: 0, mejor: "alto", manual: false, grupo: "actividad" },
   { id: "calorias_activas", nombre: "Calorías activas", unidad: "kcal", decimales: 0, mejor: "neutro", manual: false, grupo: "actividad" },
   { id: "fc_reposo", nombre: "Pulso en reposo", unidad: "lpm", decimales: 0, mejor: "bajo", manual: false, grupo: "cuerpo" },
   { id: "hrv", nombre: "Variabilidad cardíaca", unidad: "ms", decimales: 0, mejor: "alto", manual: false, grupo: "cuerpo" },
+  { id: "recuperacion", nombre: "Recuperación", unidad: "", decimales: 1, mejor: "alto", manual: false, grupo: "cuerpo" },
   { id: "peso_kg", nombre: "Peso", unidad: "kg", decimales: 1, mejor: "neutro", manual: true, grupo: "cuerpo" },
   { id: "estres_medio", nombre: "Estrés", unidad: "/100", decimales: 0, mejor: "bajo", manual: false, grupo: "cuerpo" },
   { id: "body_battery", nombre: "Energía del reloj", unidad: "/100", decimales: 0, mejor: "alto", manual: false, grupo: "cuerpo" },
@@ -29,6 +31,11 @@ export const metrica = (id: string) => METRICAS.find((m) => m.id === id);
 
 export function formatearValor(id: string, valor: number | null | undefined): string {
   if (valor === null || valor === undefined || !isFinite(valor)) return "—";
+  if (id === "hora_acostarse") {
+    // Decimal de horas; pasada la medianoche suma 24 (24,5 = 00:30).
+    const total = Math.round((((valor % 24) + 24) % 24) * 60);
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  }
   const m = metrica(id);
   const num = new Intl.NumberFormat("es-ES", { maximumFractionDigits: m?.decimales ?? 1, minimumFractionDigits: 0 }).format(valor);
   return m?.unidad ? `${num} ${m.unidad}` : num;
