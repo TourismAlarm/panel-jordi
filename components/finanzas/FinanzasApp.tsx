@@ -25,8 +25,8 @@ const TABS: { id: Tab; label: string }[] = [
 
 const PILL = 'flex min-h-12 shrink-0 items-center rounded-full border px-5 text-base font-semibold';
 
-export function FinanzasApp() {
-  const [tab, setTab] = useState<Tab>('home');
+export function FinanzasApp({ tabInicial = 'home' }: { tabInicial?: Tab }) {
+  const [tab, setTab] = useState<Tab>(tabInicial);
   const { profile, isLoading: profileLoading } = useProfile();
   const startDay = profile?.financial_month_start_day ?? 1;
   const [pickedMonth, setMonth] = useState<string | null>(null);

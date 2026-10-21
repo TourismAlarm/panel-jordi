@@ -4,10 +4,11 @@ import { ProveedorFinanzas } from "@/components/finanzas/ProveedorFinanzas";
 
 export const metadata: Metadata = { title: "Finanzas" };
 
-export default function Finanzas() {
+export default async function Finanzas({ searchParams }: PageProps<"/finanzas">) {
+  const { tab } = await searchParams;
   return (
     <ProveedorFinanzas>
-      <FinanzasApp />
+      <FinanzasApp tabInicial={tab === "movements" || tab === "debts" ? tab : "home"} />
     </ProveedorFinanzas>
   );
 }

@@ -17,6 +17,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      google_tokens: {
+        Row: { user_id: string; refresh_cifrado: string; scopes: string; correo: string | null; creado_en: string }
+        Insert: { user_id: string; refresh_cifrado: string; scopes: string; correo?: string | null; creado_en?: string }
+        Update: { user_id?: string; refresh_cifrado?: string; scopes?: string; correo?: string | null; creado_en?: string }
+        Relationships: []
+      }
+      resumenes_diarios: {
+        Row: { id: string; user_id: string; fecha: string; resumen: string; prioridades: Json; senales: Json; generado_en: string; enviado_en: string | null; error_envio: string | null }
+        Insert: { id?: string; user_id: string; fecha: string; resumen: string; prioridades?: Json; senales?: Json; generado_en?: string; enviado_en?: string | null; error_envio?: string | null }
+        Update: { id?: string; user_id?: string; fecha?: string; resumen?: string; prioridades?: Json; senales?: Json; generado_en?: string; enviado_en?: string | null; error_envio?: string | null }
+        Relationships: []
+      }
       sal_entrenos: {
         Row: {
           actualizado_en: string

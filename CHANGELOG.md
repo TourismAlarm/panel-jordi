@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## Fase 5 — Hoy (2026-10-21)
+- **Portada «Hoy»** (`/`): lo **urgente** arriba en rojo, luego la agenda de hoy, «Para hoy», los correos sin leer y, plegado, «Para saber». Reúne ELSA (proyectos que te tocan, ordenados por fecha; reglas por decidir; PC sin sincronizar), Finanzas (conexiones bancarias caducadas, cuotas de deudas de los próximos 3 días, ritmo hasta la nómina, movimientos sin categoría), Salud (aviso médico, resumen, datos viejos) y Bandeja. Si un módulo falla se dice arriba («No se ha podido leer: …»), no se esconde.
+- La ordenación y las señales son **lógica pura sin IA** (`lib/hoy/senales.ts`, con pruebas). La IA solo redacta el texto del resumen a partir de ellas; si no hay clave o falla, el resumen sale igual sin IA.
+- **Resumen de la mañana por correo** (Resend, a tu correo): cron `/api/cron/resumen-diario` (protegido con `CRON_SECRET`, una vez al día, idempotente) y botón **«Enviarme el resumen ahora»**. Cada resumen se guarda en `resumenes_diarios` (RLS).
+- **Gmail y Calendar, solo lectura** (`gmail.readonly`, `calendar.readonly`): botón «Conectar Google» en Ajustes; el refresh token se guarda **cifrado con AES-256-GCM** (`GOOGLE_TOKEN_KEY`) en `google_tokens`, tabla sin acceso desde el navegador. Del correo solo se leen remitente, asunto y un extracto; el panel no puede enviar, borrar ni modificar nada. El texto de correos y eventos se trata como dato, nunca como instrucción para la IA.
+- Se extrae `resumenInicio()` de la ruta de Finanzas para que Inicio de Finanzas y «Hoy» usen el mismo cálculo. `/finanzas?tab=movements|debts` abre esa pestaña.
+- Migración `20261021180000_hoy.sql` (aplicada). Pruebas nuevas: señales, correo (escapado), resumen sin IA, cifrado.
+- **Hora del resumen**: Vercel Hobby solo permite 2 crons diarios y los lanza con hasta una hora de margen, y la hora del cron es UTC. Está en `0 6 * * *`: de finales de octubre a marzo llega sobre las 7:00 (en horario de verano, sobre las 8:00). Con plan Pro se puede afinar.
+
 ## Fase 3 — Salud (2026-10-21)
 - Módulo `/salud` con **Hoy** (tarjetas de sueño, pasos, pulso en reposo, peso, ánimo y energía con su cambio frente a tu media de 7 días; resumen en frases; últimos entrenos), **Histórico** (gráficas de 7/30/90 días por métrica con media, mínimo y máximo) y **Registrar** (ánimo, energía, peso, síntomas, condición médica y notas, con botones grandes).
 - No existía una app de Salud anterior: las tablas `sal_metricas` (formato largo: día + métrica + valor + fuente), `sal_entrenos` y `sal_registros` son nuevas (migración `20261021120000_salud.sql`, aplicada), con RLS. Desde el navegador solo se escribe lo «manual»; los datos del reloj entran por el servidor.

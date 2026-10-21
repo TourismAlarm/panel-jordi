@@ -37,11 +37,15 @@ describe.skipIf(!listo)("RLS", () => {
     await admin.from("fin_accounts").insert({ user_id: ids[0], name: "cuenta de A", type: "bank" });
     await admin.from("sal_metricas").insert({ user_id: ids[0], fecha: "2026-10-20", metrica: "pasos", valor: 8000, fuente: "garmin" });
     await admin.from("sal_registros").insert({ user_id: ids[0], fecha: "2026-10-20", tipo: "nota", texto: "solo de A" });
+    await admin.from("resumenes_diarios").insert({ user_id: ids[0], fecha: "2026-10-21", resumen: "solo de A" });
+    await admin.from("google_tokens").insert({ user_id: ids[0], refresh_cifrado: "x.y.z", scopes: "s" });
     await admin.from("fin_bank_links").insert({ user_id: ids[0], aspsp_name: "X", aspsp_country: "ES", session_id: "s", account_uid: "u" });
   });
 
   afterAll(async () => {
     await admin.from("bandeja").delete().in("user_id", ids);
+    await admin.from("resumenes_diarios").delete().in("user_id", ids);
+    await admin.from("google_tokens").delete().in("user_id", ids);
     await admin.from("sal_metricas").delete().in("user_id", ids);
     await admin.from("sal_registros").delete().in("user_id", ids);
     await admin.from("fin_bank_links").delete().in("user_id", ids);
@@ -106,6 +110,15 @@ describe.skipIf(!listo)("RLS", () => {
     const a = await sesion(A);
     const { error } = await a.from("sal_metricas").insert({ user_id: ids[0], fecha: "2026-10-22", metrica: "pasos", valor: 99999, fuente: "garmin" });
     expect(error).not.toBeNull();
+  });
+
+  it("Hoy: el resumen es solo del dueño y el token de Google no se puede leer desde el navegador", async () => {
+    const a = await sesion(A);
+    expect((await a.from("resumenes_diarios").select("resumen")).data).toEqual([{ resumen: "solo de A" }]);
+    expect((await (await sesion(B)).from("resumenes_diarios").select("resumen")).data ?? []).toEqual([]);
+    expect((await a.from("resumenes_diarios").insert({ user_id: ids[0], fecha: "2026-10-22", resumen: "falso" })).error).not.toBeNull();
+    const t = await a.from("google_tokens").select("refresh_cifrado");
+    expect(t.error !== null || (t.data ?? []).length === 0).toBe(true);
   });
 
   it("sin sesión no se lee nada", async () => {
