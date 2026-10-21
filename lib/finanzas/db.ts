@@ -6,10 +6,15 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // traducen aquí a su versión con prefijo (fin_transactions, fin_accounts…).
 let cliente: SupabaseClient | null = null;
 
+// Al pegar claves en Vercel es habitual que se cuele un espacio, un salto de línea o comillas: se quitan.
+export function limpiar(valor: string | undefined): string | undefined {
+  return valor?.trim().replace(/^["']|["']$/g, '').trim();
+}
+
 function admin(): SupabaseClient {
   if (!cliente) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const clave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = limpiar(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    const clave = limpiar(process.env.SUPABASE_SERVICE_ROLE_KEY);
     if (!url || !clave) throw new Error("Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
     cliente = createClient(url, clave, { auth: { persistSession: false, autoRefreshToken: false } });
   }
