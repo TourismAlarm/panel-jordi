@@ -35,11 +35,15 @@ describe.skipIf(!listo)("RLS", () => {
     // Finanzas: A tiene perfil (el trigger crea sus categorías), una cuenta y un enlace bancario.
     await admin.from("fin_profiles").insert({ id: ids[0], email: A.email });
     await admin.from("fin_accounts").insert({ user_id: ids[0], name: "cuenta de A", type: "bank" });
+    await admin.from("sal_metricas").insert({ user_id: ids[0], fecha: "2026-10-20", metrica: "pasos", valor: 8000, fuente: "garmin" });
+    await admin.from("sal_registros").insert({ user_id: ids[0], fecha: "2026-10-20", tipo: "nota", texto: "solo de A" });
     await admin.from("fin_bank_links").insert({ user_id: ids[0], aspsp_name: "X", aspsp_country: "ES", session_id: "s", account_uid: "u" });
   });
 
   afterAll(async () => {
     await admin.from("bandeja").delete().in("user_id", ids);
+    await admin.from("sal_metricas").delete().in("user_id", ids);
+    await admin.from("sal_registros").delete().in("user_id", ids);
     await admin.from("fin_bank_links").delete().in("user_id", ids);
     await admin.from("fin_accounts").delete().in("user_id", ids);
     await admin.from("fin_profiles").delete().in("id", ids);
@@ -85,6 +89,23 @@ describe.skipIf(!listo)("RLS", () => {
     await b.from("fin_accounts").insert({ user_id: ids[0], name: "intrusa", type: "bank" });
     const { data } = await admin.from("fin_accounts").select("name").eq("user_id", ids[0]);
     expect(data).toEqual([{ name: "cuenta de A" }]);
+  });
+
+  it("Salud: el dueño ve sus datos; otro usuario no ve ni escribe nada", async () => {
+    const a = await sesion(A);
+    expect((await a.from("sal_metricas").select("valor")).data).toEqual([{ valor: 8000 }]);
+    const b = await sesion(B);
+    for (const t of ["sal_metricas", "sal_registros", "sal_entrenos"]) expect((await b.from(t).select("*")).data, t).toEqual([]);
+    await b.from("sal_metricas").insert({ user_id: ids[0], fecha: "2026-10-21", metrica: "pasos", valor: 1, fuente: "manual" });
+    await b.from("sal_registros").update({ texto: "hackeado" }).eq("user_id", ids[0]);
+    expect((await admin.from("sal_metricas").select("valor").eq("user_id", ids[0])).data).toEqual([{ valor: 8000 }]);
+    expect((await admin.from("sal_registros").select("texto").eq("user_id", ids[0])).data).toEqual([{ texto: "solo de A" }]);
+  });
+
+  it("Salud: ni el dueño puede falsear datos del reloj desde el navegador (solo «manual»)", async () => {
+    const a = await sesion(A);
+    const { error } = await a.from("sal_metricas").insert({ user_id: ids[0], fecha: "2026-10-22", metrica: "pasos", valor: 99999, fuente: "garmin" });
+    expect(error).not.toBeNull();
   });
 
   it("sin sesión no se lee nada", async () => {

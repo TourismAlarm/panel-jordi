@@ -17,6 +17,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      sal_entrenos: {
+        Row: {
+          actualizado_en: string
+          calorias: number | null
+          distancia_km: number | null
+          duracion_min: number | null
+          fc_media: number | null
+          fecha: string
+          fuente: string
+          id: string
+          id_externo: string | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          actualizado_en?: string
+          calorias?: number | null
+          distancia_km?: number | null
+          duracion_min?: number | null
+          fc_media?: number | null
+          fecha: string
+          fuente?: string
+          id?: string
+          id_externo?: string | null
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          actualizado_en?: string
+          calorias?: number | null
+          distancia_km?: number | null
+          duracion_min?: number | null
+          fc_media?: number | null
+          fecha?: string
+          fuente?: string
+          id?: string
+          id_externo?: string | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sal_metricas: {
+        Row: {
+          actualizado_en: string
+          fecha: string
+          fuente: string
+          id: string
+          metrica: string
+          unidad: string | null
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          actualizado_en?: string
+          fecha: string
+          fuente?: string
+          id?: string
+          metrica: string
+          unidad?: string | null
+          user_id: string
+          valor: number
+        }
+        Update: {
+          actualizado_en?: string
+          fecha?: string
+          fuente?: string
+          id?: string
+          metrica?: string
+          unidad?: string | null
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      sal_registros: {
+        Row: {
+          aviso_medico: boolean
+          creado_en: string
+          etiqueta: string | null
+          fecha: string
+          id: string
+          intensidad: number | null
+          texto: string | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          aviso_medico?: boolean
+          creado_en?: string
+          etiqueta?: string | null
+          fecha: string
+          id?: string
+          intensidad?: number | null
+          texto?: string | null
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          aviso_medico?: boolean
+          creado_en?: string
+          etiqueta?: string | null
+          fecha?: string
+          id?: string
+          intensidad?: number | null
+          texto?: string | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bandeja: {
         Row: {
           created_at: string

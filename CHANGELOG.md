@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Fase 3 — Salud (2026-10-21)
+- Módulo `/salud` con **Hoy** (tarjetas de sueño, pasos, pulso en reposo, peso, ánimo y energía con su cambio frente a tu media de 7 días; resumen en frases; últimos entrenos), **Histórico** (gráficas de 7/30/90 días por métrica con media, mínimo y máximo) y **Registrar** (ánimo, energía, peso, síntomas, condición médica y notas, con botones grandes).
+- No existía una app de Salud anterior: las tablas `sal_metricas` (formato largo: día + métrica + valor + fuente), `sal_entrenos` y `sal_registros` son nuevas (migración `20261021120000_salud.sql`, aplicada), con RLS. Desde el navegador solo se escribe lo «manual»; los datos del reloj entran por el servidor.
+- **Entrada de datos del PC**: `POST /api/salud/ingesta` protegida con `SALUD_INGESTA_SECRET` (no hace falta ninguna clave de Supabase en el PC). Repetir un envío no duplica. Contrato y ejemplo en `docs/pc-salud.md`.
+- **Seguridad médica**: si apuntas dolor agudo, mareo, dolor de pecho, falta de aire, desmayo, una condición médica o escribes palabras de alarma, sale el aviso «Consulta a un médico» (en directo y tras guardar; también en Hoy si hubo uno en los últimos 3 días). La app no diagnostica ni receta; el resumen solo te compara contigo mismo y no usa IA.
+- Pruebas: aviso médico, resumen/medias, contrato de ingesta, autenticación bearer y RLS de `sal_*` (también comprobada en la base real).
+- Pendiente de la fase: el resumen diario por correo. Se decidió incluir la salud dentro del resumen matutino de «Hoy» (Fase 5); la lógica (`lib/salud/resumen.ts`) ya está lista para reutilizarla.
+
 ## Fase 2 — Finanzas (2026-10-20) · datos migrados el 21-10-2026; falta probar en paralelo
 - Módulo `/finanzas` con las 4 pantallas que tiene hoy Control-Financiero: **Inicio** (lo que te queda y cuánto al día hasta la nómina, gasto real por cuenta, traspasos, ritmo frente a los 3 meses anteriores, en qué se va, sin categoría), **Movimientos**, **Deudas** y **Ajustes** (mes financiero, bancos conectados, cuentas y papeles, categorías, importar CSV, exportar, borrar datos de prueba). Se ha portado la lógica y los componentes existentes; solo se han adaptado sesión, tablas y colores.
 - Tablas `fin_*` en Panel-jordi (migración `20261020120000_finanzas.sql`, aplicada, vacías) con `user_id` uuid, RLS por usuario y trigger de categorías por defecto. `fin_bank_links` y `fin_bank_auth_states` solo las toca el servidor.

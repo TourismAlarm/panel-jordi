@@ -16,7 +16,7 @@ export type Modulo = {
 export const MODULOS: Modulo[] = [
   { id: "hoy", nombre: "Hoy", href: "/", icono: CalendarCheck, descripcion: "Lo urgente del día", estado: "proximamente", barra: true },
   { id: "finanzas", nombre: "Finanzas", href: "/finanzas", icono: Wallet, descripcion: "Gasto, presupuesto y deudas", estado: "activo", barra: true },
-  { id: "salud", nombre: "Salud", href: "/salud", icono: HeartPulse, descripcion: "Tu estado de un vistazo", estado: "proximamente", barra: true },
+  { id: "salud", nombre: "Salud", href: "/salud", icono: HeartPulse, descripcion: "Tu estado de un vistazo", estado: "activo", barra: true },
   { id: "elsa", nombre: "ELSA", href: "/elsa", icono: Truck, descripcion: "Panel de contenido", estado: "activo", barra: true },
   { id: "documentos", nombre: "Documentos", href: "/documentos", icono: FileText, descripcion: "Archivo con vencimientos", estado: "proximamente", barra: true },
 ];

@@ -6,11 +6,11 @@ import type { Database } from "@/lib/supabase/tipos";
 
 // Refresca la sesión en cada petición. Sin sesión → /login. Con sesión de otro correo → /acceso-denegado.
 // /api/cron/* no usa sesión: cada ruta valida CRON_SECRET (lib/cron-auth.ts).
-const PUBLICAS = ["/login", "/acceso-denegado", "/api/cron/"];
+const PUBLICAS = ["/login", "/acceso-denegado", "/api/cron/", "/api/salud/ingesta"];
 
 export async function proxy(request: NextRequest) {
   const ruta = request.nextUrl.pathname;
-  if (ruta.startsWith("/api/cron/")) return NextResponse.next({ request });
+  if (ruta.startsWith("/api/cron/") || ruta === "/api/salud/ingesta") return NextResponse.next({ request });
 
   let response = NextResponse.next({ request });
   const { url, clave } = configSupabase();

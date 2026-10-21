@@ -10,3 +10,6 @@
 - Finanzas: «Proyección» (regresión a 3 meses), presupuestos por categoría, metas y recurrentes existían en código pero sin pantalla en la app real; no se han portado.
 - Finanzas: el offline (cola de movimientos) no se ha portado; la app del móvil necesita conexión.
 - Finanzas: los movimientos nuevos del banco deberían pasar por la IA solo si Jordi lo pide (hoy categorización por reglas).
+- Salud: conectar la tarea/proceso de Windows existente a `/api/salud/ingesta` (hay que adaptar su salida a `docs/pc-salud.md`).
+- Salud: comentario de IA sobre el resumen (sin diagnóstico) cuando exista la clave de Anthropic; hoy es texto calculado.
+- Salud: medicación, tensión arterial, agua u otras métricas si las pides (una línea en `lib/salud/metricas.ts`).
