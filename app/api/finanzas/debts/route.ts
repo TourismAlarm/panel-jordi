@@ -41,7 +41,7 @@ export async function GET() {
   const [loansRes, txRes, dismissedRes, accountsData] = await Promise.all([
     supabaseAdmin
       .from('loans')
-      .select('*, loan_payments(id, amount, payment_date, transaction_id)')
+      .select('*, loan_payments:fin_loan_payments(id, amount, payment_date, transaction_id)')
       .eq('user_id', userId)
       .neq('status', 'cancelled')
       .order('created_at', { ascending: true }),
