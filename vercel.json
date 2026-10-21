@@ -1,6 +1,5 @@
 {
   "crons": [
-    { "path": "/api/cron/finanzas-bancos", "schedule": "47 5 * * *" },
-    { "path": "/api/cron/resumen-diario", "schedule": "0 6 * * *" }
+    { "path": "/api/cron/finanzas-bancos", "schedule": "47 5 * * *" }
   ]
 }

@@ -6,7 +6,7 @@ import type { Database } from "@/lib/supabase/tipos";
 
 // Refresca la sesión en cada petición. Sin sesión → /login. Con sesión de otro correo → /acceso-denegado.
 // /api/cron/* no usa sesión: cada ruta valida CRON_SECRET (lib/cron-auth.ts).
-const PUBLICAS = ["/login", "/acceso-denegado", "/api/cron/", "/api/salud/ingesta"];
+const PUBLICAS = ["/login", "/acceso-denegado", "/api/cron/", "/api/salud/ingesta", "/api/hoy/"];
 
 export async function proxy(request: NextRequest) {
   const ruta = request.nextUrl.pathname;

@@ -15,4 +15,3 @@
 - Salud: medicación, tensión arterial, agua u otras métricas si las pides (una línea en `lib/salud/metricas.ts`).
 - Hoy: marcar un correo como «ya contestado» o «ignorar remitente» (hoy la IA solo lo lee; el panel no toca el correo).
 - Hoy: avisar de vencimientos de Documentos cuando exista la Fase 6.
-- Hoy: cron a las 7:00 exactas todo el año (hace falta plan Pro de Vercel o un disparador externo).
