@@ -111,6 +111,7 @@ export async function leerDocumento(db: SupabaseClient<Database>, userId: string
     return fallo ? await marcarError(fallo) : null;
   } catch (e) {
     console.error("Documentos · leer:", e instanceof Error ? e.message : e);
-    return await marcarError("La IA no ha podido leerlo. Puedes reintentarlo o rellenar la ficha a mano.");
+    const estado = (e as { status?: number }).status;
+    return await marcarError(estado === 401 || estado === 403 ? "La clave de Anthropic no es válida." : estado === 400 ? "Anthropic ha rechazado la petición (revisa la clave y el saldo)." : estado === 429 ? "Demasiadas peticiones a la IA; prueba en un minuto." : "La IA no ha podido leerlo.");
   }
 }

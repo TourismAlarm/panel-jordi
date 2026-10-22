@@ -20,7 +20,9 @@ function obtenerCliente(): Cliente {
   if (!cliente) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("Falta ANTHROPIC_API_KEY.");
-    cliente = new Anthropic({ apiKey, maxRetries: 3 }); // reintenta 429 y 5xx con espera creciente
+    // Si la clave no está ligada a un workspace, Anthropic exige su id (ANTHROPIC_WORKSPACE_ID). Lo normal es crear la clave dentro de un workspace.
+    const workspace = process.env.ANTHROPIC_WORKSPACE_ID?.trim();
+    cliente = new Anthropic({ apiKey: apiKey.trim(), maxRetries: 3, ...(workspace ? { defaultHeaders: { "anthropic-workspace-id": workspace } } : {}) }); // reintenta 429 y 5xx con espera creciente
   }
   return cliente;
 }

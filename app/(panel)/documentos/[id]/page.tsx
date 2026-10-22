@@ -45,7 +45,7 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
       </header>
 
       {doc.estado === "pendiente" && <div className="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3"><p className="font-semibold">Todavía no se ha leído.</p><BotonLeer id={doc.id} /></div>}
-      {doc.estado === "error" && <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">No se pudo leer: {doc.error ?? "motivo desconocido"}. Puedes reintentarlo o rellenar la ficha a mano.</p>}
+      {doc.estado === "error" && <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">No se pudo leer: {(doc.error ?? "motivo desconocido").replace(/\.$/, "")}. Puedes reintentarlo o rellenar la ficha a mano.</p>}
       {doc.estado === "error" && <BotonLeer id={doc.id} />}
 
       {v && (
