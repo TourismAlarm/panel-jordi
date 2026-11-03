@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { supabaseServidor } from "@/lib/supabase/server";
+import { guionAMarkdown } from "@/lib/bots/guiones";
 import type { EjecucionBot } from "@/lib/bots/resumen";
 import type { Fila } from "@/lib/supabase/tipos";
 import { comprobar } from "./comun";
@@ -22,21 +23,21 @@ export const listarIdeas = cache(async (): Promise<Idea[]> => {
 });
 
 // RLS no deja tocar una idea ya usada: 0 filas = el Guionista ya la cogió.
-export async function decidirIdeaBot(id: string, estado: "me_gusta" | "descartada" | "nueva", nota: string | null) {
+export async function decidirIdeaBot(id: string, estado: "me_gusta" | "descartada" | "nueva", nota: string | null): Promise<{ titulo: string } | "error" | "cerrada"> {
   const supabase = await supabaseServidor();
   const { data, error } = await supabase
     .from("ideas")
     .update({ estado, nota_jordi: nota, actualizado: new Date().toISOString() })
     .eq("id", id)
-    .select("id");
+    .select("titulo");
   if (error) return "error";
-  return data?.length ? "ok" : "cerrada";
+  return data?.[0] ?? "cerrada";
 }
 
 // ── Guiones propuestos ────────────────────────────────────
 export type GuionPropuesto = Fila<"guiones_propuestos">;
 
-// Los que siguen vivos en el panel: por decidir, con cambios pedidos y aprobados que aún no son vídeo.
+// Los que siguen vivos en el panel: por decidir, con cambios pedidos y aprobados que no se pudieron convertir en vídeo.
 export const guionesAbiertos = cache(async (): Promise<GuionPropuesto[]> => {
   const supabase = await supabaseServidor();
   const r = await supabase
@@ -58,6 +59,19 @@ export async function decidirGuionPropuesto(id: string, estado: "aprobado" | "ca
     .select("id");
   if (error) return "error";
   return data?.length ? "ok" : "cerrado";
+}
+
+// Guion aprobado → proyecto GE, en una sola transacción. null = no se ha podido: el guion sigue aprobado y se puede reintentar.
+export async function crearVideoDeGuion(id: string): Promise<string | null> {
+  const supabase = await supabaseServidor();
+  const { data: guion, error: eGuion } = await supabase.from("guiones_propuestos").select("*").eq("id", id).maybeSingle();
+  if (eGuion || !guion) {
+    console.error("Guion → vídeo:", eGuion?.message ?? "no existe");
+    return null;
+  }
+  const { data, error } = await supabase.rpc("crear_ge_de_guion", { p_guion: id, p_guion_md: guionAMarkdown(guion) });
+  if (error) console.error("Guion → vídeo:", error.message);
+  return error ? null : data;
 }
 
 // ── Revisiones ────────────────────────────────────────────

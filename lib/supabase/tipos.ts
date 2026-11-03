@@ -1714,6 +1714,7 @@ export type Database = {
           guion_md: string | null
           id: string
           montaje_url: string | null
+          origen: string
           por_revisar: boolean
           siguiente_paso: string | null
           sin_guion: boolean
@@ -1786,6 +1787,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      crear_ge_de_guion: {
+        Args: { p_guion: string; p_guion_md: string }
+        Returns: string
+      }
+      crear_ge_urgencia: {
+        Args: { p_fecha: string | null; p_texto: string }
+        Returns: string
+      }
       doc_buscar: {
         Args: { q: string }
         Returns: {

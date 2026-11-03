@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { conBot, conDatosDeCliente, firmante, leerCuerpo, leerFiltro } from "@/lib/bots/entrada";
 import { FiltroGuion, GuionIn } from "@/lib/bots/esquemas";
+import { porQueNoSeReemplaza } from "@/lib/bots/guiones";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/tipos";
 
 const noVale = (error: string, status = 409) => NextResponse.json({ error }, { status });
 
 // POST /api/bots/guiones — una propuesta de guion, siempre desde una idea que a Jordi le ha gustado.
-// Con reemplaza_id es la nueva versión de un guion al que Jordi pidió cambios.
+// Con reemplaza_id es la nueva versión de un guion: Jordi pidió cambios o el bot lo mejora antes de que lo mire.
 export async function POST(request: Request) {
   return conBot(request, "guiones:escribir", async (clave) => {
     const cuerpo = await leerCuerpo(request, GuionIn);
@@ -27,10 +28,11 @@ export async function POST(request: Request) {
 
     let version = 1;
     if (guion.reemplaza_id) {
-      const { data: previo, error } = await db.from("guiones_propuestos").select("estado, version").eq("id", guion.reemplaza_id).maybeSingle();
+      const { data: previo, error } = await db.from("guiones_propuestos").select("estado, version, video_id").eq("id", guion.reemplaza_id).maybeSingle();
       if (error) throw new Error(error.message);
       if (!previo) return noVale("el guion que reemplaza no existe", 404);
-      if (previo.estado !== "cambios") return noVale("solo se reemplaza un guion al que Jordi ha pedido cambios");
+      const motivo = porQueNoSeReemplaza(previo);
+      if (motivo) return noVale(motivo);
       version = previo.version + 1;
     }
 
