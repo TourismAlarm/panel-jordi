@@ -3,6 +3,7 @@ import { cache } from "react";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
+import type { Bot } from "@/lib/bots/catalogo";
 
 export type Aviso = Database["public"]["Tables"]["bandeja"]["Row"];
 export type Modulo = "hoy" | "finanzas" | "salud" | "elsa" | "documentos" | "sistema";
@@ -34,10 +35,11 @@ export async function guardarRespuestaBandeja(id: string, respuesta: string): Pr
 }
 
 // Para crons y agentes: deja un aviso, pregunta o borrador al propietario (usa la service_role).
-export async function dejarEnBandeja(p: { modulo: Modulo; tipo: TipoBandeja; titulo: string; cuerpo?: string }) {
+export async function dejarEnBandeja(p: { modulo: Modulo; tipo: TipoBandeja; titulo: string; cuerpo?: string; origen_bot?: Bot }): Promise<string> {
   const admin = supabaseAdmin();
   const { data: dueno, error: e1 } = await admin.from("permitidos").select("user_id").limit(1).single();
   if (e1) throw new Error(`No hay usuario permitido: ${e1.message}`);
-  const { error } = await admin.from("bandeja").insert({ user_id: dueno.user_id, ...p, cuerpo: p.cuerpo ?? null });
+  const { data, error } = await admin.from("bandeja").insert({ user_id: dueno.user_id, ...p, cuerpo: p.cuerpo ?? null }).select("id").single();
   if (error) throw new Error(`No se pudo dejar el aviso: ${error.message}`);
+  return data.id;
 }
