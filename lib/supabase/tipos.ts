@@ -119,6 +119,21 @@ export type Database = {
         }
         Relationships: []
       }
+      contadores: {
+        Row: {
+          nombre: string
+          valor: number
+        }
+        Insert: {
+          nombre: string
+          valor: number
+        }
+        Update: {
+          nombre?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       doc_documentos: {
         Row: {
           categoria: string
@@ -1727,6 +1742,7 @@ export type Database = {
           guion_md?: string | null
           id: string
           montaje_url?: string | null
+          origen?: string
           por_revisar?: boolean
           siguiente_paso?: string | null
           sin_guion?: boolean
@@ -1739,6 +1755,7 @@ export type Database = {
           guion_md?: string | null
           id?: string
           montaje_url?: string | null
+          origen?: string
           por_revisar?: boolean
           siguiente_paso?: string | null
           sin_guion?: boolean
@@ -1792,7 +1809,7 @@ export type Database = {
         Returns: string
       }
       crear_ge_urgencia: {
-        Args: { p_fecha: string | null; p_texto: string }
+        Args: { p_fecha: string; p_texto: string }
         Returns: string
       }
       doc_buscar: {
@@ -1812,6 +1829,7 @@ export type Database = {
           tabla: string
         }[]
       }
+      siguiente_ge: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
