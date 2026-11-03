@@ -8,6 +8,7 @@ import { correoPermitido } from "@/lib/acceso";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
+import { decidirGuionPropuesto, decidirIdeaBot } from "@/lib/datos/bots";
 import { guardarDecision } from "@/lib/datos/reglas";
 import { guardarRespuestaBandeja, marcarLeido } from "@/lib/datos/bandeja";
 import { esMotivo } from "@/lib/estados";
@@ -131,6 +132,37 @@ export async function decidirRegla(_prev: Resultado, form: FormData): Promise<Re
   if (r === "recogida") return { error: "El PC ya la ha aplicado: no se puede cambiar desde aquí." };
   revalidatePath("/elsa/aprendizaje");
   revalidatePath("/elsa");
+  return { ok: true };
+}
+
+// Ideas de los bots: Me gusta (lista para el Guionista) · Descartar · volver a «por decidir». La nota va con la decisión.
+export async function decidirIdea(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const id = String(form.get("id") ?? "");
+  const que = String(form.get("decision") ?? "");
+  const nota = String(form.get("nota") ?? "").trim() || null;
+  if (!id) return { error: "Falta la idea." };
+  if (que !== "me_gusta" && que !== "descartada" && que !== "nueva") return { error: "Acción no válida." };
+  const r = await decidirIdeaBot(id, que, nota);
+  if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
+  if (r === "cerrada") return { error: "El Guionista ya la ha usado: no se puede cambiar." };
+  revalidatePath("/elsa/ideas");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+// Guiones de los bots: Aprobar · Pedir cambios (con texto) · Descartar · Deshacer.
+export async function decidirGuion(_prev: Resultado, form: FormData): Promise<Resultado> {
+  const id = String(form.get("id") ?? "");
+  const que = String(form.get("decision") ?? "");
+  const nota = String(form.get("nota") ?? "").trim() || null;
+  if (!id) return { error: "Falta el guion." };
+  if (que !== "aprobado" && que !== "cambios" && que !== "descartado" && que !== "propuesto") return { error: "Acción no válida." };
+  if (que === "cambios" && !nota) return { error: "Escribe qué quieres cambiar." };
+  const r = await decidirGuionPropuesto(id, que, nota);
+  if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
+  if (r === "cerrado") return { error: "Ya es un vídeo: no se puede cambiar desde aquí." };
+  revalidatePath("/elsa");
+  revalidatePath("/");
   return { ok: true };
 }
 
