@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Pantalla, Seccion } from "@/components/ui";
 import { ListaAgentes } from "@/components/actividad/ListaAgentes";
 import { Registro } from "@/components/actividad/Registro";
+import { SubNavActividad } from "@/components/actividad/SubNavActividad";
 import { actividadReciente, estadoAgentes } from "@/lib/datos/actividad";
 
 export const metadata: Metadata = { title: "Actividad" };
@@ -11,6 +12,7 @@ export default async function Actividad() {
 
   return (
     <Pantalla titulo="Actividad" subtitulo="Lo que han hecho los agentes, lo último arriba.">
+      <SubNavActividad activa="agentes" />
       <Seccion titulo="Agentes">
         <ListaAgentes agentes={agentes} />
       </Seccion>

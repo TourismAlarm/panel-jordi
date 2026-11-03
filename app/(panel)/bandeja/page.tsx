@@ -5,6 +5,7 @@ import { Badge } from "@/components/shadcn/badge";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { leerAviso } from "@/lib/acciones";
+import { nombreBot } from "@/lib/bots/catalogo";
 import { listarBandeja } from "@/lib/datos/bandeja";
 import { formatearFechaHora } from "@/lib/fechas";
 
@@ -32,7 +33,7 @@ export default async function Bandeja() {
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={a.estado === "nuevo" ? "default" : "secondary"}>{a.estado === "nuevo" ? "Nuevo" : a.estado === "leido" ? "Leído" : "Respondido"}</Badge>
             <Badge>{TIPO[a.tipo as keyof typeof TIPO] ?? a.tipo}</Badge>
-            <span className="text-sm text-muted-foreground">{a.modulo} · {formatearFechaHora(a.created_at)}</span>
+            <span className="text-sm text-muted-foreground">{a.origen_bot ? `${nombreBot(a.origen_bot)} · ` : ""}{a.modulo} · {formatearFechaHora(a.created_at)}</span>
           </div>
           <h2 className="text-lg font-semibold">{a.titulo}</h2>
           {a.cuerpo && <p className="whitespace-pre-line">{a.cuerpo}</p>}

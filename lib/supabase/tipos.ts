@@ -13,7 +13,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -158,6 +158,69 @@ export type Database = {
         }
         Relationships: []
       }
+      actividad_bots: {
+        Row: {
+          bot: string
+          creado: string
+          enlace: string | null
+          fin: string | null
+          id: number
+          inicio: string
+          nota: string | null
+          resultado: string
+          tarea: string
+        }
+        Insert: {
+          bot: string
+          creado?: string
+          enlace?: string | null
+          fin?: string | null
+          id?: never
+          inicio: string
+          nota?: string | null
+          resultado: string
+          tarea: string
+        }
+        Update: {
+          bot?: string
+          creado?: string
+          enlace?: string | null
+          fin?: string | null
+          id?: never
+          inicio?: string
+          nota?: string | null
+          resultado?: string
+          tarea?: string
+        }
+        Relationships: []
+      }
+      bots_llamadas: {
+        Row: {
+          bot: string
+          creado: string
+          estado: number
+          id: number
+          metodo: string
+          ruta: string
+        }
+        Insert: {
+          bot: string
+          creado?: string
+          estado: number
+          id?: never
+          metodo: string
+          ruta: string
+        }
+        Update: {
+          bot?: string
+          creado?: string
+          estado?: number
+          id?: never
+          metodo?: string
+          ruta?: string
+        }
+        Relationships: []
+      }
       bandeja: {
         Row: {
           created_at: string
@@ -165,6 +228,7 @@ export type Database = {
           estado: string
           id: string
           modulo: string
+          origen_bot: string | null
           respuesta: string | null
           tipo: string
           titulo: string
@@ -176,6 +240,7 @@ export type Database = {
           estado?: string
           id?: string
           modulo: string
+          origen_bot?: string | null
           respuesta?: string | null
           tipo: string
           titulo: string
@@ -187,6 +252,7 @@ export type Database = {
           estado?: string
           id?: string
           modulo?: string
+          origen_bot?: string | null
           respuesta?: string | null
           tipo?: string
           titulo?: string
