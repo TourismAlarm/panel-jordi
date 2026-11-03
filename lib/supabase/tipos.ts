@@ -158,6 +158,189 @@ export type Database = {
         }
         Relationships: []
       }
+      ideas: {
+        Row: {
+          actualizado: string
+          creado: string
+          estado: string
+          formato: string | null
+          fuente_bot: string
+          gancho: string
+          id: string
+          nota_jordi: string | null
+          por_que_funciona: string | null
+          referencias: Json
+          titulo: string
+          trabajo_sugerido: string | null
+        }
+        Insert: {
+          actualizado?: string
+          creado?: string
+          estado?: string
+          formato?: string | null
+          fuente_bot: string
+          gancho: string
+          id?: string
+          nota_jordi?: string | null
+          por_que_funciona?: string | null
+          referencias?: Json
+          titulo: string
+          trabajo_sugerido?: string | null
+        }
+        Update: {
+          actualizado?: string
+          creado?: string
+          estado?: string
+          formato?: string | null
+          fuente_bot?: string
+          gancho?: string
+          id?: string
+          nota_jordi?: string | null
+          por_que_funciona?: string | null
+          referencias?: Json
+          titulo?: string
+          trabajo_sugerido?: string | null
+        }
+        Relationships: []
+      }
+      guiones_propuestos: {
+        Row: {
+          actualizado: string
+          creado: string
+          duracion_s: number | null
+          estado: string
+          evento_calendario: string | null
+          fuente_bot: string
+          gancho: string
+          id: string
+          idea_id: string | null
+          nota_jordi: string | null
+          planos: Json
+          preguntas: Json
+          prueba: string | null
+          reemplaza_id: string | null
+          reglas_cumplidas: Json
+          tema: string | null
+          textos_pantalla: Json
+          tipo_gancho: string | null
+          titulo: string
+          version: number
+          video_id: string | null
+        }
+        Insert: {
+          actualizado?: string
+          creado?: string
+          duracion_s?: number | null
+          estado?: string
+          evento_calendario?: string | null
+          fuente_bot: string
+          gancho: string
+          id?: string
+          idea_id?: string | null
+          nota_jordi?: string | null
+          planos?: Json
+          preguntas?: Json
+          prueba?: string | null
+          reemplaza_id?: string | null
+          reglas_cumplidas?: Json
+          tema?: string | null
+          textos_pantalla?: Json
+          tipo_gancho?: string | null
+          titulo: string
+          version?: number
+          video_id?: string | null
+        }
+        Update: {
+          actualizado?: string
+          creado?: string
+          duracion_s?: number | null
+          estado?: string
+          evento_calendario?: string | null
+          fuente_bot?: string
+          gancho?: string
+          id?: string
+          idea_id?: string | null
+          nota_jordi?: string | null
+          planos?: Json
+          preguntas?: Json
+          prueba?: string | null
+          reemplaza_id?: string | null
+          reglas_cumplidas?: Json
+          tema?: string | null
+          textos_pantalla?: Json
+          tipo_gancho?: string | null
+          titulo?: string
+          version?: number
+          video_id?: string | null
+        }
+        Relationships: []
+      }
+      revisiones: {
+        Row: {
+          bot: string
+          creado: string
+          fase: string
+          guion_id: string | null
+          id: string
+          por_regla: Json
+          resultado: string
+          resumen: string | null
+          video_id: string | null
+        }
+        Insert: {
+          bot: string
+          creado?: string
+          fase: string
+          guion_id?: string | null
+          id?: string
+          por_regla?: Json
+          resultado: string
+          resumen?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          bot?: string
+          creado?: string
+          fase?: string
+          guion_id?: string | null
+          id?: string
+          por_regla?: Json
+          resultado?: string
+          resumen?: string | null
+          video_id?: string | null
+        }
+        Relationships: []
+      }
+      memoria_comun: {
+        Row: {
+          actualizado: string
+          autor: string
+          clave: string
+          contenido: string
+          creado: string
+          id: string
+          tipo: string
+        }
+        Insert: {
+          actualizado?: string
+          autor: string
+          clave: string
+          contenido: string
+          creado?: string
+          id?: string
+          tipo: string
+        }
+        Update: {
+          actualizado?: string
+          autor?: string
+          clave?: string
+          contenido?: string
+          creado?: string
+          id?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       actividad_bots: {
         Row: {
           bot: string

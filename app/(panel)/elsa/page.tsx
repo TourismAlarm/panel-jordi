@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Rotulo, Seccion, Segmentos, Vacio } from "@/components/ui";
 import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
+import { TarjetaGuion } from "@/components/bots/TarjetaGuion";
+import { guionesAbiertos, revisionesDeGuiones, textosDeReglas } from "@/lib/datos/bots";
 import { descartesPorVideo, listarPeticiones, materialDeVideo } from "@/lib/datos/peticiones";
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
 import { contarPorDecidir } from "@/lib/datos/reglas";
@@ -16,7 +18,7 @@ import { pasosDe, teToca } from "@/lib/pasos";
 // «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, lo que has pedido (guiones y ediciones sin guion);
 // al final, plegados, los hechos y los que has descartado.
 export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
-  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync, reglas] = await Promise.all([
+  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
@@ -24,7 +26,10 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
     PETICIONES_ACTIVAS ? listarPeticiones() : Promise.resolve([]),
     estadoSync(),
     contarPorDecidir(),
+    guionesAbiertos(),
+    textosDeReglas(),
   ]);
+  const revisionesGuion = await revisionesDeGuiones(guiones.map((g) => g.id));
 
   const descartes = descartesPorVideo(peticiones);
   const pedidos = peticiones.filter((x) => (x.tipo === "nuevo" || x.tipo === "sin_guion") && x.estado !== "hecha");
@@ -76,6 +81,14 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         <Aviso tono="info">
           {plural(enviadas, "respuesta guardada", "respuestas guardadas")}. Pendiente de que la recoja el PC.
         </Aviso>
+      )}
+
+      {!!guiones.length && (
+        <Seccion titulo="Guiones propuestos">
+          {guiones.map((g) => (
+            <TarjetaGuion key={g.id} g={g} revisiones={revisionesGuion.filter((r) => r.guion_id === g.id)} reglas={textosReglas} />
+          ))}
+        </Seccion>
       )}
 
       {!!pedidos.length && (

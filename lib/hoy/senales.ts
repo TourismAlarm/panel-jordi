@@ -27,7 +27,7 @@ const plural = (n: number, uno: string, varios = `${uno}s`) => `${n} ${n === 1 ?
 // ── ELSA ─────────────────────────────────────────────────────
 export type ProyectoElsa = { id: string; titulo: string | null; fecha_trabajo: string | null; pasoTuyo: string }; // solo los que te tocan
 
-export function senalesElsa(p: { hoy: string; proyectos: ProyectoElsa[]; reglasPorDecidir: number; pcUltimoOk: string | null; ahora: number }): Senal[] {
+export function senalesElsa(p: { hoy: string; proyectos: ProyectoElsa[]; reglasPorDecidir: number; pcUltimoOk: string | null; ahora: number; ideasNuevas?: number; guionesPorAprobar?: number; revisionesConFallos?: number }): Senal[] {
   const s: Senal[] = [];
   for (const x of p.proyectos) {
     const dias = x.fecha_trabajo ? diasHasta(x.fecha_trabajo, p.hoy) : null;
@@ -43,6 +43,15 @@ export function senalesElsa(p: { hoy: string; proyectos: ProyectoElsa[]; reglasP
   }
   if (p.reglasPorDecidir > 0) {
     s.push({ id: "elsa-reglas", modulo: "elsa", nivel: "saber", titulo: `${plural(p.reglasPorDecidir, "cosa")} que los agentes quieren aprender de ti`, detalle: "¿Sí o no?", href: "/elsa/aprendizaje" });
+  }
+  if (p.guionesPorAprobar) {
+    s.push({ id: "elsa-guiones", modulo: "elsa", nivel: "hoy", titulo: `${plural(p.guionesPorAprobar, "guion propuesto", "guiones propuestos")} por aprobar`, detalle: "Los ha escrito el Guionista ELSA", href: "/elsa" });
+  }
+  if (p.revisionesConFallos) {
+    s.push({ id: "elsa-revisiones", modulo: "elsa", nivel: "hoy", titulo: `${plural(p.revisionesConFallos, "revisión", "revisiones")} de Antonio con cambios`, detalle: "Últimos 7 días", href: "/elsa" });
+  }
+  if (p.ideasNuevas) {
+    s.push({ id: "elsa-ideas", modulo: "elsa", nivel: "saber", titulo: `${plural(p.ideasNuevas, "idea nueva", "ideas nuevas")} por decidir`, detalle: "¿Te gustan?", href: "/elsa/ideas" });
   }
   const horas = p.pcUltimoOk ? (p.ahora - new Date(p.pcUltimoOk).getTime()) / 3_600_000 : null;
   if (horas === null || horas > 12) {
