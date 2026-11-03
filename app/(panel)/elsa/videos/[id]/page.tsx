@@ -131,7 +131,7 @@ export default async function Proyecto({ params }: PageProps<"/elsa/videos/[id]"
       {!descarte && !!preguntas.length && (
         <Seccion titulo="Preguntas" id="preguntas" cuenta={resumen.sinContestar}>
           {preguntas.map((p) => (
-            <FormPregunta key={p.id} videoId={video.id} p={p} />
+            <FormPregunta key={p.id} videoId={video.id} p={p} quien={video.origen === "panel" ? "Antonio" : "el PC"} />
           ))}
         </Seccion>
       )}

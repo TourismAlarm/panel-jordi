@@ -46,6 +46,13 @@ export const contarEnviadas = cache(async () => {
   return r.count ?? 0;
 });
 
+// Una pregunta con lo que hace falta para avisar a Antonio. null si no es de un vídeo del panel: esa la recoge el PC.
+export async function preguntaDePanel(id: string) {
+  const supabase = await supabaseServidor();
+  const { data } = await supabase.from("preguntas").select("clave, texto, video_id, videos!inner(origen)").eq("id", id).eq("videos.origen", "panel").maybeSingle();
+  return data;
+}
+
 // Lo único que la app escribe. RLS solo deja si eres usuario permitido y el PC aún no la ha recogido.
 export async function guardarRespuesta(id: string, respuesta: string): Promise<"ok" | "recogida" | "error"> {
   const supabase = await supabaseServidor();

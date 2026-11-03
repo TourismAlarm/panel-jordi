@@ -9,11 +9,11 @@ import s from "./FormPregunta.module.css";
 
 type P = Pick<Pregunta, "id" | "clave" | "texto" | "respuesta" | "respondida_en" | "recogida_en">;
 
-// Una pregunta del guionista con su caja para contestar (o la respuesta, si el PC ya la recogió).
-export function FormPregunta({ videoId, p }: { videoId: string; p: P }) {
+// Una pregunta del guionista con su caja para contestar (o la respuesta, si ya está recogida). quien: quién la recoge.
+export function FormPregunta({ videoId, p, quien = "el PC" }: { videoId: string; p: P; quien?: string }) {
   const [estado, accion] = useActionState(responder, null);
   const fase = fasePregunta(p);
-  const e = estadoPregunta(p);
+  const e = estadoPregunta(p, quien);
 
   return (
     <Tarjeta tono={fase === "pendiente" ? "ojo" : undefined}>
@@ -35,7 +35,7 @@ export function FormPregunta({ videoId, p }: { videoId: string; p: P }) {
             aria-label={`Respuesta a ${p.clave}`}
           />
           {estado?.error && <ErrorCampo>{estado.error}</ErrorCampo>}
-          {estado?.ok && <Aviso tono="bien">Guardada. Pendiente de que la recoja el PC.</Aviso>}
+          {estado?.ok && <Aviso tono="bien">Guardada. Pendiente de que la recoja {quien}.</Aviso>}
           <BotonEnviar texto={fase === "enviada" ? "Cambiar respuesta" : "Enviar"} />
         </form>
       )}

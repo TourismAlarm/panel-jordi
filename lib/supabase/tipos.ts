@@ -1721,6 +1721,30 @@ export type Database = {
         }
         Relationships: []
       }
+      videos_guion_historial: {
+        Row: {
+          creado: string
+          guion_md: string
+          id: number
+          quien: string
+          video_id: string
+        }
+        Insert: {
+          creado?: string
+          guion_md: string
+          id?: never
+          quien: string
+          video_id: string
+        }
+        Update: {
+          creado?: string
+          guion_md?: string
+          id?: never
+          quien?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
       videos: {
         Row: {
           actualizado_en: string

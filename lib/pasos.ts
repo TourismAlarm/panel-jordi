@@ -21,7 +21,7 @@ export type Paso = {
 
 export const TONO_PASO: Record<EstadoPaso, Tono> = { hecho: "bien", tuyo: "ojo", sistema: "info", pendiente: "neutro" };
 
-type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" | "tieneGuion" | "ficha" | "sin_guion"> & { descartado?: boolean; materialListo?: boolean };
+type Entrada = Pick<Proyecto, "id" | "estado" | "por_revisar" | "fecha_trabajo" | "tieneGuion" | "ficha" | "sin_guion" | "origen"> & { descartado?: boolean; materialListo?: boolean };
 
 const SIN_PREGUNTAS: ResumenPreguntas = { total: 0, sinContestar: 0, enviadas: 0 };
 
@@ -56,7 +56,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       accion: { texto: "Contestar", href: `/elsa/videos/${p.id}#preguntas` },
     });
   } else if (q.enviadas) {
-    pasos.push({ clave: "preguntas", titulo: "Enviadas · esperando al PC", estado: "sistema" });
+    pasos.push({ clave: "preguntas", titulo: `Enviadas · esperando ${p.origen === "panel" ? "a Antonio" : "al PC"}`, estado: "sistema" });
   } else if (q.total) {
     pasos.push({ clave: "preguntas", titulo: "Preguntas contestadas", estado: "hecho" });
   }

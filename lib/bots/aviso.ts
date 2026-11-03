@@ -10,7 +10,8 @@ export type EventoAviso =
   | { evento: "guion_cambios"; guion_id: string; nota_jordi: string | null }
   | { evento: "guion_aprobado"; guion_id: string; video_id: string }
   | { evento: "material_listo"; video_id: string }
-  | { evento: "montaje_revisado"; video_id: string; decision: string; texto: string | null };
+  | { evento: "montaje_revisado"; video_id: string; decision: string; texto: string | null }
+  | { evento: "pregunta_respondida"; video_id: string; clave: string; texto: string; respuesta: string };
 
 const PANEL = "https://panel-jordi.vercel.app";
 const ESPERA_MS = 5000;
@@ -20,7 +21,7 @@ const limpio = (v: string | undefined) => v?.trim().replace(/^["']|["']$/g, "").
 // Lo que escribe Jordi puede llevar un teléfono o un precio: hacia fuera sale tachado.
 export function cuerpoAviso(e: EventoAviso, cuando: Date) {
   const cuerpo: Record<string, unknown> = { ...e, cuando: cuando.toISOString(), panel: PANEL };
-  for (const campo of ["titulo", "nota_jordi", "texto"]) {
+  for (const campo of ["titulo", "nota_jordi", "texto", "respuesta"]) {
     if (typeof cuerpo[campo] === "string") cuerpo[campo] = tacharDatos(cuerpo[campo]);
   }
   return cuerpo;

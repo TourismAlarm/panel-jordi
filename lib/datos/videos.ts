@@ -6,14 +6,14 @@ import { fichaDeGuion, type Ficha } from "@/lib/guion";
 import { comprobar } from "./comun";
 
 export type Video = Fila<"videos">;
-export type VideoResumen = Omit<Video, "guion_md" | "origen">;
+export type VideoResumen = Omit<Video, "guion_md">;
 
 // Todos los vídeos sin el guion (pesa), por fecha de trabajo; los que no tienen fecha, al final.
 export const listarVideos = cache(async (): Promise<VideoResumen[]> => {
   const supabase = await supabaseServidor();
   const r = await supabase
     .from("videos")
-    .select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, actualizado_en")
+    .select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, origen, actualizado_en")
     .order("fecha_trabajo", { ascending: true, nullsFirst: false });
   return comprobar(r, "los vídeos");
 });
@@ -26,7 +26,7 @@ export const listarProyectos = cache(async (): Promise<Proyecto[]> => {
   const supabase = await supabaseServidor();
   const r = await supabase
     .from("videos")
-    .select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, actualizado_en, guion_md")
+    .select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md")
     .order("fecha_trabajo", { ascending: true, nullsFirst: false });
   return comprobar(r, "los proyectos").map(({ guion_md, ...v }) => ({
     ...v,

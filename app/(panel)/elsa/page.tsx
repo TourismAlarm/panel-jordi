@@ -79,7 +79,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
 
       {!!enviadas && (
         <Aviso tono="info">
-          {plural(enviadas, "respuesta guardada", "respuestas guardadas")}. Pendiente de que la recoja el PC.
+          {plural(enviadas, "respuesta guardada", "respuestas guardadas")}. Pendiente de recoger.
         </Aviso>
       )}
 

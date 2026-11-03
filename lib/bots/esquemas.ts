@@ -59,6 +59,15 @@ export const GuionIn = z.object({
   reglas_cumplidas: z.array(texto(40)).max(100).default([]),
   preguntas: z.array(texto(500)).max(30).default([]),
 });
+// El guion de un vídeo del panel con las respuestas de Jordi dentro, sin cabecera. Sin guion_md, solo da respuestas por recogidas.
+export const VideoGuionIn = z
+  .object({
+    ...firma,
+    guion_md: z.string().trim().min(1).max(50000).refine((md) => /^# Guion completo/m.test(md), { message: "tiene que llevar la sección «# Guion completo»" }).optional(),
+    recogidas: z.array(z.object({ clave: z.string().regex(/^P\d+$/), respondida_en: instante })).max(50).default([]),
+  })
+  .refine((v) => !!v.guion_md || v.recogidas.length > 0, { message: "sin guion_md ni recogidas no hay nada que hacer", path: ["guion_md"] });
+
 export const FiltroGuion = z.enum(["propuesto", "aprobado", "cambios", "descartado", "sustituido"]);
 
 export const ReglaRevisada = z
