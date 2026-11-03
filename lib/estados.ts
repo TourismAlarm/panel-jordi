@@ -8,7 +8,7 @@ export type Estado = { texto: string; tono: Tono };
 
 // ── Vídeos ────────────────────────────────────────────────
 
-const CERRADOS = /publicado|aprobado|exportado|archivado/;
+const CERRADOS = /publicado|metricas|aprobado|exportado|archivado/;
 
 export function videoCerrado(estado: string) {
   return CERRADOS.test(estado);
@@ -28,6 +28,7 @@ export function estadoVideo(estado: string): Estado {
   if (/respuestas|pregunt/.test(estado)) return { texto: "Faltan tus respuestas", tono: "ojo" };
   if (/guion_listo/.test(estado) && /material/.test(estado)) return { texto: "Guion listo · falta grabar", tono: "info" };
   if (/material|grab/.test(estado)) return { texto: "Falta grabar", tono: "neutro" };
+  if (estado === "metricas") return { texto: "Publicado · midiendo", tono: "bien" };
   if (/publicado/.test(estado)) return { texto: "Publicado", tono: "bien" };
   if (/aprobado|exportado/.test(estado)) return { texto: "Aprobado", tono: "bien" };
   if (/archivado/.test(estado)) return { texto: "Archivado", tono: "neutro" };
