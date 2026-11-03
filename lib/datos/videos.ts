@@ -6,7 +6,7 @@ import { fichaDeGuion, type Ficha } from "@/lib/guion";
 import { comprobar } from "./comun";
 
 export type Video = Fila<"videos">;
-export type VideoResumen = Omit<Video, "guion_md">;
+export type VideoResumen = Omit<Video, "guion_md" | "origen">;
 
 // Todos los vídeos sin el guion (pesa), por fecha de trabajo; los que no tienen fecha, al final.
 export const listarVideos = cache(async (): Promise<VideoResumen[]> => {

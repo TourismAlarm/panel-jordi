@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { supabaseServidor } from "@/lib/supabase/server";
 import type { Fila } from "@/lib/supabase/tipos";
+import { hoy } from "@/lib/formato";
 import type { Motivo } from "@/lib/estados";
 import { comprobar } from "./comun";
 
@@ -50,10 +51,11 @@ export async function pedirGuionNuevo(texto: string, fecha: string | null) {
   return !error;
 }
 
-// Edición sin guion: una urgencia que ya has grabado. El PC crea el proyecto (y su carpeta de Drive) sin pasar por el guionista.
+// Edición sin guion: una urgencia que ya has grabado. El proyecto se crea aquí mismo, sin pasar por el guionista ni esperar al PC.
 export async function pedirEdicionSinGuion(texto: string, fecha: string | null) {
   const supabase = await supabaseServidor();
-  const { error } = await supabase.from("peticiones").insert({ tipo: "sin_guion", texto, fecha_trabajo: fecha });
+  const { error } = await supabase.rpc("crear_ge_urgencia", { p_texto: texto, p_fecha: fecha ?? hoy() });
+  if (error) console.error("Urgencia → vídeo:", error.message);
   return !error;
 }
 

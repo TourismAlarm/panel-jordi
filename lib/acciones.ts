@@ -8,7 +8,8 @@ import { correoPermitido } from "@/lib/acceso";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { guardarRespuesta } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
-import { decidirGuionPropuesto, decidirIdeaBot } from "@/lib/datos/bots";
+import { crearVideoDeGuion, decidirGuionPropuesto, decidirIdeaBot } from "@/lib/datos/bots";
+import { avisarAntonio } from "@/lib/bots/aviso";
 import { guardarDecision } from "@/lib/datos/reglas";
 import { guardarRespuestaBandeja, marcarLeido } from "@/lib/datos/bandeja";
 import { esMotivo } from "@/lib/estados";
@@ -79,7 +80,7 @@ export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resu
   redirect("/elsa");
 }
 
-// «Ya lo he grabado»: una urgencia sin guion. El PC crea el proyecto con su carpeta para subir el material.
+// «Ya lo he grabado»: una urgencia sin guion. El proyecto se crea al momento.
 export async function pedirEdicion(_prev: Resultado, form: FormData): Promise<Resultado> {
   if (!PETICIONES_ACTIVAS) return { error: "Todavía no está disponible." };
   const texto = String(form.get("texto") ?? "").trim();
@@ -105,6 +106,7 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
     return { error: "No se ha podido guardar. Prueba otra vez." };
   }
+  avisarAntonio({ evento: "montaje_revisado", video_id: videoId, decision: tipo, texto: tipo === "cambios" ? texto : null });
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
   return { ok: true };
@@ -115,6 +117,7 @@ export async function materialListo(_prev: Resultado, form: FormData): Promise<R
   const videoId = String(form.get("video_id") ?? "");
   if (!videoId) return { error: "Falta el proyecto." };
   if (!(await confirmarMaterial(videoId))) return { error: "No se ha podido guardar. Prueba otra vez." };
+  avisarAntonio({ evento: "material_listo", video_id: videoId });
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
   return { ok: true };
@@ -145,12 +148,13 @@ export async function decidirIdea(_prev: Resultado, form: FormData): Promise<Res
   const r = await decidirIdeaBot(id, que, nota);
   if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
   if (r === "cerrada") return { error: "El Guionista ya la ha usado: no se puede cambiar." };
+  if (que === "me_gusta") avisarAntonio({ evento: "idea_me_gusta", idea_id: id, titulo: r.titulo, nota_jordi: nota });
   revalidatePath("/elsa/ideas");
   revalidatePath("/");
   return { ok: true };
 }
 
-// Guiones de los bots: Aprobar · Pedir cambios (con texto) · Descartar · Deshacer.
+// Guiones de los bots: Aprobar (crea el proyecto GE al momento) · Pedir cambios (con texto) · Descartar · Deshacer.
 export async function decidirGuion(_prev: Resultado, form: FormData): Promise<Resultado> {
   const id = String(form.get("id") ?? "");
   const que = String(form.get("decision") ?? "");
@@ -161,8 +165,11 @@ export async function decidirGuion(_prev: Resultado, form: FormData): Promise<Re
   const r = await decidirGuionPropuesto(id, que, nota);
   if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
   if (r === "cerrado") return { error: "Ya es un vídeo: no se puede cambiar desde aquí." };
-  revalidatePath("/elsa");
-  revalidatePath("/");
+  if (que === "cambios") avisarAntonio({ evento: "guion_cambios", guion_id: id, nota_jordi: nota });
+  const videoId = que === "aprobado" ? await crearVideoDeGuion(id) : null;
+  if (videoId) avisarAntonio({ evento: "guion_aprobado", guion_id: id, video_id: videoId });
+  revalidatePath("/", "layout");
+  if (que === "aprobado" && !videoId) return { error: "Guion aprobado, pero no se ha podido crear el proyecto. Prueba otra vez con «Crear proyecto»." };
   return { ok: true };
 }
 

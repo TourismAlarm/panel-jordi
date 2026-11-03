@@ -74,9 +74,9 @@ Solo desde una idea con «Me gusta» (`409` si no). Al crearlo, la idea pasa a `
 curl -X POST https://panel-jordi.vercel.app/api/bots/guiones   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"guionista","idea_id":"<uuid de la idea>","titulo":"Jacuzzi al ático","gancho":"¿Cómo sube esto a un ático?","planos":["Plano 1: grúa desde abajo","Plano 2: jacuzzi en el aire"],"textos_pantalla":[{"texto":"40 toneladas","segundo":3}],"duracion_s":30,"tema":"Izados","tipo_gancho":"Pregunta","prueba":"Si la pregunta retiene","reglas_cumplidas":["R0001"],"preguntas":["¿Tienes plano desde el ático?"]}'
 ```
 
-Obligatorios: `idea_id`, `titulo`, `gancho` y `planos`. Si Jordi pide cambios, envía la versión nueva con `"reemplaza_id":"<uuid del guion>"`.
+Obligatorios: `idea_id`, `titulo`, `gancho` y `planos`. Para una versión nueva, añade `"reemplaza_id":"<uuid del guion>"`: vale si está `propuesto` (lo mejoras antes de que Jordi lo mire) o en `cambios`. Da `409` si está `aprobado`, `descartado`, `sustituido` o ya tiene `video_id`. La versión anterior pasa a `sustituido`.
 
-Al aprobarlo, Jordi lo deja como `aprobado`. Hasta que se añada al PC el paso que lo recoja, no se crea el vídeo GE: se queda esperando.
+Cuando Jordi lo aprueba, el panel crea el proyecto `GE_0xx` al momento y lo apunta en `video_id`. El panel es el único que numera.
 
 ## `GET /api/bots/guiones?estado=cambios`
 
@@ -105,6 +105,21 @@ Lo que está por revisar; con `?id=GE_012`, ese vídeo. Trae `montaje_url` (Driv
 ```bash
 curl "https://panel-jordi.vercel.app/api/bots/videos"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
 ```
+
+## Avisos a Antonio (webhook)
+
+El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida: 5 s de espera y sin reintentos. Si falla o faltan las variables, el clic de Jordi funciona igual y el fallo sale en Actividad → Bots. La rutina de cada hora sigue como red de seguridad.
+
+- **Variables en Vercel:** `GROKBOT_WEBHOOK_URL`, `GROKBOT_WEBHOOK_KEY` y, si hace falta, `GROKBOT_WEBHOOK_HEADER` (por defecto `Authorization: Bearer <clave>`; también vale `X-Api-Key`, que manda la clave tal cual).
+- **Todos llevan** `"cuando"` (ISO) y `"panel":"https://panel-jordi.vercel.app"`. Lo que escribe Jordi sale con los datos de clientes tachados (`[oculto]`).
+
+| `evento` | Cuándo | Campos |
+|---|---|---|
+| `idea_me_gusta` | Una idea pasa a «Me gusta» | `idea_id`, `titulo`, `nota_jordi` |
+| `guion_cambios` | Jordi pide cambios | `guion_id`, `nota_jordi` |
+| `guion_aprobado` | Aprobado y ya es GE | `guion_id`, `video_id` |
+| `material_listo` | «Ya he subido todo» | `video_id` |
+| `montaje_revisado` | Jordi revisa un montaje | `video_id`, `decision` (`aprobar`, `cambios` o `corte_ok`), `texto` |
 
 ## `POST` y `GET /api/bots/memoria`
 

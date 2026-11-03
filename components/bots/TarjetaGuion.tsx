@@ -11,7 +11,7 @@ import s from "./Bots.module.css";
 const lista = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const textoDe = (v: unknown) => (typeof v === "string" ? v : JSON.stringify(v));
 
-// Propuesta de guion de un bot: se lee entera y se decide. Aprobada, espera a que el PC la convierta en vídeo GE.
+// Propuesta de guion de un bot: se lee entera y se decide. Al aprobarla se convierte en vídeo GE; aquí solo sigue si eso falló.
 export function TarjetaGuion({ g, revisiones, reglas }: { g: GuionPropuesto; revisiones: Revision[]; reglas: Record<string, string> }) {
   const [estado, accion] = useActionState(decidirGuion, null);
   const [cambiando, setCambiando] = useState(false);
@@ -22,7 +22,7 @@ export function TarjetaGuion({ g, revisiones, reglas }: { g: GuionPropuesto; rev
     <Tarjeta tono={g.estado === "propuesto" ? "ojo" : g.estado === "aprobado" ? "bien" : "info"}>
       <div className={s.cabecera}>
         {g.estado === "aprobado" ? (
-          <Etiqueta tono="bien">Aprobado · esperando al PC</Etiqueta>
+          <Etiqueta tono="ojo">Aprobado · falta crear el proyecto</Etiqueta>
         ) : g.estado === "cambios" ? (
           <Etiqueta tono="info">Cambios pedidos · le toca al bot</Etiqueta>
         ) : (
@@ -86,6 +86,14 @@ export function TarjetaGuion({ g, revisiones, reglas }: { g: GuionPropuesto; rev
             <BotonEnviar texto="Pedir cambios" enviando="Guardando…" compacto />
             <Boton type="button" variante="secundario" compacto onClick={() => setCambiando(false)}>Cancelar</Boton>
           </div>
+        </form>
+      )}
+      {g.estado === "aprobado" && (
+        <form action={accion}>
+          <input type="hidden" name="id" value={g.id} />
+          <input type="hidden" name="decision" value="aprobado" />
+          <input type="hidden" name="nota" value={g.nota_jordi ?? ""} />
+          <BotonEnviar texto="Crear proyecto" enviando="Creando…" compacto />
         </form>
       )}
       {g.estado !== "propuesto" && !cambiando && (
