@@ -33,6 +33,7 @@ begin
 
   -- tomar: el más antiguo; después otro vídeo; después nada
   b := public.crear_encargo('GE_9902', null, 'acabado', '[]', '', '{}', '', 'antonio');
+  update public.encargos_edicion set creado = now() - interval '1 hour' where id = (a->>'id')::uuid;   -- en una transacción now() no avanza
   select * into t from public.tomar_encargo();
   assert t.id = (a->>'id')::uuid and t.estado = 'en_curso' and t.tomado_en is not null, 'no toma el más antiguo';
   select * into t from public.tomar_encargo();
