@@ -305,6 +305,99 @@ export type Database = {
           },
         ]
       }
+      encargos_edicion: {
+        Row: {
+          brutos: Json
+          creado: string
+          creado_por: string
+          decision_jordi: string | null
+          duracion_real_s: number | null
+          error: string | null
+          estado: string
+          fase: string
+          feedback: string | null
+          final_url: string | null
+          guion_md: string | null
+          id: string
+          instrucciones: Json
+          preguntas: Json
+          reemplaza_id: string | null
+          reglas: Json
+          resultado_notas: string | null
+          resultado_url: string | null
+          revisado_en: string | null
+          terminado_en: string | null
+          tomado_en: string | null
+          version: number
+          video_id: string
+        }
+        Insert: {
+          brutos?: Json
+          creado?: string
+          creado_por: string
+          decision_jordi?: string | null
+          duracion_real_s?: number | null
+          error?: string | null
+          estado?: string
+          fase: string
+          feedback?: string | null
+          final_url?: string | null
+          guion_md?: string | null
+          id?: string
+          instrucciones: Json
+          preguntas?: Json
+          reemplaza_id?: string | null
+          reglas?: Json
+          resultado_notas?: string | null
+          resultado_url?: string | null
+          revisado_en?: string | null
+          terminado_en?: string | null
+          tomado_en?: string | null
+          version: number
+          video_id: string
+        }
+        Update: {
+          brutos?: Json
+          creado?: string
+          creado_por?: string
+          decision_jordi?: string | null
+          duracion_real_s?: number | null
+          error?: string | null
+          estado?: string
+          fase?: string
+          feedback?: string | null
+          final_url?: string | null
+          guion_md?: string | null
+          id?: string
+          instrucciones?: Json
+          preguntas?: Json
+          reemplaza_id?: string | null
+          reglas?: Json
+          resultado_notas?: string | null
+          resultado_url?: string | null
+          revisado_en?: string | null
+          terminado_en?: string | null
+          tomado_en?: string | null
+          version?: number
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encargos_edicion_reemplaza_id_fkey"
+            columns: ["reemplaza_id"]
+            isOneToOne: false
+            referencedRelation: "encargos_edicion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encargos_edicion_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fin_accounts: {
         Row: {
           balance: number
@@ -1003,84 +1096,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      encargos_edicion: {
-        Row: {
-          brutos: Json
-          creado: string
-          creado_por: string
-          decision_jordi: string | null
-          duracion_real_s: number | null
-          error: string | null
-          estado: string
-          fase: string
-          feedback: string | null
-          final_url: string | null
-          guion_md: string | null
-          id: string
-          instrucciones: Json
-          preguntas: Json
-          reemplaza_id: string | null
-          reglas: Json
-          resultado_notas: string | null
-          resultado_url: string | null
-          revisado_en: string | null
-          terminado_en: string | null
-          tomado_en: string | null
-          version: number
-          video_id: string
-        }
-        Insert: {
-          brutos?: Json
-          creado?: string
-          creado_por?: string
-          decision_jordi?: string | null
-          duracion_real_s?: number | null
-          error?: string | null
-          estado?: string
-          fase?: string
-          feedback?: string | null
-          final_url?: string | null
-          guion_md?: string | null
-          id?: string
-          instrucciones?: Json
-          preguntas?: Json
-          reemplaza_id?: string | null
-          reglas?: Json
-          resultado_notas?: string | null
-          resultado_url?: string | null
-          revisado_en?: string | null
-          terminado_en?: string | null
-          tomado_en?: string | null
-          version?: number
-          video_id?: string
-        }
-        Update: {
-          brutos?: Json
-          creado?: string
-          creado_por?: string
-          decision_jordi?: string | null
-          duracion_real_s?: number | null
-          error?: string | null
-          estado?: string
-          fase?: string
-          feedback?: string | null
-          final_url?: string | null
-          guion_md?: string | null
-          id?: string
-          instrucciones?: Json
-          preguntas?: Json
-          reemplaza_id?: string | null
-          reglas?: Json
-          resultado_notas?: string | null
-          resultado_url?: string | null
-          revisado_en?: string | null
-          terminado_en?: string | null
-          tomado_en?: string | null
-          version?: number
-          video_id?: string
-        }
-        Relationships: []
       }
       google_tokens: {
         Row: {
@@ -1971,20 +1986,17 @@ export type Database = {
     }
     Functions: {
       crear_encargo: {
-        Args: { p_brutos: Json; p_fase: string; p_feedback: string; p_guion_md: string; p_instrucciones: Json; p_quien: string; p_reemplaza?: string; p_video: string }
+        Args: {
+          p_brutos: Json
+          p_fase: string
+          p_feedback: string
+          p_guion_md: string
+          p_instrucciones: Json
+          p_quien: string
+          p_reemplaza: string
+          p_video: string
+        }
         Returns: Json
-      }
-      decidir_encargo: {
-        Args: { p_siempre: boolean; p_texto: string; p_tipo: string; p_video: string }
-        Returns: boolean
-      }
-      encargo_revisado: {
-        Args: { p_fase: string; p_resultado: string; p_video: string }
-        Returns: undefined
-      }
-      tomar_encargo: {
-        Args: never
-        Returns: Database["public"]["Tables"]["encargos_edicion"]["Row"][]
       }
       crear_ge_de_guion: {
         Args: { p_guion: string; p_guion_md: string }
@@ -1994,6 +2006,15 @@ export type Database = {
         Args: { p_fecha: string; p_texto: string }
         Returns: string
       }
+      decidir_encargo: {
+        Args: {
+          p_siempre: boolean
+          p_texto: string
+          p_tipo: string
+          p_video: string
+        }
+        Returns: boolean
+      }
       doc_buscar: {
         Args: { q: string }
         Returns: {
@@ -2002,6 +2023,10 @@ export type Database = {
           pagina: number
           relevancia: number
         }[]
+      }
+      encargo_revisado: {
+        Args: { p_fase: string; p_resultado: string; p_video: string }
+        Returns: undefined
       }
       es_permitido: { Args: never; Returns: boolean }
       fin_crear_categorias: { Args: { p_user_id: string }; Returns: undefined }
@@ -2059,6 +2084,40 @@ export type Database = {
       }
       siguiente_ge: { Args: never; Returns: string }
       siguiente_regla: { Args: never; Returns: string }
+      tomar_encargo: {
+        Args: never
+        Returns: {
+          brutos: Json
+          creado: string
+          creado_por: string
+          decision_jordi: string | null
+          duracion_real_s: number | null
+          error: string | null
+          estado: string
+          fase: string
+          feedback: string | null
+          final_url: string | null
+          guion_md: string | null
+          id: string
+          instrucciones: Json
+          preguntas: Json
+          reemplaza_id: string | null
+          reglas: Json
+          resultado_notas: string | null
+          resultado_url: string | null
+          revisado_en: string | null
+          terminado_en: string | null
+          tomado_en: string | null
+          version: number
+          video_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "encargos_edicion"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       [_ in never]: never
