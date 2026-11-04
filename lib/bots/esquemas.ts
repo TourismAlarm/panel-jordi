@@ -105,6 +105,57 @@ export const MemoriaIn = z.object({
 });
 export const FiltroMemoria = z.enum(["hecho", "preferencia", "decision"]);
 
+// Lo que escribe Antonio para el PC. Sin cortes, el montador los decide viendo el material y lo dice en sus notas.
+const segundos = z.number().min(0).max(3600);
+const InstruccionesIn = z.object({
+  duracion_objetivo_s: z.number().int().min(1).max(600),
+  cortes: z
+    .array(
+      z.object({
+        archivo: z.string().trim().regex(/^[\w .()-]{1,120}\.[A-Za-z0-9]{2,5}$/, "nombre de archivo, sin carpetas"),
+        desde: z.string().regex(/^\d{1,3}:\d{2}(\.\d{1,3})?$/, "mm:ss o mm:ss.d"),
+        hasta: z.string().regex(/^\d{1,3}:\d{2}(\.\d{1,3})?$/, "mm:ss o mm:ss.d"),
+        velocidad: z.number().min(0.25).max(30).default(1),
+        nota: z.string().trim().max(300).optional(),
+      }),
+    )
+    .max(200)
+    .default([]),
+  subtitulos: z.object({ idioma: z.enum(["ca", "es"]), estilo: z.string().trim().max(200).default("sistema/estilo-video.md") }),
+  textos_pantalla: z.array(z.object({ texto: texto(120), desde_s: segundos, hasta_s: segundos, posicion: z.enum(["arriba", "centro", "abajo"]).default("centro") })).max(50).default([]),
+  onomatopeyas: z.array(z.object({ texto: texto(40), segundo: segundos })).max(50).default([]),
+  transiciones: z.array(z.object({ segundo: segundos, tipo: z.enum(["corte_seco", "fundido", "zoom"]) })).max(100).default([]),
+  audio: texto(300),
+  notas: z.string().trim().max(3000).optional(),
+});
+
+const FASE_ENCARGO = z.enum(["corte", "acabado"]);
+const codigoVideo = z.string().regex(/^GE_\d{3,}$/, "código GE_000");
+
+export const EncargoIn = z
+  .object({
+    video_id: codigoVideo,
+    fase: FASE_ENCARGO,
+    reemplaza_id: uuid.optional(),
+    feedback: z.string().trim().max(3000).optional(),
+    brutos: z.array(texto(500)).max(200).default([]),
+    guion_md: z.string().trim().min(1).max(50000).optional(),
+    instrucciones: InstruccionesIn,
+  })
+  .refine((e) => !e.reemplaza_id || !!e.feedback, { message: "una versión nueva dice qué cambia", path: ["feedback"] });
+
+export const FiltroEncargo = z.enum(["pendiente", "en_curso", "listo", "aprobado", "cambios", "sustituido", "bloqueado", "fallido"]);
+
+export const ResponderEncargoIn = z.object({ respuestas: z.array(z.object({ n: z.number().int().min(1), respuesta: texto(2000) })).min(1).max(50) });
+
+// Lo que devuelve el PC. `final` = ya copió a FINAL/ lo que Jordi aprobó.
+export const InformarIn = z.discriminatedUnion("estado", [
+  z.object({ estado: z.literal("listo"), resultado_url: url, notas: z.string().trim().max(5000).optional(), duracion_real_s: z.number().min(0).max(3600) }),
+  z.object({ estado: z.literal("bloqueado"), preguntas: z.array(texto(500)).min(1).max(20), notas: z.string().trim().max(5000).optional() }),
+  z.object({ estado: z.literal("fallido"), error: texto(2000), notas: z.string().trim().max(5000).optional() }),
+  z.object({ estado: z.literal("final"), resultado_url: url }),
+]);
+
 export const FiltroAgente = z.enum(["guionista", "archivador", "observador", "montador", "analista", "coordinador", "ideas", "antonio"]);
 
 // Antonio cambia las reglas con un porqué: es lo que Jordi lee en Aprende antes de decidir si lo deshace.
