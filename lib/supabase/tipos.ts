@@ -1454,6 +1454,7 @@ export type Database = {
       reglas: {
         Row: {
           actualizada_en: string
+          actualizada_por: string | null
           agente: string
           clave: string
           creada_en: string
@@ -1466,9 +1467,11 @@ export type Database = {
           medida: string | null
           origen: string
           regla: string
+          version: number
         }
         Insert: {
           actualizada_en?: string
+          actualizada_por?: string | null
           agente: string
           clave: string
           creada_en?: string
@@ -1481,9 +1484,11 @@ export type Database = {
           medida?: string | null
           origen?: string
           regla: string
+          version?: number
         }
         Update: {
           actualizada_en?: string
+          actualizada_por?: string | null
           agente?: string
           clave?: string
           creada_en?: string
@@ -1496,8 +1501,59 @@ export type Database = {
           medida?: string | null
           origen?: string
           regla?: string
+          version?: number
         }
         Relationships: []
+      }
+      reglas_historial: {
+        Row: {
+          accion: string
+          clave: string
+          creado: string
+          estado_antes: string | null
+          estado_despues: string | null
+          id: number
+          por_que: string | null
+          quien: string
+          regla_id: string
+          texto_antes: string | null
+          texto_despues: string | null
+        }
+        Insert: {
+          accion: string
+          clave: string
+          creado?: string
+          estado_antes?: string | null
+          estado_despues?: string | null
+          id?: never
+          por_que?: string | null
+          quien: string
+          regla_id: string
+          texto_antes?: string | null
+          texto_despues?: string | null
+        }
+        Update: {
+          accion?: string
+          clave?: string
+          creado?: string
+          estado_antes?: string | null
+          estado_despues?: string | null
+          id?: never
+          por_que?: string | null
+          quien?: string
+          regla_id?: string
+          texto_antes?: string | null
+          texto_despues?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reglas_historial_regla_id_fkey"
+            columns: ["regla_id"]
+            isOneToOne: false
+            referencedRelation: "reglas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resumenes_diarios: {
         Row: {
@@ -1859,6 +1915,48 @@ export type Database = {
         Args: { p_preguntas: Json; p_video: string }
         Returns: undefined
       }
+      regla_cambiar: {
+        Args: {
+          p_accion: string
+          p_estado: string
+          p_por_que: string
+          p_quien: string
+          p_regla: Database["public"]["Tables"]["reglas"]["Row"]
+          p_texto: string
+        }
+        Returns: number
+      }
+      regla_crear: {
+        Args: {
+          p_agente: string
+          p_estado?: string
+          p_evidencia: string
+          p_medida: string
+          p_origen?: string
+          p_por_que: string
+          p_quien: string
+          p_regla: string
+        }
+        Returns: string
+      }
+      regla_decidir: {
+        Args: { p_decision: string; p_id: string; p_texto: string }
+        Returns: boolean
+      }
+      regla_deshacer: { Args: { p_id: string }; Returns: boolean }
+      regla_editar: {
+        Args: {
+          p_clave: string
+          p_por_que: string
+          p_quien: string
+          p_regla: string
+        }
+        Returns: number
+      }
+      regla_retirar: {
+        Args: { p_clave: string; p_por_que: string; p_quien: string }
+        Returns: number
+      }
       rls_auditoria: {
         Args: never
         Returns: {
@@ -1866,6 +1964,7 @@ export type Database = {
         }[]
       }
       siguiente_ge: { Args: never; Returns: string }
+      siguiente_regla: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

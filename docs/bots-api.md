@@ -94,10 +94,34 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/revisiones   -H "Authorizat
 
 ## `GET /api/bots/reglas?agente=montador`
 
-Reglas activas de Aprende. `agente` es opcional: `guionista` · `archivador` · `observador` · `montador` · `analista` · `coordinador`.
+Reglas activas de Aprende. `agente` es opcional: `guionista` · `archivador` · `observador` · `montador` · `analista` · `coordinador` · `ideas` · `antonio`. Con `historial=1` añade los últimos cambios: quién, cuándo, por qué y el texto de antes. Una regla retirada ya no sale en `items`.
 
 ```bash
-curl "https://panel-jordi.vercel.app/api/bots/reglas?agente=montador"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+curl "https://panel-jordi.vercel.app/api/bots/reglas?agente=montador&historial=1"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+```
+
+## `POST /api/bots/reglas`
+
+Solo Antonio. Crea una regla y entra **activa** al momento; el panel pone el número (`R0030`…). `por_que` y `evidencia` son obligatorios, `medida` no. Si esa regla ya está activa devuelve su clave sin duplicarla, y si estaba retirada la reactiva. Jordi la ve en Aprende con «Deshacer». Con datos de clientes: `422`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/reglas   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"agente":"montador","regla":"El gancho entra antes del segundo 2","por_que":"Los tres últimos reels con gancho tardío retuvieron menos","evidencia":"GE_038, GE_040, GE_041","medida":"Retención a 3 s de los próximos cinco"}'
+```
+
+## `PATCH /api/bots/reglas/{clave}`
+
+Solo Antonio y solo reglas activas. Cambia el texto y sube `version`; el anterior queda en el historial. `404` si no existe y `409` si no está activa.
+
+```bash
+curl -X PATCH https://panel-jordi.vercel.app/api/bots/reglas/R0030   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"regla":"El gancho entra antes del segundo 1,5","por_que":"Con 2 s sigue perdiendo gente"}'
+```
+
+## `POST /api/bots/reglas/{clave}/retirar`
+
+Solo Antonio. La regla no se borra: pasa a quitada, deja de aplicarse y Jordi puede deshacerlo.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/reglas/R0030/retirar   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"por_que":"No ha cambiado la retención en cuatro semanas"}'
 ```
 
 ## `GET /api/bots/videos`

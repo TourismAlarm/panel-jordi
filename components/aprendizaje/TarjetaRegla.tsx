@@ -3,7 +3,9 @@
 import { useActionState, useState } from "react";
 import { AreaTexto, Boton, BotonEnviar, Campo, ErrorCampo, Etiqueta, Tarjeta } from "@/components/ui";
 import { decidirRegla } from "@/lib/acciones";
-import type { Regla } from "@/lib/datos/reglas";
+import { quienYQue, seDeshace } from "@/lib/bots/reglas";
+import type { CambioDeRegla, Regla } from "@/lib/datos/reglas";
+import { fecha } from "@/lib/formato";
 import s from "./Reglas.module.css";
 
 const ORIGEN: Record<string, string> = {
@@ -11,9 +13,10 @@ const ORIGEN: Record<string, string> = {
   analista: "De las estadísticas",
   correccion: "Lo marcaste como «siempre así»",
   manual: "Guardada a mano",
+  antonio: "De Antonio",
 };
 
-// Una regla propuesta: Sí / No / Sí pero cambiada. Un toque y el PC la aplica en el siguiente ciclo.
+// Una regla propuesta: Sí / No / Sí pero cambiada. Un toque y se aplica al momento.
 export function TarjetaPropuesta({ r }: { r: Regla }) {
   const [estado, accion] = useActionState(decidirRegla, null);
   const [cambiando, setCambiando] = useState(false);
@@ -63,39 +66,43 @@ export function TarjetaPropuesta({ r }: { r: Regla }) {
   );
 }
 
-// Ya decidida, esperando a que el PC la aplique: se puede deshacer.
-export function TarjetaEsperando({ r }: { r: Regla }) {
+// Quién la tocó por última vez, cuándo, por qué y qué ponía antes. Se puede deshacer.
+export function UltimoCambio({ c }: { c: CambioDeRegla }) {
   const [estado, accion] = useActionState(decidirRegla, null);
-  const que =
-    r.decision === "quitar" ? "La quitas" : r.decision === "no" ? "Le has dicho que no" : r.decision_texto ? "Sí, cambiada" : "Le has dicho que sí";
+  const cambioElTexto = c.texto_antes && c.texto_antes !== c.texto_despues;
   return (
-    <Tarjeta tono="info">
-      <div className={s.cabecera}>
-        <Etiqueta tono="info">{r.agente}</Etiqueta>
+    <div className={s.cambio}>
+      <p className="suave pequeno">
+        {quienYQue(c)} · {fecha(c.creado)}
+        {c.por_que && ` · ${c.por_que}`}
+      </p>
+      {cambioElTexto && <p className="suave pequeno">Antes: {c.texto_antes}</p>}
+      {seDeshace(c) && (
         <form action={accion}>
-          <input type="hidden" name="id" value={r.id} />
+          <input type="hidden" name="id" value={c.regla_id} />
           <input type="hidden" name="decision" value="deshacer" />
           <BotonEnviar texto="Deshacer" enviando="Deshaciendo…" variante="secundario" compacto />
         </form>
-      </div>
-      <p className={s.regla}>{r.decision_texto || r.regla}</p>
-      <span className="suave pequeno">{que}. Se aplica en el siguiente ciclo del PC.</span>
+      )}
       {estado?.error && <ErrorCampo>{estado.error}</ErrorCampo>}
-    </Tarjeta>
+    </div>
   );
 }
 
 // Activa: la aplica su agente cada vez. Se puede quitar.
-export function FilaActiva({ r }: { r: Regla }) {
+export function FilaActiva({ r, cambio }: { r: Regla; cambio?: CambioDeRegla }) {
   const [estado, accion] = useActionState(decidirRegla, null);
   return (
-    <div className={s.activa}>
-      <p className={s.regla}>{r.regla}</p>
-      <form action={accion}>
-        <input type="hidden" name="id" value={r.id} />
-        <input type="hidden" name="decision" value="quitar" />
-        <BotonEnviar texto="Quitar" enviando="Quitando…" variante="secundario" compacto />
-      </form>
+    <div className={s.fila}>
+      <div className={s.activa}>
+        <p className={s.regla}>{r.regla}</p>
+        <form action={accion}>
+          <input type="hidden" name="id" value={r.id} />
+          <input type="hidden" name="decision" value="quitar" />
+          <BotonEnviar texto="Quitar" enviando="Quitando…" variante="secundario" compacto />
+        </form>
+      </div>
+      {cambio && <UltimoCambio c={cambio} />}
       {estado?.error && <ErrorCampo>{estado.error}</ErrorCampo>}
     </div>
   );
