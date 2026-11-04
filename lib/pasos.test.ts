@@ -14,6 +14,7 @@ const video = (estado: string, guion: string | null = "listo") => ({
   tieneGuion: guion !== null,
   ficha: ficha(guion),
   sin_guion: false,
+  origen: "pc",
 });
 
 const preguntas = (sinContestar: number, enviadas: number, total: number) => ({ total, sinContestar, enviadas });
@@ -96,5 +97,14 @@ describe("pasosDe", () => {
     expect(por(pasos, "grabar")).toBeUndefined();
     expect(por(pasos, "subir")?.estado).toBe("tuyo");
     expect(por(pasos, "subir")?.titulo).toBe("Subir lo grabado");
+  });
+});
+
+describe("preguntas de un vídeo del panel", () => {
+  const q = { total: 2, sinContestar: 0, enviadas: 2 };
+  it("las recoge Antonio, no el PC", () => {
+    const paso = (origen: string) => pasosDe({ ...video("guion_listo_falta_material", null), origen }, q).find((x) => x.clave === "preguntas")?.titulo;
+    expect(paso("panel")).toBe("Enviadas · esperando a Antonio");
+    expect(paso("pc")).toBe("Enviadas · esperando al PC");
   });
 });

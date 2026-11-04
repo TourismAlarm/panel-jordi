@@ -69,6 +69,7 @@ const EJEMPLO = {
   por_revisar: false,
   tieneGuion: true,
   sin_guion: false,
+  origen: "pc",
   ficha: {
     hora: "08:00",
     franja: null,

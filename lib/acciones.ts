@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { correoPermitido } from "@/lib/acceso";
 import { supabaseServidor } from "@/lib/supabase/server";
-import { guardarRespuesta } from "@/lib/datos/preguntas";
+import { guardarRespuesta, preguntaDePanel } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { crearVideoDeGuion, decidirGuionPropuesto, decidirIdeaBot } from "@/lib/datos/bots";
 import { avisarAntonio } from "@/lib/bots/aviso";
@@ -44,7 +44,10 @@ export async function responder(_prev: Resultado, form: FormData): Promise<Resul
 
   const r = await guardarRespuesta(id, respuesta);
   if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
-  if (r === "recogida") return { error: "El PC ya ha recogido esta respuesta y no se puede cambiar." };
+  if (r === "recogida") return { error: "Esta respuesta ya está recogida y no se puede cambiar." };
+
+  const pregunta = await preguntaDePanel(id);
+  if (pregunta) avisarAntonio({ evento: "pregunta_respondida", video_id: pregunta.video_id, clave: pregunta.clave, texto: pregunta.texto, respuesta });
 
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");

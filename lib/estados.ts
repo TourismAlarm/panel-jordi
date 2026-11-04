@@ -59,10 +59,10 @@ export function fasePregunta(p: PreguntaEstado): "pendiente" | "enviada" | "reco
   return "pendiente";
 }
 
-export function estadoPregunta(p: PreguntaEstado): Estado {
+export function estadoPregunta(p: PreguntaEstado, quien = "el PC"): Estado {
   const fase = fasePregunta(p);
-  if (fase === "recogida") return { texto: "Recogida por el PC", tono: "bien" };
-  if (fase === "enviada") return { texto: "Enviada · la recoge el PC", tono: "info" };
+  if (fase === "recogida") return { texto: `Recogida por ${quien}`, tono: "bien" };
+  if (fase === "enviada") return { texto: `Enviada · la recoge ${quien}`, tono: "info" };
   return { texto: "Pendiente", tono: "ojo" };
 }
 

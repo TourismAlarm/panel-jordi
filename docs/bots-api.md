@@ -78,6 +78,8 @@ Obligatorios: `idea_id`, `titulo`, `gancho` y `planos`. Para una versión nueva,
 
 Cuando Jordi lo aprueba, el panel crea el proyecto `GE_0xx` al momento y lo apunta en `video_id`. El panel es el único que numera.
 
+Las `preguntas` que llevan `¿` o `?` pasan a la ficha del vídeo para que Jordi las conteste. Lo demás (un aviso de seguridad, por ejemplo) queda en «Notas para grabar».
+
 ## `GET /api/bots/guiones?estado=cambios`
 
 `estado`: `propuesto` · `aprobado` · `cambios` · `descartado` · `sustituido`. Con `cambios`, `nota_jordi` dice qué cambiar.
@@ -106,6 +108,26 @@ Lo que está por revisar; con `?id=GE_012`, ese vídeo. Trae `montaje_url` (Driv
 curl "https://panel-jordi.vercel.app/api/bots/videos"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
 ```
 
+## `GET /api/bots/preguntas`
+
+Lo que Jordi ha contestado y nadie ha recogido, de los vídeos creados en el panel. Con `?video_id=GE_044`, todas las de ese vídeo. Los datos de clientes salen tachados.
+
+```bash
+curl https://panel-jordi.vercel.app/api/bots/preguntas   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+```
+
+## `POST /api/bots/videos/{id}/guion`
+
+Mete las respuestas de Jordi en el guion y da esas respuestas por recogidas. Lee el guion con `GET /api/bots/videos?id=GE_044` (sale sin cabecera) y devuelve el cuerpo entero con los huecos rellenos, con su `# Guion completo`. El panel conserva la cabecera, sube la versión y guarda el guion anterior.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/videos/GE_044/guion   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"guionista","guion_md":"# Guion completo\n\n**Gancho:** ...","recogidas":[{"clave":"P2","respondida_en":"2026-11-04T09:00:00+00:00"}]}'
+```
+
+- `recogidas` lleva el `respondida_en` que leíste. Si Jordi cambió la respuesta después, no se recoge y sale en `sin_recoger`: vuelve a leerla. Una respuesta recogida ya no se puede cambiar desde el panel.
+- Si una respuesta no cambia el guion, envía solo `recogidas`.
+- `409` si el vídeo es del PC o ya tiene el material entregado: a partir de ahí el guion no se toca.
+
 ## Avisos a Antonio (webhook)
 
 El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida: 5 s de espera y sin reintentos. Si falla o faltan las variables, el clic de Jordi funciona igual y el fallo sale en Actividad → Bots. La rutina de cada hora sigue como red de seguridad.
@@ -120,6 +142,7 @@ El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida:
 | `guion_aprobado` | Aprobado y ya es GE | `guion_id`, `video_id` |
 | `material_listo` | «Ya he subido todo» | `video_id` |
 | `montaje_revisado` | Jordi revisa un montaje | `video_id`, `decision` (`aprobar`, `cambios` o `corte_ok`), `texto` |
+| `pregunta_respondida` | Jordi contesta o cambia una respuesta de un vídeo del panel | `video_id`, `clave`, `texto`, `respuesta` |
 
 ## `POST` y `GET /api/bots/memoria`
 

@@ -1763,6 +1763,38 @@ export type Database = {
         }
         Relationships: []
       }
+      videos_guion_historial: {
+        Row: {
+          creado: string
+          guion_md: string
+          id: number
+          quien: string
+          video_id: string
+        }
+        Insert: {
+          creado?: string
+          guion_md: string
+          id?: never
+          quien: string
+          video_id: string
+        }
+        Update: {
+          creado?: string
+          guion_md?: string
+          id?: never
+          quien?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_guion_historial_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       windsor_fotos: {
         Row: {
           datos: Json
@@ -1823,6 +1855,10 @@ export type Database = {
       }
       es_permitido: { Args: never; Returns: boolean }
       fin_crear_categorias: { Args: { p_user_id: string }; Returns: undefined }
+      preguntas_de_guion: {
+        Args: { p_preguntas: Json; p_video: string }
+        Returns: undefined
+      }
       rls_auditoria: {
         Args: never
         Returns: {

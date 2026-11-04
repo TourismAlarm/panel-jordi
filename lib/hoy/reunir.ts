@@ -47,7 +47,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
   const [elsa, finanzas, salud, nuevos, documentos, google] = await Promise.all([
     intentar(fallos, "ELSA", async () => {
       const [v, p, q, pe, rg, sy, id, gu, rv] = await Promise.all([
-        supabase.from("videos").select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, actualizado_en, guion_md").order("fecha_trabajo", { ascending: true, nullsFirst: false }),
+        supabase.from("videos").select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md").order("fecha_trabajo", { ascending: true, nullsFirst: false }),
         Promise.resolve(null),
         supabase.from("preguntas").select("video_id, respondida_en, recogida_en"),
         supabase.from("peticiones").select("*").order("creada_en", { ascending: false }),
