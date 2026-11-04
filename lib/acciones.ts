@@ -10,7 +10,7 @@ import { guardarRespuesta, preguntaDePanel } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { crearVideoDeGuion, decidirGuionPropuesto, decidirIdeaBot } from "@/lib/datos/bots";
 import { avisarAntonio } from "@/lib/bots/aviso";
-import { guardarDecision } from "@/lib/datos/reglas";
+import { decidirReglaYa, deshacerCambioDeRegla } from "@/lib/datos/reglas";
 import { guardarRespuestaBandeja, marcarLeido } from "@/lib/datos/bandeja";
 import { esMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
@@ -126,16 +126,16 @@ export async function materialListo(_prev: Resultado, form: FormData): Promise<R
   return { ok: true };
 }
 
-// Lo que aprenden los agentes: sí / no / sí cambiada a una propuesta, quitar una activa, o deshacer.
+// Lo que aprenden los agentes: sí / no / sí cambiada a una propuesta, quitar una activa, o deshacer el último cambio. Se aplica al momento.
 export async function decidirRegla(_prev: Resultado, form: FormData): Promise<Resultado> {
   const id = String(form.get("id") ?? "");
   const que = String(form.get("decision") ?? "");
   const texto = String(form.get("texto") ?? "").trim() || null;
   if (!id) return { error: "Falta la regla." };
   if (que !== "si" && que !== "no" && que !== "quitar" && que !== "deshacer") return { error: "Acción no válida." };
-  const r = await guardarDecision(id, que === "deshacer" ? null : que, que === "si" ? texto : null);
+  const r = que === "deshacer" ? await deshacerCambioDeRegla(id) : await decidirReglaYa(id, que, que === "si" ? texto : null);
   if (r === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
-  if (r === "recogida") return { error: "El PC ya la ha aplicado: no se puede cambiar desde aquí." };
+  if (r === "cerrada") return { error: "Esa regla ha cambiado mientras tanto: recarga la página." };
   revalidatePath("/elsa/aprendizaje");
   revalidatePath("/elsa");
   return { ok: true };

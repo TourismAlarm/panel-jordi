@@ -21,6 +21,7 @@ export type Permiso =
   | "guiones:leer"
   | "revisiones:escribir"
   | "reglas:leer"
+  | "reglas:escribir"
   | "memoria:escribir"
   | "memoria:leer"
   | "videos:leer";
@@ -28,7 +29,7 @@ export type Permiso =
 const COMUNES: Permiso[] = ["actividad:escribir", "bandeja:escribir", "bandeja:leer", "reglas:leer", "memoria:escribir", "memoria:leer"];
 
 const PERMISOS: Record<Bot, Permiso[]> = {
-  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "videos:leer"],
+  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "videos:leer"],
   ideas: [...COMUNES, "ideas:escribir", "ideas:leer"],
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
 };

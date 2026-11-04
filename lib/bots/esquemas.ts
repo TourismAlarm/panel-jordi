@@ -105,4 +105,9 @@ export const MemoriaIn = z.object({
 });
 export const FiltroMemoria = z.enum(["hecho", "preferencia", "decision"]);
 
-export const FiltroAgente = z.enum(["guionista", "archivador", "observador", "montador", "analista", "coordinador"]);
+export const FiltroAgente = z.enum(["guionista", "archivador", "observador", "montador", "analista", "coordinador", "ideas", "antonio"]);
+
+// Antonio cambia las reglas con un porqué: es lo que Jordi lee en Aprende antes de decidir si lo deshace.
+export const ReglaIn = z.object({ agente: FiltroAgente, regla: texto(600), por_que: texto(1000), evidencia: texto(1000), medida: texto(600).optional() });
+export const ReglaCambioIn = z.object({ regla: texto(600), por_que: texto(1000) });
+export const ReglaRetirarIn = z.object({ por_que: texto(1000) });

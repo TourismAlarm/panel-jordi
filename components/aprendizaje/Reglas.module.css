@@ -43,3 +43,23 @@
   flex: 1;
   min-width: 0;
 }
+
+.fila {
+  border-bottom: 1px solid var(--borde);
+}
+
+.fila:last-child {
+  border-bottom: 0;
+}
+
+.fila .activa {
+  border-bottom: 0;
+}
+
+.cambio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-bottom: 12px;
+}
