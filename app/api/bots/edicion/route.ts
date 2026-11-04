@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
     const { data, error } = await db.rpc("crear_encargo", {
       p_video: video_id,
-      p_reemplaza: reemplaza_id,
+      p_reemplaza: (reemplaza_id ?? null) as string, // el tipo generado no admite null, pero sin este dato Supabase no encuentra la función
       p_fase: fase,
       p_brutos: brutos,
       p_guion_md: guion ?? "",
