@@ -1,6 +1,5 @@
 import { ultimos4 } from "@/lib/documentos/contrato";
 import { isSpending, type FlowTx } from "@/lib/finanzas/summary/flow";
-import type { Senal } from "@/lib/hoy/senales";
 
 // Cálculos de los bots de vida sobre lo que ya se ha leído. Sin base de datos.
 
@@ -70,9 +69,4 @@ export function cobrosDeducidos(ingresos: { fecha: string; importe: number; cont
       };
     })
     .sort((a, b) => b.importe_medio - a.importe_medio);
-}
-
-// Lo que ve el bot Día de Salud: que hay un aviso o que el reloj no llega. Nunca los valores.
-export function senalesParaDia(senales: Senal[]): Senal[] {
-  return senales.filter((s) => s.modulo !== "salud" || s.id === "sal-medico" || s.id === "sal-viejo");
 }

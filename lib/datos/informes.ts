@@ -1,7 +1,7 @@
 import "server-only";
 import { supabaseServidor } from "@/lib/supabase/server";
 
-// El último informe de un bot, para su pantalla. Lo de Salud solo se pide desde Salud.
+// El último informe de un bot, para su pantalla.
 export async function ultimoInforme(bot: "finanzas" | "salud") {
   const supabase = await supabaseServidor();
   const { data, error } = await supabase.from("informes_bots").select("titulo, cuerpo_md, periodo_desde, periodo_hasta, creado").eq("bot", bot).order("creado", { ascending: false }).limit(1).maybeSingle();

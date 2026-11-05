@@ -7,7 +7,7 @@ const fila = (id: number, bot: string, inicio: string, resultado = "ok"): Ejecuc
 describe("resumen de bots", () => {
   it("salen todos los bots, también los que no han corrido", () => {
     const r = resumenBots([], ahora);
-    expect(r.map((x) => x.bot)).toEqual(["antonio", "ideas", "guionista", "editor"]);
+    expect(r.map((x) => x.bot)).toEqual(["antonio", "ideas", "guionista", "editor", "dia", "finanzas", "salud", "documentos"]);
     expect(r[0].ultima).toBeNull();
   });
   it("coge la última ejecución y cuenta solo los fallos de 7 días", () => {

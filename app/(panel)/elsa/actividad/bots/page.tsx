@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SubNavActividad } from "@/components/actividad/SubNavActividad";
 import { Fila, Lista, Pantalla, Punto, Rotulo, Seccion, Segmentos, Vacio } from "@/components/ui";
-import { BOTS, IDS_BOTS_ELSA, nombreBot, type Bot } from "@/lib/bots/catalogo";
+import { BOTS, IDS_BOTS, nombreBot, type Bot } from "@/lib/bots/catalogo";
 import { filtrarEjecuciones, resumenBots, type FiltroDia } from "@/lib/bots/resumen";
 import { actividadBots } from "@/lib/datos/bots";
 import { estadoResultado } from "@/lib/estados";
@@ -17,7 +17,7 @@ const DIAS: { id: FiltroDia; texto: string }[] = [
 
 export default async function ActividadBots({ searchParams }: { searchParams: Promise<{ bot?: string; dia?: string }> }) {
   const q = await searchParams;
-  const bot = IDS_BOTS_ELSA.includes(q.bot as Bot) ? (q.bot as Bot) : undefined;
+  const bot = IDS_BOTS.includes(q.bot as Bot) ? (q.bot as Bot) : undefined;
   const dia = DIAS.find((d) => d.id === q.dia)?.id;
   const url = (p: { bot?: string; dia?: string }) => {
     const params = new URLSearchParams(Object.entries(p).filter((e): e is [string, string] => !!e[1]));
@@ -51,7 +51,7 @@ export default async function ActividadBots({ searchParams }: { searchParams: Pr
         <Segmentos
           opciones={[
             { href: url({ dia }), texto: "Todos", activo: !bot },
-            ...IDS_BOTS_ELSA.map((b) => ({ href: url({ bot: b, dia }), texto: BOTS[b].nombre, activo: bot === b })),
+            ...IDS_BOTS.map((b) => ({ href: url({ bot: b, dia }), texto: BOTS[b].nombre, activo: bot === b })),
           ]}
         />
         <Segmentos

@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 import { leerPrioridades } from "@/lib/hoy/prioridades";
 import { clavePuede, moduloDeBot, puede, resolverAutor, type Bot, type Permiso } from "./catalogo";
 import { FechaIso, FichaBotIn, InformeIn, ResumenHoyIn } from "./esquemas";
-import { cobrosDeducidos, gastoPorCategoria, ocultarIban, proximaCuota, senalesParaDia, type Movimiento } from "./vida";
+import { cobrosDeducidos, gastoPorCategoria, ocultarIban, proximaCuota, type Movimiento } from "./vida";
 
-const PRIVADOS: Permiso[] = ["finanzas:resumen", "finanzas:leer", "finanzas:informe", "salud:leer", "salud:informe", "documentos:vencimientos", "documentos:leer", "documentos:ficha"];
+const PRIVADOS: Permiso[] = ["finanzas:resumen", "finanzas:leer", "finanzas:informe", "salud:leer", "salud:escribir", "salud:informe", "documentos:vencimientos", "documentos:leer", "documentos:ficha"];
 
 describe("permisos de los bots de vida", () => {
   it("ideas y guionista no llegan a dinero, salud ni documentos", () => {
@@ -31,7 +31,9 @@ describe("permisos de los bots de vida", () => {
     expect(puede("dia", "documentos:vencimientos")).toBe(true);
     for (const p of ["finanzas:leer", "documentos:leer", "salud:leer"] as Permiso[]) expect(puede("dia", p)).toBe(false);
   });
-  it("Salud no escribe en la memoria común y sus avisos no caen en ELSA", () => {
+  it("Salud guarda lo de Garmin, no escribe en la memoria común y sus avisos van a Salud", () => {
+    expect(puede("salud", "salud:escribir")).toBe(true);
+    expect(puede("finanzas", "salud:escribir")).toBe(false);
     expect(puede("salud", "memoria:escribir")).toBe(false);
     expect(moduloDeBot("salud")).toBe("salud");
     expect(moduloDeBot("ideas")).toBe("elsa");
@@ -95,10 +97,6 @@ describe("cálculos", () => {
       "2026-11-05",
     );
     expect(r).toEqual([{ contraparte: "NOMINA ELSA", importe_medio: 1550, dia_habitual: 27, ultimo: "2026-10-27", proximo_estimado: "2026-11-27" }]);
-  });
-  it("Día no ve valores de salud, solo el aviso genérico", () => {
-    const s = (id: string, modulo: string) => ({ id, modulo, nivel: "saber", titulo: id, href: "/" }) as never;
-    expect(senalesParaDia([s("sal-resumen", "salud"), s("sal-medico", "salud"), s("sal-viejo", "salud"), s("fin-x", "finanzas")]).map((x: { id: string }) => x.id)).toEqual(["sal-medico", "sal-viejo", "fin-x"]);
   });
   it("Hoy lee las prioridades del cron y las del bot", () => {
     expect(leerPrioridades(["Subir"])).toEqual([{ texto: "Subir" }]);

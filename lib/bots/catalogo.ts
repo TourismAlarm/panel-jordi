@@ -15,8 +15,6 @@ export const BOTS = {
 
 export type Bot = keyof typeof BOTS;
 export const IDS_BOTS = Object.keys(BOTS) as Bot[];
-// Los que salen en ELSA → Actividad. Lo que hacen los bots de vida no se mezcla con ELSA.
-export const IDS_BOTS_ELSA: Bot[] = ["antonio", "ideas", "guionista", "editor"];
 
 export type Permiso =
   | "actividad:escribir"
@@ -42,6 +40,7 @@ export type Permiso =
   | "finanzas:leer"
   | "finanzas:informe"
   | "salud:leer"
+  | "salud:escribir" // lo que lee de Garmin: solo métricas y entrenos
   | "salud:informe"
   | "documentos:vencimientos" // lo único de documentos que lee Día: sin texto
   | "documentos:leer"
@@ -56,7 +55,7 @@ const PERMISOS: Record<Bot, Permiso[]> = {
   editor: ["edicion:tomar", "edicion:informar", "reglas:leer"],
   dia: [...COMUNES, "hoy:leer", "hoy:escribir", "videos:leer", "documentos:vencimientos", "finanzas:resumen"],
   finanzas: [...COMUNES, "finanzas:resumen", "finanzas:leer", "finanzas:informe"],
-  salud: [...COMUNES.filter((p) => p !== "memoria:escribir"), "salud:leer", "salud:informe"], // lo privado no entra en la memoria común
+  salud: [...COMUNES.filter((p) => p !== "memoria:escribir"), "salud:leer", "salud:escribir", "salud:informe"],
   documentos: [...COMUNES, "documentos:vencimientos", "documentos:leer", "documentos:ficha"],
 };
 

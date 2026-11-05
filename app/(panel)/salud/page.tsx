@@ -35,7 +35,7 @@ export default async function SaludHoy() {
           <Activity size={40} className="text-muted-foreground" />
           <p className="text-xl font-semibold">Todavía no hay datos</p>
           <p className="text-muted-foreground">
-            Los datos del reloj llegan solos cuando tu proceso del PC los envíe (ver <code>docs/pc-salud.md</code>). Mientras, apunta tú cómo estás.
+            Los datos del reloj los trae de Garmin el bot de Salud de Antonio. Mientras, apunta tú cómo estás.
           </p>
         </Card>
       ) : (

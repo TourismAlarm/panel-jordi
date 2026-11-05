@@ -1,5 +1,5 @@
 import { aISODia, sumarDias } from "@/lib/fechas";
-import { IDS_BOTS_ELSA, type Bot } from "./catalogo";
+import { IDS_BOTS, type Bot } from "./catalogo";
 
 // La «fábrica»: de un vistazo, cómo va cada bot. Lógica pura (pruebas en resumen.test.ts).
 export type EjecucionBot = { id: number; bot: string; tarea: string; inicio: string; fin: string | null; resultado: string; nota: string | null; enlace: string | null };
@@ -7,7 +7,7 @@ export type FiltroDia = "hoy" | "ayer" | "semana";
 
 export function resumenBots(filas: EjecucionBot[], ahora = new Date()) {
   const desde = sumarDias(aISODia(ahora), -6);
-  return IDS_BOTS_ELSA.map((bot: Bot) => {
+  return IDS_BOTS.map((bot: Bot) => {
     const suyas = filas.filter((f) => f.bot === bot);
     return {
       bot,
