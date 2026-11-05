@@ -150,9 +150,10 @@ export function senalesBandeja(nuevos: number): Senal[] {
   return nuevos > 0 ? [{ id: "bandeja", modulo: "sistema", nivel: "hoy", titulo: `${plural(nuevos, "aviso")} nuevo${nuevos === 1 ? "" : "s"} en la bandeja`, href: "/bandeja" }] : [];
 }
 
-// ── Google (agenda y correo) ─────────────────────────────────
-export type Evento = { titulo: string; inicio: string | null; fin: string | null; todoElDia: boolean; lugar: string | null };
-export type Correo = { de: string; asunto: string; resumen: string; fecha: string | null };
+// ── Agenda y correo (los publica Antonio) ────────────────────
+// Con hora: inicio y fin ISO con offset. Todo el día: inicio y fin «AAAA-MM-DD» (fin incluido) o null.
+export type Evento = { titulo: string; inicio: string | null; fin: string | null; todoElDia: boolean; lugar: string | null; calendario?: string | null };
+export type Correo = { de: string; asunto: string; resumen: string | null; fecha: string | null };
 
 export function senalesAgenda(eventos: Evento[], hora: (iso: string) => string): Senal[] {
   return eventos.map((e, i) => ({

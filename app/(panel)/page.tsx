@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { BotonResumen } from "@/components/hoy/BotonResumen";
 import { ListaSenales } from "@/components/hoy/ListaSenales";
 import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
+import { estadoBloque } from "@/lib/hoy/contexto";
 import { leerPrioridades } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
@@ -19,14 +19,16 @@ export default async function Hoy() {
   const userId = data?.claims?.sub as string;
   const foto = await reunirHoy(supabase, userId);
 
-  const { data: guardado } = await supabase.from("resumenes_diarios").select("resumen, prioridades, generado_en").eq("fecha", foto.fecha).maybeSingle();
-  const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar ?? undefined }));
-  const correos = foto.correos.map((c) => ({ de: c.de, asunto: c.asunto }));
+  const guardado = foto.guardado;
+  const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar, calendario: e.calendario }));
+  const estadoAgenda = foto.contexto === "error" ? "error" : estadoBloque(foto.agendaEn, agenda);
+  const estadoCorreo = foto.contexto === "error" ? "error" : estadoBloque(foto.correosEn, foto.correos);
   const prioridades = leerPrioridades(guardado?.prioridades);
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
   const saber = foto.senales.filter((s) => s.nivel === "saber");
   const nada = !urgentes.length && !deHoy.length && !agenda.length;
+  const actualizado = (en: string | null) => (en ? <p className="text-sm text-muted-foreground">Actualizado el {formatearFechaHora(en)}</p> : null);
 
   return (
     <main className="mx-auto flex max-w-[var(--ancho)] flex-col gap-5 px-4 py-5">
@@ -62,7 +64,7 @@ export default async function Hoy() {
               ))}
             </ol>
           )}
-          <p className="text-sm text-muted-foreground">Preparado el {formatearFechaHora(guardado.generado_en)}</p>
+          {guardado.generado_en && <p className="text-sm text-muted-foreground">Preparado el {formatearFechaHora(guardado.generado_en)}</p>}
         </Card>
       ) : null}
 
@@ -75,49 +77,51 @@ export default async function Hoy() {
         </Card>
       )}
 
-      {agenda.length > 0 && (
-        <section className="flex flex-col gap-2" aria-label="Agenda de hoy">
-          <h2 className="text-xl font-bold">Agenda</h2>
+      <section className="flex flex-col gap-2" aria-label="Agenda de hoy">
+        <h2 className="text-xl font-bold">Agenda</h2>
+        {estadoAgenda === "lista" ? (
           <Card className="flex flex-col divide-y divide-border py-1">
             {agenda.map((e, i) => (
               <div key={i} className="flex min-h-14 items-center gap-4 py-2">
                 <p className="w-16 shrink-0 font-bold tabular-nums">{e.hora || "Hoy"}</p>
                 <div className="min-w-0">
                   <p className="text-lg font-semibold leading-snug">{e.titulo}</p>
-                  {e.lugar && <p className="truncate text-muted-foreground">{e.lugar}</p>}
+                  {(e.lugar || e.calendario) && <p className="truncate text-muted-foreground">{[e.lugar, e.calendario].filter(Boolean).join(" · ")}</p>}
                 </div>
               </div>
             ))}
           </Card>
-        </section>
-      )}
+        ) : (
+          <p className="text-muted-foreground">
+            {estadoAgenda === "error" ? "Agenda no disponible: no se ha podido leer." : estadoAgenda === "vacio" ? "No hay citas para este día." : "Agenda todavía no disponible."}
+          </p>
+        )}
+        {actualizado(foto.agendaEn)}
+      </section>
 
       <ListaSenales titulo="Para hoy" senales={deHoy} plegable />
 
-      {correos.length > 0 && (
-        <section className="flex flex-col gap-2" aria-label="Correos sin leer">
-          <h2 className="text-xl font-bold">Correos sin leer</h2>
+      <section className="flex flex-col gap-2" aria-label="Selección de correo">
+        <h2 className="text-xl font-bold">Selección de correo</h2>
+        {estadoCorreo === "lista" ? (
           <Card className="flex flex-col divide-y divide-border py-1">
-            {correos.slice(0, 5).map((c, i) => (
+            {foto.correos.map((c, i) => (
               <div key={i} className="py-3">
                 <p className="text-sm font-semibold text-muted-foreground">{c.de}</p>
                 <p className="text-lg font-semibold leading-snug">{c.asunto}</p>
+                {c.resumen && <p className="text-muted-foreground">{c.resumen}</p>}
               </div>
             ))}
-            {correos.length > 5 && <p className="py-3 text-muted-foreground">y {correos.length - 5} más en Gmail</p>}
           </Card>
-        </section>
-      )}
+        ) : (
+          <p className="text-muted-foreground">
+            {estadoCorreo === "error" ? "Correo no disponible: no se ha podido leer." : estadoCorreo === "vacio" ? "No hay correos en la selección." : "Selección de correo todavía no disponible."}
+          </p>
+        )}
+        {actualizado(foto.correosEn)}
+      </section>
 
       <ListaSenales titulo="Para saber" senales={saber} plegable abiertas={2} />
-
-      {foto.google === "sin-conectar" && (
-        <Card className="flex flex-col gap-2">
-          <p className="text-lg font-semibold">Añade tu agenda y tu correo</p>
-          <p className="text-muted-foreground">Conecta Google (solo lectura) para ver aquí tus citas de hoy y los correos sin leer.</p>
-          <Link href="/ajustes" className="min-h-12 content-center font-semibold underline">Ir a Ajustes</Link>
-        </Card>
-      )}
 
       <BotonResumen />
     </main>

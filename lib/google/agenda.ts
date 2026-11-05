@@ -1,15 +1,9 @@
 import "server-only";
-import { sumarDias } from "@/lib/fechas";
+import { inicioDiaMadrid, sumarDias } from "@/lib/fechas";
 import type { Correo, Evento } from "@/lib/hoy/senales";
 import { getGoogle } from "./cliente";
 
-// Madrid cambia entre +01:00 y +02:00: se calcula para el día pedido.
-export function inicioDiaMadrid(iso: string): string {
-  const mediodia = new Date(`${iso}T12:00:00Z`);
-  const nombre = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Madrid", timeZoneName: "longOffset" }).formatToParts(mediodia).find((p) => p.type === "timeZoneName")?.value ?? "GMT+01:00";
-  const offset = nombre.replace("GMT", "") || "+00:00";
-  return `${iso}T00:00:00${offset}`;
-}
+export { inicioDiaMadrid };
 
 type EventosGoogle = { items?: { summary?: string; location?: string; status?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } }[] };
 

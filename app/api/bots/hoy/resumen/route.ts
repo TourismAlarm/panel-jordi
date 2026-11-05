@@ -5,7 +5,7 @@ import { duenoId } from "@/lib/datos/dueno";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/tipos";
 
-// POST /api/bots/hoy/resumen — el bot Día escribe el resumen de la mañana. Sustituye al del cron de ese día. No envía nada: no toca enviado_en.
+// POST /api/bots/hoy/resumen — el resumen de Día, que publica Antonio. Sustituye al del cron de ese día. No toca agenda, correo ni enviado_en; sin `senales`, las anteriores se quedan.
 export async function POST(request: Request) {
   return conBot(request, "hoy:escribir", async (clave) => {
     const cuerpo = await leerCuerpo(request, ResumenHoyIn);
@@ -15,7 +15,10 @@ export async function POST(request: Request) {
     if ("fallo" in firma) return firma.fallo;
     const { error } = await supabaseAdmin()
       .from("resumenes_diarios")
-      .upsert({ user_id: await duenoId(), fecha, resumen, prioridades: prioridades as Json, senales: (senales ?? {}) as Json, origen: "bot", generado_en: new Date().toISOString() }, { onConflict: "user_id,fecha" });
+      .upsert(
+        { user_id: await duenoId(), fecha, resumen, prioridades: prioridades as Json, ...(senales === undefined ? {} : { senales: senales as Json }), origen: "bot", generado_en: new Date().toISOString() },
+        { onConflict: "user_id,fecha" },
+      );
     if (error) throw new Error(error.message);
     return NextResponse.json({ ok: true }, { status: 201 });
   });

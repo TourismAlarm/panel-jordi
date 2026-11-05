@@ -1695,38 +1695,50 @@ export type Database = {
       }
       resumenes_diarios: {
         Row: {
+          agenda: Json
+          agenda_en: string | null
+          correos: Json
+          correos_en: string | null
           enviado_en: string | null
           error_envio: string | null
           fecha: string
-          generado_en: string
+          generado_en: string | null
           id: string
-          origen: string
+          origen: string | null
           prioridades: Json
-          resumen: string
+          resumen: string | null
           senales: Json
           user_id: string
         }
         Insert: {
+          agenda?: Json
+          agenda_en?: string | null
+          correos?: Json
+          correos_en?: string | null
           enviado_en?: string | null
           error_envio?: string | null
           fecha: string
-          generado_en?: string
+          generado_en?: string | null
           id?: string
-          origen?: string
+          origen?: string | null
           prioridades?: Json
-          resumen: string
+          resumen?: string | null
           senales?: Json
           user_id: string
         }
         Update: {
+          agenda?: Json
+          agenda_en?: string | null
+          correos?: Json
+          correos_en?: string | null
           enviado_en?: string | null
           error_envio?: string | null
           fecha?: string
-          generado_en?: string
+          generado_en?: string | null
           id?: string
-          origen?: string
+          origen?: string | null
           prioridades?: Json
-          resumen?: string
+          resumen?: string | null
           senales?: Json
           user_id?: string
         }
@@ -2078,6 +2090,26 @@ export type Database = {
       }
       es_permitido: { Args: never; Returns: boolean }
       fin_crear_categorias: { Args: { p_user_id: string }; Returns: undefined }
+      hoy_guardar_resumen_sencillo: {
+        Args: {
+          p_fecha: string
+          p_forzar: boolean
+          p_prioridades: Json
+          p_resumen: string
+          p_senales: Json
+          p_user: string
+        }
+        Returns: boolean
+      }
+      hoy_publicar_contexto: {
+        Args: {
+          p_agenda: Json
+          p_correos: Json
+          p_fecha: string
+          p_user: string
+        }
+        Returns: undefined
+      }
       preguntas_de_guion: {
         Args: { p_preguntas: Json; p_video: string }
         Returns: undefined

@@ -43,7 +43,7 @@ Enable Banking: usa las mismas credenciales que la app vieja (`ENABLE_BANKING_AP
 
 La portada **Hoy** reúne ELSA, Finanzas, Salud, Documentos y Bandeja. El **resumen redactado** lo escribe el bot Día de Antonio; el panel deja antes uno sencillo, sin IA, cada mañana (cron `/api/cron/resumen-diario`, 06:00 UTC) y se lee en la app; el botón «Pedir el resumen a Antonio» se lo pide al bot Día; si Antonio no responde, deja el sencillo. Sin correo. No usa la API de Anthropic. Necesita `CRON_SECRET`.
 
-Para ver también la **agenda** y los **correos sin leer** (solo lectura):
+La **agenda** y una **selección de correo** de Hoy las publica Antonio (`POST /api/bots/hoy/contexto`): Hoy ya no consulta Google. La conexión de Google de **Ajustes** se mantiene igual (solo lectura):
 
 1. En [Google Cloud Console](https://console.cloud.google.com) crea un proyecto → *APIs y servicios* → activa **Gmail API** y **Google Calendar API**.
 2. *Pantalla de consentimiento OAuth*: tipo **Externo**, añade tu correo como usuario de prueba y los permisos `gmail.readonly` y `calendar.readonly`.

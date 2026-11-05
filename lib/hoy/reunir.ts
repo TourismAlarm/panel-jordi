@@ -3,12 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { aISODia, sumarDias } from "@/lib/fechas";
 import { resumenInicio } from "@/lib/finanzas/resumen-inicio";
 import { fichaDeGuion } from "@/lib/guion";
-import { eventosDeHoy, correosSinLeer } from "@/lib/google/agenda";
-import { tokenDeAcceso } from "@/lib/google/cliente";
 import { leerSalud } from "@/lib/datos/salud";
 import { pasosDe, pasoActual, teToca } from "@/lib/pasos";
 import { faseVideo } from "@/lib/estados";
 import { construirResumen } from "@/lib/salud/resumen";
+import { leerCorreos, leerEventos } from "./contexto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
 import { senalesAgenda, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
@@ -18,7 +17,10 @@ export type Foto = {
   senales: Senal[];
   eventos: Evento[];
   correos: Correo[];
-  google: "conectado" | "sin-conectar" | "error";
+  agendaEn: string | null; // cuándo publicó Antonio cada bloque; null = aún no ha llegado
+  correosEn: string | null;
+  contexto: "ok" | "error"; // si no se ha podido leer, la portada lo dice en vez de enseñar «no hay citas»
+  guardado: { resumen: string; prioridades: unknown; generado_en: string | null; origen: string | null } | null;
   fallos: string[]; // módulos que no se han podido leer, para decirlo en vez de callarlo
   salud: string[]; // líneas de resumen de salud (para el resumen escrito)
 };
@@ -37,14 +39,14 @@ const hora = (iso: string) => new Intl.DateTimeFormat("es-ES", { timeZone: "Euro
 
 // Reúne lo que pasa en cada módulo. Sirve a la pantalla (con la sesión de Jordi) y al cron (service_role + userId):
 // por eso TODA consulta a tablas con dueño filtra por user_id.
-export async function reunirHoy(supabase: SupabaseClient<Database>, userId: string, opciones: { conGoogle?: boolean; soloLectura?: boolean } = {}): Promise<Foto> {
+export async function reunirHoy(supabase: SupabaseClient<Database>, userId: string, opciones: { soloLectura?: boolean } = {}): Promise<Foto> {
   const hoy = aISODia();
   const fallos: string[] = [];
   const ahora = Date.now();
   // fin_* aún no está en los tipos generados. Los enlaces bancarios solo los lee el servidor (service_role), siempre filtrando por user_id.
   const sinTipos = supabaseAdmin() as unknown as SupabaseClient;
 
-  const [elsa, finanzas, salud, nuevos, documentos, google] = await Promise.all([
+  const [elsa, finanzas, salud, nuevos, documentos, dia] = await Promise.all([
     intentar(fallos, "ELSA", async () => {
       const [v, p, q, pe, rg, sy, id, gu, rv] = await Promise.all([
         supabase.from("videos").select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md").order("fecha_trabajo", { ascending: true, nullsFirst: false }),
@@ -124,20 +126,15 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
       return senalesDocumentos({ hoy, docs: (data ?? []).map((x) => ({ id: x.documento_id, nombre: nombre.get(x.documento_id) ?? "Documento", vencimiento: x.vencimiento as string })) });
     }),
 
-    (async () => {
-      if (opciones.conGoogle === false) return { estado: "sin-conectar" as const, eventos: [] as Evento[], correos: [] as Correo[] };
-      try {
-        const token = await tokenDeAcceso(userId);
-        if (!token) return { estado: "sin-conectar" as const, eventos: [], correos: [] };
-        const [eventos, correos] = await Promise.all([eventosDeHoy(token, hoy), correosSinLeer(token)]);
-        return { estado: "conectado" as const, eventos, correos };
-      } catch (e) {
-        console.error("Hoy · Google:", e instanceof Error ? e.message : e);
-        fallos.push("Google");
-        return { estado: "error" as const, eventos: [], correos: [] };
-      }
-    })(),
+    // La fila del día: resumen, y agenda y correo que publica Antonio. Hoy no consulta Google.
+    intentar(fallos, "Agenda y correo", async () => {
+      const { data, error } = await supabase.from("resumenes_diarios").select("resumen, prioridades, generado_en, origen, agenda, correos, agenda_en, correos_en").eq("user_id", userId).eq("fecha", hoy).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    }),
   ]);
+  const eventos: Evento[] = leerEventos(dia?.agenda);
+  const correos: Correo[] = leerCorreos(dia?.correos);
 
   const senales = ordenar([
     ...(elsa ?? []),
@@ -145,8 +142,19 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     ...(salud?.senales ?? []),
     ...(nuevos ?? []),
     ...(documentos ?? []),
-    ...senalesAgenda(google.eventos, hora),
+    ...senalesAgenda(eventos, hora),
   ]);
-  return { fecha: hoy, senales, eventos: google.eventos, correos: google.correos, google: google.estado, fallos, salud: salud?.lineas ?? [] };
+  return {
+    fecha: hoy,
+    senales,
+    eventos,
+    correos,
+    agendaEn: dia?.agenda_en ?? null,
+    correosEn: dia?.correos_en ?? null,
+    contexto: dia === null && fallos.includes("Agenda y correo") ? "error" : "ok",
+    guardado: dia?.resumen ? { resumen: dia.resumen, prioridades: dia.prioridades, generado_en: dia.generado_en, origen: dia.origen } : null,
+    fallos,
+    salud: salud?.lineas ?? [],
+  };
 }
 

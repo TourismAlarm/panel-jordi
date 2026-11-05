@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CATEGORIAS } from "@/lib/documentos/categorias";
 import { FichaDatos } from "@/lib/documentos/contrato";
+import { CorreoIn, EventoIn, tocaElDia } from "@/lib/hoy/contexto";
 import { enlaceValido } from "@/lib/hoy/prioridades";
 import { IDS_BOTS } from "./catalogo";
 
@@ -200,3 +201,18 @@ export const FichaBotIn = FichaDatos.extend({
   titular: texto(200).nullish(),
   resumen: texto(4000).nullish(),
 });
+
+// Agenda y selección de correo de un día. Bloque ausente: no se toca. []: revisado y vacío. null no vale.
+export const ContextoHoyIn = z
+  .object({
+    ...firma,
+    fecha: FechaIso,
+    agenda: z.array(EventoIn).max(50).optional(),
+    correos: z.array(CorreoIn).max(30).optional(),
+  })
+  .refine((c) => c.agenda !== undefined || c.correos !== undefined, { message: "falta agenda o correos" })
+  .superRefine((c, ctx) => {
+    c.agenda?.forEach((ev, i) => {
+      if (!tocaElDia(ev, c.fecha)) ctx.addIssue({ code: "custom", path: ["agenda", i], message: "no cae en esa fecha (Europe/Madrid)" });
+    });
+  });
