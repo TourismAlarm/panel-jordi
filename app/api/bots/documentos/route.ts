@@ -27,6 +27,7 @@ export async function GET(request: Request) {
     if (desde.valor) consulta = consulta.gte("subido_en", desde.valor);
     const { data, error } = await consulta;
     if (error) throw new Error(error.message);
+    if (!data.length) return NextResponse.json({ items: [], siguiente: null });
     const fichas = await db.from("doc_fichas").select("documento_id, vencimiento").eq("user_id", userId).in("documento_id", data.map((d) => d.id));
     if (fichas.error) throw new Error(fichas.error.message);
     const vencimiento = new Map(fichas.data.map((f) => [f.documento_id, f.vencimiento]));

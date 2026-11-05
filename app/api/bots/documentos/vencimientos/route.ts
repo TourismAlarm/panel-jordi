@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     const hoy = aISODia();
     const { data, error } = await db.from("doc_fichas").select("documento_id, vencimiento").eq("user_id", userId).not("vencimiento", "is", null).lte("vencimiento", sumarDias(hoy, dias)).order("vencimiento").limit(500);
     if (error) throw new Error(error.message);
+    if (!data.length) return NextResponse.json({ items: [] });
     const docs = await db.from("doc_documentos").select("id, nombre, categoria").eq("user_id", userId).in("id", data.map((f) => f.documento_id));
     if (docs.error) throw new Error(docs.error.message);
     const porId = new Map(docs.data.map((d) => [d.id, d]));

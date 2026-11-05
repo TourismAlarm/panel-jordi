@@ -19,6 +19,7 @@ export async function GET(request: Request) {
       .eq("status", "active")
       .order("due_date");
     if (error) throw new Error(error.message);
+    if (!prestamos.length) return NextResponse.json({ items: [] });
     const { data: pagos, error: e2 } = await db
       .from("fin_loan_payments")
       .select("loan_id, amount, principal_paid, interest_paid, payment_date")
