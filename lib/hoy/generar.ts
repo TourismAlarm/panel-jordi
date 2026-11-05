@@ -13,24 +13,18 @@ export async function generarResumen(opciones: { forzar?: boolean; userId?: stri
   const userId = opciones.userId ?? (await duenoId());
   const foto = await reunirHoy(admin, userId);
 
-  const { data } = await admin.from("resumenes_diarios").select("origen").eq("user_id", userId).eq("fecha", foto.fecha).maybeSingle();
-  if (data && (!opciones.forzar || data.origen === "bot")) return { fecha: foto.fecha, fallos: foto.fallos, yaExistia: true };
+  // Atajo: ya hay resumen y no se fuerza. La protección de verdad está en la función de la base.
+  if (foto.guardado && (!opciones.forzar || foto.guardado.origen === "bot")) return { fecha: foto.fecha, fallos: foto.fallos, yaExistia: true };
 
   const r = resumenSencillo(foto);
-  const { error } = await admin.from("resumenes_diarios").upsert(
-    {
-      user_id: userId,
-      fecha: foto.fecha,
-      resumen: r.resumen,
-      prioridades: r.prioridades,
-      senales: { fallos: foto.fallos },
-      origen: "cron",
-      generado_en: new Date().toISOString(),
-      enviado_en: null,
-      error_envio: null,
-    },
-    { onConflict: "user_id,fecha" },
-  );
+  const { data: escrito, error } = await admin.rpc("hoy_guardar_resumen_sencillo", {
+    p_user: userId,
+    p_fecha: foto.fecha,
+    p_resumen: r.resumen,
+    p_prioridades: r.prioridades,
+    p_senales: { fallos: foto.fallos },
+    p_forzar: !!opciones.forzar,
+  });
   if (error) throw new Error(`No se pudo guardar el resumen: ${error.message}`);
-  return { fecha: foto.fecha, fallos: foto.fallos };
+  return { fecha: foto.fecha, fallos: foto.fallos, ...(escrito ? {} : { yaExistia: true }) };
 }

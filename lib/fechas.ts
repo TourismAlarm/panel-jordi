@@ -40,3 +40,13 @@ export function diasHasta(iso: string, desde: string = aISODia()): number {
 export function sumarDias(iso: string, dias: number): string {
   return new Date(deISODia(iso) + dias * MS_DIA).toISOString().slice(0, 10);
 }
+
+const OFFSET = new Intl.DateTimeFormat("en-US", { timeZone: ZONA, timeZoneName: "longOffset" });
+const offsetEn = (d: Date) => (OFFSET.formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "GMT+01:00").replace("GMT", "") || "+00:00";
+
+// Medianoche de ese día en Madrid, con su offset (+01:00 o +02:00). El día del cambio de hora,
+// el offset de mediodía no vale para la medianoche: se toma el de mediodía como tanteo y se corrige con el de esa medianoche.
+export function inicioDiaMadrid(iso: string): string {
+  const tanteo = new Date(`${iso}T00:00:00${offsetEn(new Date(`${iso}T12:00:00Z`))}`);
+  return `${iso}T00:00:00${offsetEn(tanteo)}`;
+}
