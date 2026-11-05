@@ -41,7 +41,7 @@ Enable Banking: usa las mismas credenciales que la app vieja (`ENABLE_BANKING_AP
 
 ## Hoy: resumen de la mañana
 
-La portada **Hoy** reúne ELSA, Finanzas, Salud, Documentos y Bandeja. El **resumen redactado** lo genera la API de Anthropic cada mañana (cron `/api/cron/resumen-diario`, 06:00 UTC) y se lee en la app; el botón «Actualizar el resumen» lo regenera. Sin correo. Necesita `ANTHROPIC_API_KEY` y `CRON_SECRET`.
+La portada **Hoy** reúne ELSA, Finanzas, Salud, Documentos y Bandeja. El **resumen redactado** lo escribe el bot Día de Antonio; el panel deja antes uno sencillo, sin IA, cada mañana (cron `/api/cron/resumen-diario`, 06:00 UTC) y se lee en la app; el botón «Pedir el resumen a Antonio» se lo pide al bot Día; si Antonio no responde, deja el sencillo. Sin correo. No usa la API de Anthropic.
 
 Para ver también la **agenda** y los **correos sin leer** (solo lectura):
 

@@ -2,30 +2,28 @@ import "server-only";
 import { duenoId } from "@/lib/datos/dueno";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { reunirHoy } from "./reunir";
-import { redactarResumen } from "./resumen-ia";
+import { resumenSencillo } from "./resumen-sencillo";
 
-export type Generado = { fecha: string; conIA: boolean; fallos: string[]; yaExistia?: boolean };
+export type Generado = { fecha: string; fallos: string[]; yaExistia?: boolean };
 
-// Genera el resumen de hoy con la IA y lo guarda (tabla resumenes_diarios). Una vez al día salvo «forzar».
-// Sin correo: se lee en la app. Si la IA falla o no hay clave, se guarda un resumen simple con las señales.
+// Guarda el resumen sencillo de hoy (tabla resumenes_diarios). Una vez al día salvo «forzar».
+// Sin correo: se lee en la app. Nunca pisa el que ha escrito el bot Día.
 export async function generarResumen(opciones: { forzar?: boolean; userId?: string } = {}): Promise<Generado> {
   const admin = supabaseAdmin();
   const userId = opciones.userId ?? (await duenoId());
   const foto = await reunirHoy(admin, userId);
 
-  if (!opciones.forzar) {
-    const { data } = await admin.from("resumenes_diarios").select("id").eq("user_id", userId).eq("fecha", foto.fecha).maybeSingle();
-    if (data) return { fecha: foto.fecha, conIA: false, fallos: foto.fallos, yaExistia: true };
-  }
+  const { data } = await admin.from("resumenes_diarios").select("origen").eq("user_id", userId).eq("fecha", foto.fecha).maybeSingle();
+  if (data && (!opciones.forzar || data.origen === "bot")) return { fecha: foto.fecha, fallos: foto.fallos, yaExistia: true };
 
-  const r = await redactarResumen(foto);
+  const r = resumenSencillo(foto);
   const { error } = await admin.from("resumenes_diarios").upsert(
     {
       user_id: userId,
       fecha: foto.fecha,
       resumen: r.resumen,
       prioridades: r.prioridades,
-      senales: { fallos: foto.fallos, conIA: r.conIA },
+      senales: { fallos: foto.fallos },
       origen: "cron",
       generado_en: new Date().toISOString(),
       enviado_en: null,
@@ -34,5 +32,5 @@ export async function generarResumen(opciones: { forzar?: boolean; userId?: stri
     { onConflict: "user_id,fecha" },
   );
   if (error) throw new Error(`No se pudo guardar el resumen: ${error.message}`);
-  return { fecha: foto.fecha, conIA: r.conIA, fallos: foto.fallos };
+  return { fecha: foto.fecha, fallos: foto.fallos };
 }

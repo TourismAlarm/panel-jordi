@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { avisarDocumentos } from "@/lib/bots/webhook-vida";
+import { avisarDocumentos } from "@/lib/bots/aviso";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { CATEGORIAS } from "./categorias";
 import { ultimos4 } from "./contrato";

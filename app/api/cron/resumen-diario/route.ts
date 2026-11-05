@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cronNoAutorizado } from "@/lib/cron-auth";
-import { enviarDia } from "@/lib/bots/webhook-vida";
+import { enviarAviso } from "@/lib/bots/aviso";
 import { generarResumen } from "@/lib/hoy/generar";
 
 export const maxDuration = 120;
 
 // GET /api/cron/resumen-diario — lo llama el cron de Vercel cada mañana (ver README: hora y verano/invierno).
-// Genera el resumen de hoy con la IA y lo guarda (sin correo). Una vez al día. No se registra el contenido, solo el resultado.
+// Deja el resumen sencillo de hoy (sin correo) y avisa a Antonio para que el bot Día escriba el suyo. No se registra el contenido, solo el resultado.
 export async function GET(request: NextRequest) {
   const denegado = cronNoAutorizado(request);
   if (denegado) return denegado;
   try {
     const r = await generarResumen();
-    console.log("☀️ Resumen diario:", JSON.stringify({ fecha: r.fecha, conIA: r.conIA, fallos: r.fallos, yaExistia: r.yaExistia }));
-    await enviarDia(r.fecha);
+    console.log("☀️ Resumen diario:", JSON.stringify({ fecha: r.fecha, fallos: r.fallos, yaExistia: r.yaExistia }));
+    await enviarAviso({ evento: "dia", fecha: r.fecha });
     return NextResponse.json(r);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Error generando el resumen";

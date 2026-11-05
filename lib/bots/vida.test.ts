@@ -109,7 +109,7 @@ describe("cálculos", () => {
 
 describe("las rutas de los bots nunca escriben en dinero ni borran", () => {
   const archivos = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? archivos(join(dir, f)) : f.endsWith(".ts") ? [join(dir, f)] : []));
-  const rutas = [...archivos("app/api/bots"), "lib/bots/informes.ts", "lib/bots/salud-lectura.ts", "lib/bots/webhook-vida.ts"];
+  const rutas = [...archivos("app/api/bots"), "lib/bots/informes.ts", "lib/bots/salud-lectura.ts"];
   it("ninguna toca fin_* para escribir", () => {
     for (const a of rutas) {
       for (const consulta of readFileSync(a, "utf8").split(/(?=\.from\()/)) {

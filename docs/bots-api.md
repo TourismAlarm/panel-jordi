@@ -209,6 +209,9 @@ El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida:
 | `material_listo` | «Ya he subido todo» | `video_id` |
 | `montaje_revisado` | Jordi revisa un montaje | `video_id`, `decision` (`aprobar`, `cambios` o `corte_ok`), `texto` |
 | `pregunta_respondida` | Jordi contesta o cambia una respuesta de un vídeo del panel | `video_id`, `clave`, `texto`, `respuesta` |
+| `documento_nuevo` | Jordi sube un documento: pásaselo a Documentos. Nunca lleva su contenido | `documento_id`, `nombre`, `mime`, `categoria`, `subido_en` |
+| `dia` | Cada mañana, tras dejar el resumen sencillo: pásaselo a Día | `fecha` |
+| `resumen_pedido` | Jordi pulsa «Pedir el resumen a Antonio»: pásaselo a Día | `fecha` |
 
 ## `POST` y `GET /api/bots/memoria`
 
@@ -227,6 +230,7 @@ Entran con la clave de Antonio y firman con `bot` (`dia`, `finanzas`, `salud`, `
 - **Páginas:** `limite` (hasta 500, por defecto 100) y `cursor`. Pasa como `cursor` el `siguiente` de la respuesta anterior; `null` es que no hay más.
 - **Bandeja:** los avisos de estos bots van a su módulo (`hoy`, `finanzas`, `salud`, `documentos`), nunca a ELSA. Su actividad tampoco sale en ELSA → Actividad.
 - **Memoria común:** Salud no escribe en ella. Lo privado no se cuenta a los bots de ELSA.
+- **Avisos:** todo llega a Antonio por un solo webhook (`evento` dice de qué es), y él lo reparte. Ver «Avisos a Antonio».
 
 ## Día a día (`dia`)
 
@@ -290,17 +294,8 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/salud/informe   -H "Authori
 | `POST /api/bots/documentos/{id}/ficha` | Guarda lo que ha sacado. De la referencia solo se guardan los 4 últimos. |
 
 - `409` si Jordi escribió la ficha a mano, o si el documento es una nota.
-- Las notas de texto no avisan por webhook. Hoy los documentos solo entran subiéndolos en el panel.
+- Las notas de texto no avisan. Hoy los documentos solo entran subiéndolos en el panel.
 
 ```bash
 curl -X POST https://panel-jordi.vercel.app/api/bots/documentos/ID/ficha   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"documentos","categoria":"Seguros","tipo":"Póliza","titular":"Jordi","partes":["Aseguradora"],"referencia":"1234","vencimiento":"2027-01-01","importes":[{"concepto":"Prima","importe":100}],"condiciones":[],"resumen":"Seguro del camión."}'
 ```
-
-## Avisos a los bots de vida (webhooks)
-
-El panel hace `POST` con `Authorization: Bearer <clave>`. Dispara y olvida: 5 s de espera y sin reintentos. Sin variables no hace nada. Si falla, queda en `actividad_bots` y la subida o el cron siguen. **Nunca llevan el contenido del archivo.**
-
-| Variables en Vercel | Cuándo | Cuerpo |
-|---|---|---|
-| `GROKBOT_DOCS_WEBHOOK_URL`, `GROKBOT_DOCS_WEBHOOK_KEY` | Jordi sube un documento | `evento: "documento_nuevo"`, `documento_id`, `nombre`, `mime`, `categoria`, `subido_en` |
-| `GROKBOT_DIA_WEBHOOK_URL`, `GROKBOT_DIA_WEBHOOK_KEY` | Pasa el cron del resumen diario | `evento: "dia"`, `fecha` |
