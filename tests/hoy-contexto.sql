@@ -1,5 +1,5 @@
--- Prueba de 20261106100000_hoy_contexto.sql. PREPARADA, NO EJECUTADA.
--- Ejecutar solo en una base de pruebas con la migración aplicada. Se deshace sola: el único final bueno es la excepción PRUEBA_COMPLETA_OK.
+-- Prueba de 20261106100000_hoy_contexto.sql. Pasada en Panel-jordi el 5-11-2026, tras aplicar la migración con autorización de Jordi.
+-- Se deshace sola: el único final bueno es la excepción PRUEBA_COMPLETA_OK.
 do $$
 declare
   dueno uuid;
@@ -77,7 +77,7 @@ begin
   raise exception 'PRUEBA_COMPLETA_OK';
 end $$;
 
--- Concurrencia (manual, dos sesiones contra la misma base de pruebas; tampoco ejecutado):
+-- Concurrencia (manual, dos sesiones contra una base de pruebas; NO ejecutado):
 -- A: begin; select public.hoy_publicar_contexto('<user>', '2000-01-05', '[{"titulo":"A"}]', null);   -- sin commit
 -- B: select public.hoy_publicar_contexto('<user>', '2000-01-05', null, '[{"de":"x","asunto":"B"}]'); -- espera a A
 -- A: commit;  → B termina. Resultado esperado: agenda = A y correos = B.
