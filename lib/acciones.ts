@@ -10,6 +10,7 @@ import { guardarRespuesta, preguntaDePanel } from "@/lib/datos/preguntas";
 import { borrarPeticion, confirmarMaterial, descartarProyecto, pedirEdicionSinGuion, pedirGuionNuevo, pedirRevision } from "@/lib/datos/peticiones";
 import { crearVideoDeGuion, decidirGuionPropuesto, decidirIdeaBot } from "@/lib/datos/bots";
 import { avisarAntonio } from "@/lib/bots/aviso";
+import { decidirEncargo } from "@/lib/datos/encargos";
 import { decidirReglaYa, deshacerCambioDeRegla } from "@/lib/datos/reglas";
 import { guardarRespuestaBandeja, marcarLeido } from "@/lib/datos/bandeja";
 import { esMotivo } from "@/lib/estados";
@@ -106,7 +107,10 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   if (tipo === "cambios" && !texto) return { error: "Escribe qué quieres cambiar." };
 
   const siempre = tipo === "cambios" && form.get("siempre") === "on";
-  if (!(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
+  // Con encargo de la cola se decide al momento; si no, va al PC como siempre.
+  const conEncargo = tipo === "corte_ok" ? false : await decidirEncargo(videoId, tipo, texto, siempre);
+  if (conEncargo === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
+  if (!conEncargo && !(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
     return { error: "No se ha podido guardar. Prueba otra vez." };
   }
   avisarAntonio({ evento: "montaje_revisado", video_id: videoId, decision: tipo, texto: tipo === "cambios" ? texto : null });

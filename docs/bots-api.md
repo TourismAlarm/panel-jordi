@@ -6,7 +6,7 @@ Cada llamada dice para quién trabaja con el campo `bot` (`antonio`, `ideas` o `
 `bot` sirve para ver quién hizo cada cosa y para que un bot no haga lo que no le toca (Ideas no puede subir guiones). **No es seguridad:** quien tenga la clave puede firmar como cualquiera.
 
 - **Dirección:** `https://panel-jordi.vercel.app` (las previews de Vercel están protegidas y no responden a los bots).
-- **Clave:** cabecera `Authorization: Bearer <clave>`. Variable en Vercel: `BOTS_API_KEY_ANTONIO` (mínimo 16 caracteres). `BOTS_API_KEY_IDEAS` y `BOTS_API_KEY_GUIONISTA` son opcionales: esas claves solo pueden firmar como su bot.
+- **Clave:** cabecera `Authorization: Bearer <clave>`. Variable en Vercel: `BOTS_API_KEY_ANTONIO` (mínimo 16 caracteres). `BOTS_API_KEY_IDEAS` y `BOTS_API_KEY_GUIONISTA` son opcionales: esas claves solo pueden firmar como su bot. `BOTS_API_KEY_EDITOR` es la del PC: solo toma encargos, los entrega y lee reglas.
 - **Límite:** 60 llamadas por minuto y bot. Cada llamada con clave válida queda en `bots_llamadas`.
 - **Respuestas:** `201`/`200` bien · `400` datos no válidos (`detalle` dice qué) · `401` clave mala · `403` ese bot no hace eso · `404` no existe · `409` conflicto (`error` dice cuál) · `422` lleva datos de clientes (`detalle` dice dónde) · `429` espera 60 s · `500`/`503` reintenta más tarde.
 - **Nada de borrar:** ninguna ruta borra.
@@ -122,6 +122,48 @@ Solo Antonio. La regla no se borra: pasa a quitada, deja de aplicarse y Jordi pu
 
 ```bash
 curl -X POST https://panel-jordi.vercel.app/api/bots/reglas/R0030/retirar   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"por_que":"No ha cambiado la retención en cuatro semanas"}'
+```
+
+## `POST /api/bots/edicion`
+
+Solo Antonio. Encarga un montaje al PC y el vídeo pasa a `montando`. Para una versión nueva, `reemplaza_id` y `feedback` con lo que cambia: la anterior queda `sustituido`. Si ya hay uno abierto del vídeo y no dices cuál reemplazas: `409`. `cortes` puede ir vacío: el montador los decide viendo el material y lo explica en sus notas. `subtitulos.idioma` es `ca` o `es`. Las reglas del montador se copian solas. Con datos de clientes: `422`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/edicion   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"video_id":"GE_044","fase":"acabado","brutos":["Nuevos/GE_044"],"instrucciones":{"duracion_objetivo_s":25,"cortes":[{"archivo":"VID_0012.mp4","desde":"00:03.2","hasta":"00:07.8","velocidad":1,"nota":"pie del estabilizador"}],"subtitulos":{"idioma":"ca"},"textos_pantalla":[{"texto":"4 T","desde_s":0,"hasta_s":2.5,"posicion":"centro"}],"onomatopeyas":[{"texto":"CLONC","segundo":3.1}],"transiciones":[{"segundo":7.8,"tipo":"corte_seco"}],"audio":"solo voz"}}'
+```
+
+## `GET /api/bots/edicion?estado=listo`
+
+Solo Antonio. Encargos por estado; con `?video_id=GE_044`, los de ese vídeo. Con `estado=listo` solo salen los que aún no has revisado. `GET /api/bots/edicion/{id}` trae uno entero.
+
+```bash
+curl "https://panel-jordi.vercel.app/api/bots/edicion?estado=listo"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+```
+
+## `POST /api/bots/edicion/{id}/responder`
+
+Solo Antonio. Contesta todas las `preguntas` de un encargo `bloqueado` y vuelve a `pendiente`. `n` es la posición de la pregunta, empezando en 1.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/<id>/responder   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"respuestas":[{"n":1,"respuesta":"VID_0012 es el del estabilizador"}]}'
+```
+
+La revisión sigue por `POST /api/bots/revisiones`. `corte` ok da el corte por bueno; `acabado` ok pasa el vídeo a `acabado_listo` y le toca a Jordi; `cambios` deja el encargo en `cambios` para que crees la versión siguiente. El «Aprobar» o «Pedir cambios» de Jordi se aplica al momento y llega por el webhook como `montaje_revisado`.
+
+## `POST /api/bots/edicion/tomar` (PC)
+
+Solo la clave del editor. Devuelve en `encargo` el `pendiente` más antiguo, ya `en_curso`, o `null`. En `finales` van los aprobados por Jordi que faltan por copiar a `FINAL/`. Un encargo que lleva 4 horas en curso pasa a `fallido`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/tomar   -H "Authorization: Bearer $BOTS_API_KEY_EDITOR"
+```
+
+## `POST /api/bots/edicion/{id}/informar` (PC)
+
+Solo la clave del editor. `estado`: `listo` (con `resultado_url` y `duracion_real_s`), `bloqueado` (con `preguntas`), `fallido` (con `error`) o `final` (con `resultado_url`, sobre uno aprobado). Con datos de clientes: `422`. Avisa a Antonio con el evento `edicion_lista`, salvo en `final`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/<id>/informar   -H "Authorization: Bearer $BOTS_API_KEY_EDITOR"   -H "Content-Type: application/json"   -d '{"estado":"listo","resultado_url":"https://drive.google.com/file/d/xxx/view","notas":"Regla R0023 respetada","duracion_real_s":26.4}'
 ```
 
 ## `GET /api/bots/videos`

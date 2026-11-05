@@ -6,6 +6,7 @@ export const BOTS = {
   antonio: { nombre: "Antonio", variable: "BOTS_API_KEY_ANTONIO" },
   ideas: { nombre: "Ideas ELSA", variable: "BOTS_API_KEY_IDEAS" },
   guionista: { nombre: "Guionista ELSA", variable: "BOTS_API_KEY_GUIONISTA" },
+  editor: { nombre: "Editor (PC)", variable: "BOTS_API_KEY_EDITOR" },
 } as const;
 
 export type Bot = keyof typeof BOTS;
@@ -22,6 +23,10 @@ export type Permiso =
   | "revisiones:escribir"
   | "reglas:leer"
   | "reglas:escribir"
+  | "edicion:escribir"
+  | "edicion:leer"
+  | "edicion:tomar"
+  | "edicion:informar"
   | "memoria:escribir"
   | "memoria:leer"
   | "videos:leer";
@@ -29,18 +34,22 @@ export type Permiso =
 const COMUNES: Permiso[] = ["actividad:escribir", "bandeja:escribir", "bandeja:leer", "reglas:leer", "memoria:escribir", "memoria:leer"];
 
 const PERMISOS: Record<Bot, Permiso[]> = {
-  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "videos:leer"],
+  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer"],
   ideas: [...COMUNES, "ideas:escribir", "ideas:leer"],
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
+  editor: ["edicion:tomar", "edicion:informar", "reglas:leer"],
 };
 
 export function puede(bot: Bot, permiso: Permiso) {
   return PERMISOS[bot].includes(permiso);
 }
 
+// Lo que solo hace el PC con su clave: Antonio no toma encargos ni los da por hechos.
+const SOLO_SU_CLAVE: Permiso[] = ["edicion:tomar", "edicion:informar"];
+
 // Con su clave, Antonio puede hacer lo de cualquiera (dice para quién en `bot`). Los demás, solo lo suyo.
 export function clavePuede(clave: Bot, permiso: Permiso) {
-  return clave === "antonio" ? IDS_BOTS.some((b) => puede(b, permiso)) : puede(clave, permiso);
+  return clave === "antonio" && !SOLO_SU_CLAVE.includes(permiso) ? IDS_BOTS.some((b) => puede(b, permiso)) : puede(clave, permiso);
 }
 
 // Quién firma una llamada. null = esa clave no puede firmar como ese bot, o ese bot no hace eso.

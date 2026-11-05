@@ -8,7 +8,9 @@ import { FormDescartar } from "@/components/proyectos/FormDescartar";
 import { MaterialListo } from "@/components/proyectos/MaterialListo";
 import { RevisarMontaje } from "@/components/proyectos/RevisarMontaje";
 import { ListaPasos } from "@/components/proyectos/ListaPasos";
+import { ListaEncargos } from "@/components/bots/ListaEncargos";
 import { ListaRevisiones } from "@/components/bots/ListaRevisiones";
+import { encargosDeVideo } from "@/lib/datos/encargos";
 import { Guion } from "@/components/videos/Guion";
 import { actividadDeVideo } from "@/lib/datos/actividad";
 import { revisionesDeVideo, textosDeReglas } from "@/lib/datos/bots";
@@ -31,13 +33,14 @@ export async function generateMetadata({ params }: PageProps<"/elsa/videos/[id]"
 // las preguntas y, plegado, el resto del guion y la actividad.
 export default async function Proyecto({ params }: PageProps<"/elsa/videos/[id]">) {
   const { id } = await params;
-  const [video, preguntas, actividad, peticiones, revisiones, reglas] = await Promise.all([
+  const [video, preguntas, actividad, peticiones, revisiones, reglas, encargos] = await Promise.all([
     obtenerVideo(id),
     preguntasDeVideo(id),
     actividadDeVideo(id),
     PETICIONES_ACTIVAS ? listarPeticiones() : Promise.resolve([]),
     revisionesDeVideo(id),
     textosDeReglas(),
+    encargosDeVideo(id),
   ]);
   if (!video) notFound();
 
@@ -112,6 +115,12 @@ export default async function Proyecto({ params }: PageProps<"/elsa/videos/[id]"
       {!descarte && (video.por_revisar || video.estado === "revision_jordi" || revision?.estado === "procesando" || revision?.estado === "pendiente") && (
         <Seccion titulo="Revisar el montaje" id="montaje">
           <RevisarMontaje videoId={video.id} estado={video.estado} montajeUrl={video.montaje_url} revision={revision} />
+        </Seccion>
+      )}
+
+      {!!encargos.length && (
+        <Seccion titulo="Edición" cuenta={encargos.length}>
+          <ListaEncargos encargos={encargos} />
         </Seccion>
       )}
 

@@ -117,7 +117,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
         clave: "revisar",
         titulo: "Revisar el acabado",
         estado: "tuyo",
-        detalle: "En ChatCut: apruébalo o pide cambios",
+        detalle: p.origen === "panel" ? "Míralo: apruébalo o pide cambios" : "En ChatCut: apruébalo o pide cambios",
         accion: { texto: "Revisar", href: `/elsa/videos/${p.id}#montaje` },
       });
     } else {

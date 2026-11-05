@@ -11,7 +11,8 @@ export type EventoAviso =
   | { evento: "guion_aprobado"; guion_id: string; video_id: string }
   | { evento: "material_listo"; video_id: string }
   | { evento: "montaje_revisado"; video_id: string; decision: string; texto: string | null }
-  | { evento: "pregunta_respondida"; video_id: string; clave: string; texto: string; respuesta: string };
+  | { evento: "pregunta_respondida"; video_id: string; clave: string; texto: string; respuesta: string }
+  | { evento: "edicion_lista"; encargo_id: string; video_id: string; version: number; estado: "listo" | "bloqueado" | "fallido" };
 
 const PANEL = "https://panel-jordi.vercel.app";
 const ESPERA_MS = 5000;

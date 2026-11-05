@@ -29,6 +29,11 @@ export async function POST(request: Request) {
 
     const { data, error } = await db.from("revisiones").insert({ ...revision, bot: firma.autor }).select("id").single();
     if (error) throw new Error(error.message);
+    // Si hay un encargo entregado de esta fase, cambia con la revisión (acabado ok → le toca a Jordi).
+    if (revision.video_id) {
+      const { error: eEncargo } = await db.rpc("encargo_revisado", { p_video: revision.video_id, p_fase: revision.fase, p_resultado: revision.resultado });
+      if (eEncargo) throw new Error(eEncargo.message);
+    }
     return NextResponse.json({ ok: true, id: data.id }, { status: 201 });
   });
 }
