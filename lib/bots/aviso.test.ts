@@ -39,7 +39,7 @@ describe("aviso a Antonio", () => {
   });
   it("un webhook caído no lanza y queda en la actividad, sin la clave", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("clave-de-prueba rechazada"); }));
-    await expect(enviarAviso(evento)).resolves.toBeUndefined();
+    await expect(enviarAviso(evento)).resolves.toBe(false);
     expect(apuntado[0]).toMatchObject({ bot: "antonio", resultado: "fallo", tarea: "Aviso del panel: material_listo" });
     expect(apuntado[0].nota).not.toContain("clave-de-prueba");
   });
@@ -60,7 +60,7 @@ describe("aviso a Antonio", () => {
     vi.stubEnv("GROKBOT_WEBHOOK_URL", "");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
     vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(enviarAviso(evento)).resolves.toBeUndefined();
+    await expect(enviarAviso(evento)).resolves.toBe(false);
   });
   it("lo que escribe Jordi sale sin datos de clientes", () => {
     const c = cuerpoAviso({ evento: "guion_cambios", guion_id: "x", nota_jordi: "Llama al 612345678" }, new Date("2026-11-03T10:00:00Z"));
@@ -71,5 +71,14 @@ describe("aviso a Antonio", () => {
     expect(cabeceraAviso("k", null)).toEqual(["Authorization", "Bearer k"]);
     expect(cabeceraAviso("k", "X-Api-Key")).toEqual(["X-Api-Key", "k"]);
     expect(cabeceraAviso("k", "X-Clave: <clave>")).toEqual(["X-Clave", "k"]);
+  });
+  it("dice si Antonio lo ha recibido", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("ok")));
+    await expect(enviarAviso({ evento: "resumen_pedido", fecha: "2026-11-05" })).resolves.toBe(true);
+  });
+  it("un documento nuevo no lleva contenido y su nombre sale tachado si hay datos de clientes", () => {
+    const c = cuerpoAviso({ evento: "documento_nuevo", documento_id: "d1", nombre: "llamar al 612345678.pdf", mime: "application/pdf", categoria: "Seguros", subido_en: "2026-11-05T10:00:00Z" }, new Date("2026-11-05T10:00:00Z"));
+    expect(Object.keys(c).sort()).toEqual(["categoria", "cuando", "documento_id", "evento", "mime", "nombre", "panel", "subido_en"]);
+    expect(c.nombre).not.toContain("612345678");
   });
 });

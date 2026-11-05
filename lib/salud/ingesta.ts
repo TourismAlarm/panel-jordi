@@ -24,11 +24,15 @@ export const EntrenoIn = z.object({
   id_externo: z.string().min(1).max(100), // identificador del entreno en el origen: evita duplicados al repetir
 });
 
-export const CuerpoIngesta = z
-  .object({
-    metricas: z.array(MetricaIn).max(5000).default([]),
-    entrenos: z.array(EntrenoIn).max(2000).default([]),
-  })
-  .refine((c) => c.metricas.length + c.entrenos.length > 0, "no hay nada que guardar");
+const Envio = z.object({
+  metricas: z.array(MetricaIn).max(5000).default([]),
+  entrenos: z.array(EntrenoIn).max(2000).default([]),
+});
+const conAlgo = (c: { metricas: unknown[]; entrenos: unknown[] }) => c.metricas.length + c.entrenos.length > 0;
+
+export const CuerpoIngesta = Envio.refine(conAlgo, "no hay nada que guardar");
+
+// Lo mismo, con la firma de los bots. `bot` se valida aparte para no atar esto al catálogo.
+export const CuerpoIngestaBot = <T extends z.ZodType>(bot: T) => Envio.extend({ bot: bot.optional() }).refine(conAlgo, "no hay nada que guardar");
 
 export type CuerpoIngesta = z.infer<typeof CuerpoIngesta>;

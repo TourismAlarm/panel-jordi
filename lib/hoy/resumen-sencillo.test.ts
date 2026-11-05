@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-vi.mock("server-only", () => ({}));
-import { EsquemaResumen, resumenSinIA } from "./resumen-ia";
+import { describe, expect, it } from "vitest";
+import { resumenSencillo } from "./resumen-sencillo";
 import type { Foto } from "./reunir";
 
 const foto: Foto = {
@@ -12,15 +11,14 @@ const foto: Foto = {
   ],
 };
 
-describe("resumen del día", () => {
-  it("sin IA sigue funcionando y dice lo que falla", () => {
-    const r = resumenSinIA(foto);
-    expect(r.conIA).toBe(false);
+describe("resumen sencillo del día", () => {
+  it("ordena las señales y dice lo que falla", () => {
+    const r = resumenSencillo(foto);
     expect(r.resumen).toContain("Urgente: Subir lo grabado");
     expect(r.resumen).toContain("No se ha podido leer: Salud");
     expect(r.prioridades).toEqual(["Subir lo grabado", "Cuota del coche"]);
   });
-  it("el esquema rechaza más de 5 prioridades", () => {
-    expect(EsquemaResumen.safeParse({ resumen: "x", prioridades: ["1", "2", "3", "4", "5", "6"] }).success).toBe(false);
+  it("sin nada pendiente lo dice", () => {
+    expect(resumenSencillo({ ...foto, senales: [], fallos: [] }).resumen).toBe("Nada urgente.");
   });
 });

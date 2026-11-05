@@ -5,6 +5,7 @@ import { ListaSenales } from "@/components/hoy/ListaSenales";
 import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
+import { leerPrioridades } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
 
@@ -21,7 +22,7 @@ export default async function Hoy() {
   const { data: guardado } = await supabase.from("resumenes_diarios").select("resumen, prioridades, generado_en").eq("fecha", foto.fecha).maybeSingle();
   const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar ?? undefined }));
   const correos = foto.correos.map((c) => ({ de: c.de, asunto: c.asunto }));
-  const prioridades = Array.isArray(guardado?.prioridades) ? (guardado.prioridades as string[]) : [];
+  const prioridades = leerPrioridades(guardado?.prioridades);
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
   const saber = foto.senales.filter((s) => s.nivel === "saber");
@@ -47,7 +48,17 @@ export default async function Hoy() {
           {prioridades.length > 0 && (
             <ol className="flex list-decimal flex-col gap-1 pl-5 text-lg">
               {prioridades.map((p, i) => (
-                <li key={i}>{p}</li>
+                <li key={i}>
+                  {p.nivel === "urgente" && <span className="font-semibold text-destructive">Urgente: </span>}
+                  {p.nivel === "futuro" && <span className="text-muted-foreground">Más adelante: </span>}
+                  {p.enlace ? (
+                    <a href={p.enlace} className="underline">
+                      {p.texto}
+                    </a>
+                  ) : (
+                    p.texto
+                  )}
+                </li>
               ))}
             </ol>
           )}

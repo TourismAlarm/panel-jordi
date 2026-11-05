@@ -37,7 +37,7 @@ const hora = (iso: string) => new Intl.DateTimeFormat("es-ES", { timeZone: "Euro
 
 // Reúne lo que pasa en cada módulo. Sirve a la pantalla (con la sesión de Jordi) y al cron (service_role + userId):
 // por eso TODA consulta a tablas con dueño filtra por user_id.
-export async function reunirHoy(supabase: SupabaseClient<Database>, userId: string, opciones: { conGoogle?: boolean } = {}): Promise<Foto> {
+export async function reunirHoy(supabase: SupabaseClient<Database>, userId: string, opciones: { conGoogle?: boolean; soloLectura?: boolean } = {}): Promise<Foto> {
   const hoy = aISODia();
   const fallos: string[] = [];
   const ahora = Date.now();
@@ -84,7 +84,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
 
     intentar(fallos, "Finanzas", async () => {
       const [r, links, loans] = await Promise.all([
-        resumenInicio(userId),
+        resumenInicio(userId, null, { soloLectura: opciones.soloLectura }),
         sinTipos.from("fin_bank_links").select("aspsp_name, status, valid_until, last_error").eq("user_id", userId),
         sinTipos.from("fin_loans").select("contact_name, monthly_payment, payment_day").eq("user_id", userId).eq("status", "active"),
       ]);

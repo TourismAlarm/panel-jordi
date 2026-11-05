@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Activity } from "lucide-react";
+import { UltimoInforme } from "@/components/bots/UltimoInforme";
 import { AvisoMedico } from "@/components/salud/AvisoMedico";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
@@ -27,12 +28,14 @@ export default async function SaludHoy() {
 
       {r.avisoMedico && <AvisoMedico />}
 
+      <UltimoInforme bot="salud" />
+
       {sinDatos ? (
         <Card className="flex flex-col items-center gap-3 py-8 text-center">
           <Activity size={40} className="text-muted-foreground" />
           <p className="text-xl font-semibold">Todavía no hay datos</p>
           <p className="text-muted-foreground">
-            Los datos del reloj llegan solos cuando tu proceso del PC los envíe (ver <code>docs/pc-salud.md</code>). Mientras, apunta tú cómo estás.
+            Los datos del reloj los trae de Garmin el bot de Salud de Antonio. Mientras, apunta tú cómo estás.
           </p>
         </Card>
       ) : (
