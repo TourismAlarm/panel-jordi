@@ -7,10 +7,16 @@ export const BOTS = {
   ideas: { nombre: "Ideas ELSA", variable: "BOTS_API_KEY_IDEAS" },
   guionista: { nombre: "Guionista ELSA", variable: "BOTS_API_KEY_GUIONISTA" },
   editor: { nombre: "Editor (PC)", variable: "BOTS_API_KEY_EDITOR" },
+  dia: { nombre: "Día a día", variable: "BOTS_API_KEY_DIA" },
+  finanzas: { nombre: "Finanzas", variable: "BOTS_API_KEY_FINANZAS" },
+  salud: { nombre: "Salud", variable: "BOTS_API_KEY_SALUD" },
+  documentos: { nombre: "Documentos", variable: "BOTS_API_KEY_DOCUMENTOS" },
 } as const;
 
 export type Bot = keyof typeof BOTS;
 export const IDS_BOTS = Object.keys(BOTS) as Bot[];
+// Los que salen en ELSA → Actividad. Lo que hacen los bots de vida no se mezcla con ELSA.
+export const IDS_BOTS_ELSA: Bot[] = ["antonio", "ideas", "guionista", "editor"];
 
 export type Permiso =
   | "actividad:escribir"
@@ -29,7 +35,17 @@ export type Permiso =
   | "edicion:informar"
   | "memoria:escribir"
   | "memoria:leer"
-  | "videos:leer";
+  | "videos:leer"
+  | "hoy:leer"
+  | "hoy:escribir"
+  | "finanzas:resumen" // lo único de dinero que lee Día
+  | "finanzas:leer"
+  | "finanzas:informe"
+  | "salud:leer"
+  | "salud:informe"
+  | "documentos:vencimientos" // lo único de documentos que lee Día: sin texto
+  | "documentos:leer"
+  | "documentos:ficha";
 
 const COMUNES: Permiso[] = ["actividad:escribir", "bandeja:escribir", "bandeja:leer", "reglas:leer", "memoria:escribir", "memoria:leer"];
 
@@ -38,7 +54,17 @@ const PERMISOS: Record<Bot, Permiso[]> = {
   ideas: [...COMUNES, "ideas:escribir", "ideas:leer"],
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
   editor: ["edicion:tomar", "edicion:informar", "reglas:leer"],
+  dia: [...COMUNES, "hoy:leer", "hoy:escribir", "videos:leer", "documentos:vencimientos", "finanzas:resumen"],
+  finanzas: [...COMUNES, "finanzas:resumen", "finanzas:leer", "finanzas:informe"],
+  salud: [...COMUNES.filter((p) => p !== "memoria:escribir"), "salud:leer", "salud:informe"], // lo privado no entra en la memoria común
+  documentos: [...COMUNES, "documentos:vencimientos", "documentos:leer", "documentos:ficha"],
 };
+
+// Dónde deja sus avisos cada bot en la Bandeja: lo de Salud nunca cae en ELSA.
+const MODULO_BANDEJA: Partial<Record<Bot, "hoy" | "finanzas" | "salud" | "documentos">> = { dia: "hoy", finanzas: "finanzas", salud: "salud", documentos: "documentos" };
+export function moduloDeBot(bot: Bot) {
+  return MODULO_BANDEJA[bot] ?? ("elsa" as const);
+}
 
 export function puede(bot: Bot, permiso: Permiso) {
   return PERMISOS[bot].includes(permiso);

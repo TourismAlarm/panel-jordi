@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cronNoAutorizado } from "@/lib/cron-auth";
+import { enviarDia } from "@/lib/bots/webhook-vida";
 import { generarResumen } from "@/lib/hoy/generar";
 
 export const maxDuration = 120;
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     const r = await generarResumen();
     console.log("☀️ Resumen diario:", JSON.stringify({ fecha: r.fecha, conIA: r.conIA, fallos: r.fallos, yaExistia: r.yaExistia }));
+    await enviarDia(r.fecha);
     return NextResponse.json(r);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Error generando el resumen";

@@ -190,6 +190,8 @@ export type Database = {
           origen: string
           partes: string[]
           referencia: string | null
+          resumen: string | null
+          titular: string | null
           user_id: string
           vencimiento: string | null
         }
@@ -203,6 +205,8 @@ export type Database = {
           origen?: string
           partes?: string[]
           referencia?: string | null
+          resumen?: string | null
+          titular?: string | null
           user_id: string
           vencimiento?: string | null
         }
@@ -216,6 +220,8 @@ export type Database = {
           origen?: string
           partes?: string[]
           referencia?: string | null
+          resumen?: string | null
+          titular?: string | null
           user_id?: string
           vencimiento?: string | null
         }
@@ -1260,6 +1266,45 @@ export type Database = {
         }
         Relationships: []
       }
+      informes_bots: {
+        Row: {
+          bot: string
+          creado: string
+          cuerpo_md: string
+          datos: Json
+          id: string
+          periodo_desde: string | null
+          periodo_hasta: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          bot: string
+          creado?: string
+          cuerpo_md: string
+          datos?: Json
+          id?: string
+          periodo_desde?: string | null
+          periodo_hasta?: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          bot?: string
+          creado?: string
+          cuerpo_md?: string
+          datos?: Json
+          id?: string
+          periodo_desde?: string | null
+          periodo_hasta?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       informes_redes: {
         Row: {
           fecha: string
@@ -1655,6 +1700,7 @@ export type Database = {
           fecha: string
           generado_en: string
           id: string
+          origen: string
           prioridades: Json
           resumen: string
           senales: Json
@@ -1666,6 +1712,7 @@ export type Database = {
           fecha: string
           generado_en?: string
           id?: string
+          origen?: string
           prioridades?: Json
           resumen: string
           senales?: Json
@@ -1677,6 +1724,7 @@ export type Database = {
           fecha?: string
           generado_en?: string
           id?: string
+          origen?: string
           prioridades?: Json
           resumen?: string
           senales?: Json

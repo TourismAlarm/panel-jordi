@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { CATEGORIAS } from "@/lib/documentos/categorias";
+import { FichaDatos } from "@/lib/documentos/contrato";
+import { enlaceValido } from "@/lib/hoy/prioridades";
 import { IDS_BOTS } from "./catalogo";
 
 // Contrato de /api/bots/*: ver docs/bots-api.md.
@@ -162,3 +165,38 @@ export const FiltroAgente = z.enum(["guionista", "archivador", "observador", "mo
 export const ReglaIn = z.object({ agente: FiltroAgente, regla: texto(600), por_que: texto(1000), evidencia: texto(1000), medida: texto(600).optional() });
 export const ReglaCambioIn = z.object({ regla: texto(600), por_que: texto(1000) });
 export const ReglaRetirarIn = z.object({ por_que: texto(1000) });
+
+// Bots de vida: dinero, salud y documentos se leen; solo se escriben informes, el resumen de Hoy y las fichas.
+export const FechaIso = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((f) => !Number.isNaN(Date.parse(`${f}T00:00:00Z`)) && new Date(`${f}T00:00:00Z`).toISOString().startsWith(f), "fecha no válida");
+export const FiltroTipoMovimiento = z.enum(["income", "expense"]);
+export const FiltroEstadoDocumento = z.enum(["pendiente", "procesado", "error", "nota"]);
+export const FiltroCategoriaDocumento = z.enum(CATEGORIAS);
+export const FiltroMes = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+
+export const ResumenHoyIn = z.object({
+  ...firma,
+  fecha: FechaIso,
+  resumen: texto(4000),
+  prioridades: z.array(z.object({ nivel: z.enum(["urgente", "importante", "futuro"]), texto: texto(300), enlace: z.string().max(1000).refine(enlaceValido, "una ruta del panel o una web https").optional() })).max(20).default([]),
+  senales: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const InformeIn = z
+  .object({
+    ...firma,
+    tipo: texto(60),
+    periodo_desde: FechaIso.optional(),
+    periodo_hasta: FechaIso.optional(),
+    titulo: texto(200),
+    cuerpo_md: texto(20000),
+    datos: z.record(z.string(), z.unknown()).default({}),
+  })
+  .refine((i) => !i.periodo_desde || !i.periodo_hasta || i.periodo_desde <= i.periodo_hasta, { message: "periodo al revés", path: ["periodo_hasta"] });
+
+export const FichaBotIn = FichaDatos.extend({
+  ...firma,
+  categoria: z.enum(CATEGORIAS),
+  tipo: texto(80).nullish(),
+  titular: texto(200).nullish(),
+  resumen: texto(4000).nullish(),
+});

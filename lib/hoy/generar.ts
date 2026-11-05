@@ -1,13 +1,8 @@
 import "server-only";
+import { duenoId } from "@/lib/datos/dueno";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { reunirHoy } from "./reunir";
 import { redactarResumen } from "./resumen-ia";
-
-async function duenoId(): Promise<string> {
-  const { data, error } = await supabaseAdmin().from("permitidos").select("user_id").limit(1).single();
-  if (error) throw new Error(`No hay usuario permitido: ${error.message}`);
-  return data.user_id;
-}
 
 export type Generado = { fecha: string; conIA: boolean; fallos: string[]; yaExistia?: boolean };
 
@@ -31,6 +26,7 @@ export async function generarResumen(opciones: { forzar?: boolean; userId?: stri
       resumen: r.resumen,
       prioridades: r.prioridades,
       senales: { fallos: foto.fallos, conIA: r.conIA },
+      origen: "cron",
       generado_en: new Date().toISOString(),
       enviado_en: null,
       error_envio: null,

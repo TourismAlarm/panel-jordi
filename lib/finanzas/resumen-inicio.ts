@@ -31,8 +31,9 @@ export class ErrorResumen extends Error {}
 
 // Todo lo que necesita la pantalla de Inicio de Finanzas (y «Hoy»).
 // "qMonth" es el mes financiero: con día de cobro 26, octubre = 26 sep – 25 oct.
-export async function resumenInicio(userId: string, qMonth: string | null = null) {
-  await ensureSpecialCategories(userId);
+// soloLectura: para los bots, que nunca escriben en finanzas (ni las categorías de sistema si faltaran).
+export async function resumenInicio(userId: string, qMonth: string | null = null, opciones: { soloLectura?: boolean } = {}) {
+  if (!opciones.soloLectura) await ensureSpecialCategories(userId);
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')

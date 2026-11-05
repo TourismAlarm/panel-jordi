@@ -1,6 +1,6 @@
 # Entrada de los bots: `/api/bots/*`
 
-Los bots de Grok Bot (Antonio, Ideas ELSA, Guionista ELSA) no tocan Supabase: escriben y leen aquí. Todo entra con **la clave de Antonio**.
+Los bots de Grok Bot (Antonio, Ideas ELSA, Guionista ELSA y los de vida, al final de este documento) no tocan Supabase: escriben y leen aquí. Todo entra con **la clave de Antonio**.
 Cada llamada dice para quién trabaja con el campo `bot` (`antonio`, `ideas` o `guionista`); en un `GET`, con `?bot=`. Sin él, firma Antonio, salvo en `ideas` (firma Ideas ELSA), `guiones` (Guionista ELSA) y `revisiones` (Antonio).
 
 `bot` sirve para ver quién hizo cada cosa y para que un bot no haga lo que no le toca (Ideas no puede subir guiones). **No es seguridad:** quien tenga la clave puede firmar como cualquiera.
@@ -217,3 +217,90 @@ Lo que todos los bots deben saber. La misma `clave` actualiza. `tipo`: `hecho` �
 ```bash
 curl -X POST https://panel-jordi.vercel.app/api/bots/memoria   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"clave":"tono-videos","contenido":"Directo, sin música épica","tipo":"preferencia"}'
 ```
+
+# Bots de vida: Día, Finanzas, Salud y Documentos
+
+Entran con la clave de Antonio y firman con `bot` (`dia`, `finanzas`, `salud`, `documentos`). Ideas y Guionista reciben `403` en todo esto.
+
+- **Solo lectura** de dinero, salud y documentos. Solo escriben sus informes, el resumen de Hoy y las fichas. Ninguna ruta escribe en bancos ni en `fin_*`, y ninguna borra.
+- **Lecturas con fechas:** `desde` y `hasta` en `AAAA-MM-DD`. Sin ellas, los últimos 30 días. Máximo 400 días.
+- **Páginas:** `limite` (hasta 500, por defecto 100) y `cursor`. Pasa como `cursor` el `siguiente` de la respuesta anterior; `null` es que no hay más.
+- **Bandeja:** los avisos de estos bots van a su módulo (`hoy`, `finanzas`, `salud`, `documentos`), nunca a ELSA. Su actividad tampoco sale en ELSA → Actividad.
+- **Memoria común:** Salud no escribe en ella. Lo privado no se cuenta a los bots de ELSA.
+
+## Día a día (`dia`)
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/bots/hoy/datos` | Lo que reúne la pantalla de Hoy: señales de vídeos, finanzas, vencimientos y Bandeja. Sin agenda ni correo, sin texto de documentos y sin valores de salud (solo el aviso de consultar al médico y que el reloj no llega). |
+| `POST /api/bots/hoy/resumen` | Escribe el resumen de la mañana. Sustituye al del cron de ese día. No envía nada. |
+| `GET /api/bots/finanzas/resumen` | El resumen del mes. Es lo único de dinero que lee. |
+| `GET /api/bots/documentos/vencimientos` | Lo único de documentos que lee. |
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/hoy/resumen   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"dia","fecha":"2026-11-05","resumen":"Hoy hay que revisar un corte.","prioridades":[{"nivel":"urgente","texto":"Renovar el seguro","enlace":"/documentos"}]}'
+```
+
+`nivel`: `urgente` · `importante` · `futuro`. `enlace` es opcional: una ruta del panel (`/finanzas`) o una web `https`.
+
+## Finanzas (`finanzas`)
+
+| Ruta | Qué devuelve |
+|---|---|
+| `GET /api/bots/finanzas/movimientos?desde=&hasta=&categoria=&tipo=&kind=` | `id, fecha, tipo, importe, descripcion, counterparty, categoria, kind, cuenta, loan_id, refund_of`. `categoria` admite id o nombre; `tipo`: `income` o `expense`. Los IBAN salen con los 4 últimos. |
+| `GET /api/bots/finanzas/cuentas` | `id, nombre, tipo, rol, saldo, moneda, banco, estado_enlace, valido_hasta, ultima_sync`. |
+| `GET /api/bots/finanzas/prestamos` | Los activos, con `pagos` y `proxima_cuota`. |
+| `GET /api/bots/finanzas/resumen?mes=YYYY-MM` | El mes financiero, de cobro a cobro: `queda`, `por_dia`, `proximo_cobro`, `ingresos`, `gastado`, `gasto`, `cobros_previstos` y `cobros_deducidos`. |
+| `POST /api/bots/finanzas/informe` | Deja un informe. Sale en Finanzas, en «Último informe». |
+
+- **Sin categoría:** muchos movimientos no la tienen. En `gasto` van aparte, en `sin_categoria_por_contraparte`.
+- **Cuándo cobro:** `cobros_previstos` sale de las reglas, hoy vacías. Usa `cobros_deducidos`: lo que entra de la misma contraparte en al menos dos meses, desde 300 €, en los últimos 120 días.
+- **Importes de `gasto`:** son los del banco. La cuenta conjunta no va a la mitad; `gastado` sí descuenta esa mitad.
+
+```bash
+curl -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" "https://panel-jordi.vercel.app/api/bots/finanzas/movimientos?bot=finanzas&desde=2026-10-01&hasta=2026-10-31&tipo=expense"
+```
+
+## Salud (`salud`)
+
+Privado: nunca se mezcla con ELSA.
+
+| Ruta | Qué devuelve |
+|---|---|
+| `GET /api/bots/salud/metricas?desde=&hasta=&metrica=` | `fecha, metrica, valor, unidad, fuente`. |
+| `GET /api/bots/salud/entrenos?desde=&hasta=` | `fecha, tipo, duracion_min, distancia_km, calorias, fc_media, fuente`. |
+| `GET /api/bots/salud/registros?desde=&hasta=` | `fecha, creado_en, tipo, etiqueta, texto, intensidad, aviso_medico`. |
+| `POST /api/bots/salud/informe` | Deja un informe. Solo sale en Salud. |
+
+**Métricas que llegan:** `animo`, `body_battery`, `calorias_activas`, `energia`, `estres_medio`, `fc_reposo`, `hora_acostarse`, `hrv`, `minutos_activos`, `pasos`, `peso_kg`, `recuperacion`, `sueno_horas`, `sueno_puntuacion`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/salud/informe   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"salud","tipo":"semanal","periodo_desde":"2026-10-26","periodo_hasta":"2026-11-01","titulo":"Semana del 26 de octubre","cuerpo_md":"Has dormido mejor que la semana anterior."}'
+```
+
+`POST .../informe` admite `tipo`, `titulo`, `cuerpo_md` (markdown) y, opcionales, `periodo_desde`, `periodo_hasta` y `datos`.
+
+## Documentos (`documentos`)
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/bots/documentos?estado=&categoria=&desde=` | La lista, sin texto: `id, nombre, categoria, tipo, mime, estado, subido_en, vencimiento`. |
+| `GET /api/bots/documentos/{id}` | El documento, su `ficha`, su `texto` y `url_firmada`, que caduca a los 10 minutos. |
+| `GET /api/bots/documentos/vencimientos?dias=60` | Lo que vence en ese plazo o ya venció, con `dias_restantes`. |
+| `POST /api/bots/documentos/{id}/ficha` | Guarda lo que ha sacado. De la referencia solo se guardan los 4 últimos. |
+
+- `409` si Jordi escribió la ficha a mano, o si el documento es una nota.
+- Las notas de texto no avisan por webhook. Hoy los documentos solo entran subiéndolos en el panel.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/documentos/ID/ficha   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"documentos","categoria":"Seguros","tipo":"Póliza","titular":"Jordi","partes":["Aseguradora"],"referencia":"1234","vencimiento":"2027-01-01","importes":[{"concepto":"Prima","importe":100}],"condiciones":[],"resumen":"Seguro del camión."}'
+```
+
+## Avisos a los bots de vida (webhooks)
+
+El panel hace `POST` con `Authorization: Bearer <clave>`. Dispara y olvida: 5 s de espera y sin reintentos. Sin variables no hace nada. Si falla, queda en `actividad_bots` y la subida o el cron siguen. **Nunca llevan el contenido del archivo.**
+
+| Variables en Vercel | Cuándo | Cuerpo |
+|---|---|---|
+| `GROKBOT_DOCS_WEBHOOK_URL`, `GROKBOT_DOCS_WEBHOOK_KEY` | Jordi sube un documento | `evento: "documento_nuevo"`, `documento_id`, `nombre`, `mime`, `categoria`, `subido_en` |
+| `GROKBOT_DIA_WEBHOOK_URL`, `GROKBOT_DIA_WEBHOOK_KEY` | Pasa el cron del resumen diario | `evento: "dia"`, `fecha` |

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { avisarDocumentos } from "@/lib/bots/webhook-vida";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { CATEGORIAS } from "./categorias";
 import { ultimos4 } from "./contrato";
@@ -29,8 +30,9 @@ export async function registrarSubidos(items: unknown, categoria: string): Promi
   if (!parsed.success) return { error: "Algún archivo no es válido." };
   if (parsed.data.some((x) => !x.ruta.startsWith(`${id}/`) || x.ruta.includes(".."))) return { error: "Ruta no válida." };
   const cat = (CATEGORIAS as readonly string[]).includes(categoria) ? categoria : "Sin clasificar";
-  const { data, error } = await supabase.from("doc_documentos").insert(parsed.data.map((x) => ({ user_id: id, nombre: x.nombre, ruta: x.ruta, mime: x.mime, tamano: x.tamano, categoria: cat, estado: "pendiente" }))).select("id");
+  const { data, error } = await supabase.from("doc_documentos").insert(parsed.data.map((x) => ({ user_id: id, nombre: x.nombre, ruta: x.ruta, mime: x.mime, tamano: x.tamano, categoria: cat, estado: "pendiente" }))).select("id, nombre, mime, categoria, subido_en");
   if (error) return { error: "No se han podido registrar los archivos." };
+  avisarDocumentos(data ?? []);
   revalidatePath("/documentos");
   return { ok: true, ids: (data ?? []).map((x) => x.id) };
 }

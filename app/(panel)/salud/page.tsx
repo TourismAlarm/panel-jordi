@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Activity } from "lucide-react";
+import { UltimoInforme } from "@/components/bots/UltimoInforme";
 import { AvisoMedico } from "@/components/salud/AvisoMedico";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
@@ -26,6 +27,8 @@ export default async function SaludHoy() {
       </header>
 
       {r.avisoMedico && <AvisoMedico />}
+
+      <UltimoInforme bot="salud" />
 
       {sinDatos ? (
         <Card className="flex flex-col items-center gap-3 py-8 text-center">

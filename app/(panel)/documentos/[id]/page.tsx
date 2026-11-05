@@ -55,6 +55,8 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
       )}
 
       <Card className="flex flex-col divide-y divide-border py-1">
+        {ficha?.titular && <Dato titulo="Titular">{ficha.titular}</Dato>}
+        {ficha?.resumen && <Dato titulo="Resumen">{ficha.resumen}</Dato>}
         <Dato titulo="Partes">{ficha?.partes.length ? ficha.partes.join(" · ") : NO}</Dato>
         <Dato titulo="Nº de referencia">{ficha?.referencia ?? NO}</Dato>
         <Dato titulo="Inicio">{ficha?.inicio ? formatearDia(ficha.inicio) : NO}</Dato>
@@ -63,7 +65,7 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
         <Dato titulo="Condiciones clave">{ficha?.condiciones.length ? <ul className="list-disc pl-5">{ficha.condiciones.map((c, k) => <li key={k}>{c}</li>)}</ul> : NO}</Dato>
         <Dato titulo="Contacto">{ficha?.contacto ?? NO}</Dato>
       </Card>
-      {ficha && <p className="text-sm text-muted-foreground">Ficha {ficha.origen === "claude" ? "leída por la IA: revísala" : "escrita por ti"}. El panel explica el contenido pero no da interpretaciones legales.</p>}
+      {ficha && <p className="text-sm text-muted-foreground">Ficha {ficha.origen === "manual" ? "escrita por ti" : "leída por la IA: revísala"}. El panel explica el contenido pero no da interpretaciones legales.</p>}
 
       {url && (
         <section className="flex flex-col gap-2" aria-label="Documento">
