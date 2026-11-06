@@ -3,12 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { avisarDocumentos } from "@/lib/bots/aviso";
+import { avisarDocumentos, enviarAviso } from "@/lib/bots/aviso";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { CATEGORIAS } from "./categorias";
 import { ultimos4 } from "./contrato";
-import { leerDocumento } from "./leer";
-import { responderPregunta, type Respuesta, type Turno } from "./chat";
 
 export type Resultado = { ok?: boolean; error?: string; ids?: string[] } | null;
 
@@ -22,7 +20,7 @@ async function usuario() {
 const Subido = z.object({ nombre: z.string().trim().min(1).max(200), ruta: z.string().min(1).max(400), mime: z.string().max(100).nullable(), tamano: z.number().int().min(0).max(26_214_400) });
 
 // Los archivos ya están en el bucket (se suben desde el navegador, a tu carpeta). Aquí se apuntan y quedan
-// «pendientes» hasta que la tarea de Claude los lea y rellene la ficha.
+// «pendientes» hasta que el bot Documentos de Antonio los lea y rellene la ficha (se le avisa aquí).
 export async function registrarSubidos(items: unknown, categoria: string): Promise<Resultado> {
   const { supabase, id } = await usuario();
   if (!id) return { error: "No autorizado." };
@@ -78,7 +76,7 @@ function importesDe(lineasTexto: string[]) {
   });
 }
 
-// Corregir o rellenar la ficha a mano (lo que Claude no haya sacado o haya sacado mal).
+// Corregir o rellenar la ficha a mano (lo que el bot no haya sacado o haya sacado mal).
 export async function guardarFicha(_prev: Resultado, form: FormData): Promise<Resultado> {
   const { supabase, id: userId } = await usuario();
   if (!userId) return { error: "No autorizado." };
@@ -110,32 +108,13 @@ export async function borrarDocumento(form: FormData): Promise<void> {
   redirect("/documentos");
 }
 
-// Lee un documento con la IA (texto por página + ficha). Se llama tras subirlo y desde «Leer ahora».
-export async function leerAhora(docId: string): Promise<Resultado> {
+// Vuelve a avisar a Antonio de un documento sin leer (o que falló): lo lee el bot Documentos y deja la ficha.
+export async function pedirLectura(docId: string): Promise<Resultado> {
   const { supabase, id } = await usuario();
   if (!id) return { error: "No autorizado." };
   if (!/^[0-9a-f-]{36}$/.test(docId)) return { error: "Documento no válido." };
-  if (!process.env.ANTHROPIC_API_KEY) return { error: "Falta ANTHROPIC_API_KEY en Vercel." };
-  const fallo = await leerDocumento(supabase, id, docId);
-  revalidatePath("/documentos", "layout");
-  revalidatePath("/");
-  return fallo ? { error: fallo } : { ok: true };
-}
-
-export type ResultadoChat = { respuesta?: Respuesta; error?: string };
-
-// Chat: responde solo con fragmentos de tus documentos, citando documento y página.
-export async function preguntarDocumentos(pregunta: string, historial: Turno[]): Promise<ResultadoChat> {
-  const { supabase, id } = await usuario();
-  if (!id) return { error: "No autorizado." };
-  const q = String(pregunta ?? "").trim().slice(0, 500);
-  if (!q) return { error: "Escribe una pregunta." };
-  if (!process.env.ANTHROPIC_API_KEY) return { error: "Falta ANTHROPIC_API_KEY en Vercel." };
-  const h = (Array.isArray(historial) ? historial : []).slice(-4).map((t) => ({ pregunta: String(t.pregunta ?? "").slice(0, 500), respuesta: String(t.respuesta ?? "").slice(0, 1000) }));
-  try {
-    return { respuesta: await responderPregunta(supabase, id, q, h) };
-  } catch (e) {
-    console.error("Documentos · chat:", e instanceof Error ? e.message : e);
-    return { error: "No he podido responder ahora. Prueba otra vez." };
-  }
+  const { data } = await supabase.from("doc_documentos").select("id, nombre, mime, categoria, subido_en").eq("id", docId).maybeSingle();
+  if (!data) return { error: "Documento no encontrado." };
+  const enviado = await enviarAviso({ evento: "documento_nuevo", documento_id: data.id, nombre: data.nombre, mime: data.mime, categoria: data.categoria, subido_en: data.subido_en });
+  return enviado ? { ok: true } : { error: "No se ha podido avisar a Antonio. Prueba más tarde." };
 }

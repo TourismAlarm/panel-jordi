@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FilePlus2, MessageCircle, Search } from "lucide-react";
+import { FilePlus2, Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { buscarEnDocumentos, listarDocumentos } from "@/lib/documentos/datos";
@@ -50,9 +50,6 @@ export default async function Documentos({ searchParams }: PageProps<"/documento
           <Link href="/documentos/nuevo"><FilePlus2 size={20} />Añadir</Link>
         </Button>
       </header>
-      <Button asChild variant="outline" size="lg">
-        <Link href="/documentos/preguntar"><MessageCircle size={20} />Preguntar a mis documentos</Link>
-      </Button>
 
       <form action="/documentos" className="flex gap-2" role="search">
         <input name="q" defaultValue={q} placeholder="Buscar dentro de los documentos" aria-label="Buscar" className="min-h-14 min-w-0 flex-1 rounded-md border border-border bg-card px-4 text-base" />

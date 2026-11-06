@@ -5,7 +5,6 @@ import { Subir } from "@/components/documentos/Subir";
 import { Card } from "@/components/shadcn/card";
 
 export const metadata: Metadata = { title: "Añadir documento" };
-export const maxDuration = 60; // la lectura con IA de cada documento ocurre en esta página
 
 export default function Nuevo() {
   return (
@@ -17,7 +16,7 @@ export default function Nuevo() {
       <section className="flex flex-col gap-3" aria-label="Subir archivos">
         <h2 className="text-xl font-bold">Subir archivos</h2>
         <Card><Subir /></Card>
-        <p className="text-muted-foreground">Quedan guardados y privados. Al subirlos, la IA los lee y rellena la ficha (partes, vencimiento, importes…) y el texto para poder buscar. Revisa siempre la ficha.</p>
+        <p className="text-muted-foreground">Quedan guardados y privados. Al subirlos se avisa a Antonio: el bot Documentos los lee y rellena la ficha (partes, vencimiento, importes…) al rato. Revisa siempre la ficha.</p>
       </section>
       <section className="flex flex-col gap-3" aria-label="Nota de texto">
         <h2 className="text-xl font-bold">O apunta una nota</h2>

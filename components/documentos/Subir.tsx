@@ -6,7 +6,7 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { supabaseNavegador } from "@/lib/supabase/client";
 import { CATEGORIAS } from "@/lib/documentos/categorias";
-import { leerAhora, registrarSubidos } from "@/lib/documentos/acciones";
+import { registrarSubidos } from "@/lib/documentos/acciones";
 
 const MAX = 25 * 1024 * 1024;
 const limpiar = (n: string) => n.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9._-]+/g, "_").slice(-80);
@@ -37,22 +37,9 @@ export function Subir() {
         if (error) throw new Error(`No se pudo subir «${a.name}».`);
         subidos.push({ nombre: a.name, ruta, mime: a.type || null, tamano: a.size });
       }
+      // Al registrarlos se avisa a Antonio: el bot Documentos los lee y deja la ficha. Mientras, salen «sin leer».
       const r = await registrarSubidos(subidos, categoria);
       if (r?.error) throw new Error(r.error);
-      // Se leen uno a uno (con la IA). Si alguno falla no se pierde: queda en la lista con el motivo y se puede reintentar.
-      const ids = r?.ids ?? [];
-      const fallos: string[] = [];
-      for (const [i, docId] of ids.entries()) {
-        setEstado({ texto: `Leyendo ${i + 1} de ${ids.length}…` });
-        const l = await leerAhora(docId);
-        if (l?.error) fallos.push(l.error);
-      }
-      if (fallos.length) {
-        setEstado({ texto: `Subidos. ${fallos.length === 1 ? "Uno no se ha podido leer" : `${fallos.length} no se han podido leer`}: ${fallos[0]}`, error: true });
-        setSubiendo(false);
-        router.refresh();
-        return;
-      }
       router.push("/documentos");
       router.refresh();
     } catch (e) {
@@ -70,7 +57,7 @@ export function Subir() {
       <label className="flex flex-col gap-2">
         <span className="text-lg font-semibold">Categoría (opcional)</span>
         <select value={categoria} onChange={(e) => setCategoria(e.target.value)} className="min-h-14 w-full rounded-md border border-border bg-card px-4 text-base">
-          <option value="">Que lo decida la IA</option>
+          <option value="">Que lo decida el bot</option>
           {CATEGORIAS.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
