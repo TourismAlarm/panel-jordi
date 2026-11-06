@@ -25,8 +25,8 @@ const pct = (x: number | null) => (x === null ? "–" : `${Math.round(x)} %`);
 const coma = (x: number | null) => (x === null ? "–" : x.toFixed(1).replace(".", ","));
 const ultima = (fotos: Foto[]) => [...fotos].sort((a, b) => b.fecha.localeCompare(a.fecha))[0]?.reels ?? [];
 
-// Cómo van los reels y qué cambiar. Números: foto diaria de Instagram y de TikTok (Windsor).
-// Qué es cada reel (GE, tema) y el informe del analista: los sube el PC. Los vídeos de TikTok
+// Cómo van los reels y qué cambiar. Números (foto diaria de Instagram y de TikTok), qué es cada reel (GE, tema)
+// y el informe del analista: lo deja todo Antonio. Los vídeos de TikTok
 // heredan la ficha de su pareja en Instagram (mismo montaje, publicado casi a la vez).
 export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) {
   const { red: q } = await searchParams;
@@ -54,7 +54,7 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
       return (
         <Pantalla titulo="Redes" subtitulo="Instagram frente a TikTok">
           {selector}
-          <Vacio titulo="Falta una de las dos" texto="Hacen falta la foto de Instagram y la de TikTok: llegan cada mañana." icono="reloj" tono="neutro" />
+          <Vacio titulo="Falta una de las dos" texto="Hacen falta la foto de Instagram y la de TikTok: las deja Antonio." icono="reloj" tono="neutro" />
         </Pantalla>
       );
     }
@@ -96,7 +96,7 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
     return (
       <Pantalla titulo="Redes">
         {selector}
-        <Vacio titulo="Todavía no hay datos" texto={`Las cifras llegan cada mañana con la foto de ${nombre}.`} icono="reloj" tono="neutro" />
+        <Vacio titulo="Todavía no hay datos" texto={`Las cifras llegan cuando Antonio deja la foto de ${nombre}.`} icono="reloj" tono="neutro" />
       </Pantalla>
     );
   }
@@ -113,7 +113,7 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
       {selector}
       {vieja && (
         <Aviso tono="ojo">
-          Las cifras son del {dia(foto)}: la foto diaria de {nombre} de hoy no ha llegado todavía.
+          Las cifras son del {dia(foto)}: Antonio aún no ha dejado la foto de {nombre} de hoy.
         </Aviso>
       )}
 

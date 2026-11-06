@@ -10,7 +10,7 @@ import s from "./FormPregunta.module.css";
 type P = Pick<Pregunta, "id" | "clave" | "texto" | "respuesta" | "respondida_en" | "recogida_en">;
 
 // Una pregunta del guionista con su caja para contestar (o la respuesta, si ya está recogida). quien: quién la recoge.
-export function FormPregunta({ videoId, p, quien = "el PC" }: { videoId: string; p: P; quien?: string }) {
+export function FormPregunta({ videoId, p, quien = "Antonio" }: { videoId: string; p: P; quien?: string }) {
   const [estado, accion] = useActionState(responder, null);
   const fase = fasePregunta(p);
   const e = estadoPregunta(p, quien);

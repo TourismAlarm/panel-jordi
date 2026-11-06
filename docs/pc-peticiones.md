@@ -1,3 +1,5 @@
+> **Retirado (6-11-2026):** el PC ya no recoge peticiones. Las cierra Antonio: ver `docs/bots-api.md` → «Lo que Jordi pide en el panel». Esto queda como historia.
+
 # Lo que el PC tiene que recoger del panel: `peticiones`
 
 Desde el móvil, Jordi puede **descartar un proyecto** o **pedir un guion para otro trabajo**.

@@ -176,7 +176,7 @@ curl "https://panel-jordi.vercel.app/api/bots/videos"   -H "Authorization: Beare
 
 ## `GET /api/bots/preguntas`
 
-Lo que Jordi ha contestado y nadie ha recogido, de los vídeos creados en el panel. Con `?video_id=GE_044`, todas las de ese vídeo. Los datos de clientes salen tachados.
+Lo que Jordi ha contestado y nadie ha recogido, también de los vídeos que creó el PC. Con `?video_id=GE_044`, todas las de ese vídeo. Los datos de clientes salen tachados.
 
 ```bash
 curl https://panel-jordi.vercel.app/api/bots/preguntas   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
@@ -192,7 +192,73 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/videos/GE_044/guion   -H "A
 
 - `recogidas` lleva el `respondida_en` que leíste. Si Jordi cambió la respuesta después, no se recoge y sale en `sin_recoger`: vuelve a leerla. Una respuesta recogida ya no se puede cambiar desde el panel.
 - Si una respuesta no cambia el guion, envía solo `recogidas`.
-- `409` si el vídeo es del PC o ya tiene el material entregado: a partir de ahí el guion no se toca.
+- `409` si el vídeo ya tiene el material entregado: a partir de ahí el guion no se toca.
+
+## Lo que Jordi pide en el panel: `/api/bots/peticiones`
+
+El PC ya no recoge nada. Descartar un proyecto, pedir un guion para otro trabajo, «Ya he subido todo» y revisar un montaje **sin encargo en la cola** quedan apuntados aquí y llegan a Antonio con un aviso (`proyecto_descartado`, `guion_pedido`, `material_listo`, `montaje_revisado` con `peticion_id`). Antonio hace lo que toque y dice cómo quedó. En el panel sale «Esperando a Antonio» hasta entonces.
+
+### `GET /api/bots/peticiones`
+
+Sin filtro, lo abierto (`pendiente` y `procesando`), de la más vieja a la más nueva. `?estado=pendiente|procesando|hecha|fallida` para ver otras. La nota de Jordi (`texto`) sale tachada.
+
+```bash
+curl https://panel-jordi.vercel.app/api/bots/peticiones   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+```
+
+Cada una trae `id`, `tipo`, `video_id`, `motivo`, `texto`, `fecha_trabajo`, `siempre`, `estado`, `error`, `creada_en`, `procesada_en`.
+
+| `tipo` | Qué hacer |
+|---|---|
+| `descartar` | Parar el proyecto. Al marcarla `hecha`, el panel archiva el vídeo. `motivo`: `no_lo_hice` · `no_me_gusta` · `no_sirve` · `otro` (sirve al Guionista para aprender) |
+| `nuevo` | Pasárselo al Guionista: `texto` dice qué trabajo es; `fecha_trabajo`, qué día |
+| `material_listo` | Todo grabado y en Drive: encargar el corte (`POST /api/bots/edicion`) |
+| `corte_ok` | Encargar el acabado del vídeo |
+| `cambios` | Encargar otra versión con `texto`. `siempre: true` = además, regla del montador |
+| `aprobar` | Cerrar: el vídeo está aprobado |
+| `sin_guion` | Ya las hace el panel al momento: no hace falta tocarlas |
+
+### `POST /api/bots/peticiones/{id}`
+
+`estado`: `procesando` (ya la tienes; Jordi ya no la puede deshacer) · `hecha` · `fallida` (con `error`, que Jordi lee en la ficha). `hecha` y `fallida` son finales: `409` si ya lo estaba. `404` si no existe o Jordi la deshizo antes (llega el aviso `peticion_deshecha`).
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/peticiones/<id>   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"estado":"hecha"}'
+```
+
+## Redes: `/api/bots/redes/*`
+
+Las cifras de ELSA → Redes las deja Antonio: el PC ya no sube nada. Los campos son los mismos que da Windsor (conectores `instagram` y `tiktok_organic`), que es lo que el panel sabe leer; se puede mandar algún campo más y se guarda tal cual.
+
+### `POST /api/bots/redes/fotos`
+
+La foto del día de una red: **todos** los reels con sus cifras de ese día. El mismo día otra vez la sustituye. Lo ideal, una cada mañana por red; el panel compara con la de hace 7 días.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/redes/fotos   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"red":"instagram","fecha":"2026-11-06","datos":[{"timestamp":"2026-07-26T18:08:35+0000","media_permalink":"https://www.instagram.com/reel/XXXX/","media_caption":"...","media_views":7256,"media_reach":5303,"media_reel_avg_watch_time":37261,"media_reel_skip_rate":0.279,"media_saved":7,"media_shares":23,"media_product_type":"REELS"}]}'
+```
+
+- Instagram: obligatorios `timestamp` y `media_permalink`. `media_reel_avg_watch_time` en **milisegundos**; `media_reel_skip_rate` de 0 a 1.
+- TikTok (`"red":"tiktok"`): obligatorios `video_id` y `video_create_datetime` (UTC). También `video_share_url`, `video_views_count`, `video_reach`, `video_average_time_watched` (**segundos**), `video_full_watched_rate` (0 a 1), `video_favorites`, `video_shares`, `video_likes`, `video_comments`, `video_duration`, `video_new_followers`, `video_thumbnail_url`.
+- `GET` dice qué días hay ya de cada red.
+
+### `POST /api/bots/redes/reels`
+
+Qué es cada reel de Instagram: `permalink`, `ge` (`GE_044`), `tema`, `gancho`, `tipo_gancho`, `prueba` (la apuesta que prueba, p. ej. `A3`), `duracion_s` y `elsa` (por defecto `true`; `false` = no es de ELSA y no cuenta). Cada reel entero: lo que no mandes queda vacío. Sin datos de clientes (`422`). `GET` devuelve las fichas que hay.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/redes/reels   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"items":[{"permalink":"https://www.instagram.com/reel/XXXX/","ge":"GE_031","tema":"nave/tanquetas","gancho":"Plano de la grúa ya izando","duracion_s":32}]}'
+```
+
+### `POST /api/bots/redes/informes`
+
+El informe semanal del analista (`semana` `2026-45`) o la lista de lo que se está probando (`semana` `apuestas`, el `apuestas.md` de siempre: el panel lee sus `## A1 …`). La misma semana lo sustituye. Sin datos de clientes. `GET` da la lista; `?semana=apuestas`, una entera.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/redes/informes   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"semana":"2026-45","titulo":"Semana 45","fecha":"2026-11-09","markdown":"# Semana 45
+
+..."}'
+```
 
 ## Avisos a Antonio (webhook)
 
@@ -206,9 +272,12 @@ El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida:
 | `idea_me_gusta` | Una idea pasa a «Me gusta» | `idea_id`, `titulo`, `nota_jordi` |
 | `guion_cambios` | Jordi pide cambios | `guion_id`, `nota_jordi` |
 | `guion_aprobado` | Aprobado y ya es GE | `guion_id`, `video_id` |
-| `material_listo` | «Ya he subido todo» | `video_id` |
-| `montaje_revisado` | Jordi revisa un montaje | `video_id`, `decision` (`aprobar`, `cambios` o `corte_ok`), `texto` |
-| `pregunta_respondida` | Jordi contesta o cambia una respuesta de un vídeo del panel | `video_id`, `clave`, `texto`, `respuesta` |
+| `material_listo` | «Ya he subido todo» | `video_id`, `peticion_id` |
+| `montaje_revisado` | Jordi revisa un montaje | `video_id`, `decision` (`aprobar`, `cambios` o `corte_ok`), `texto`, `peticion_id` (null si había encargo: ya está decidido) |
+| `proyecto_descartado` | Jordi descarta un proyecto | `peticion_id`, `video_id`, `motivo`, `texto` |
+| `guion_pedido` | Jordi pide un guion para otro trabajo | `peticion_id`, `texto`, `fecha_trabajo` |
+| `peticion_deshecha` | Jordi deshace una petición que aún no habías tocado | `peticion_id` |
+| `pregunta_respondida` | Jordi contesta o cambia una respuesta (de cualquier vídeo) | `video_id`, `clave`, `texto`, `respuesta` |
 | `documento_nuevo` | Jordi sube un documento: pásaselo a Documentos. Nunca lleva su contenido | `documento_id`, `nombre`, `mime`, `categoria`, `subido_en` |
 | `dia` | Cada mañana, tras dejar el resumen sencillo: pásaselo a Día | `fecha` |
 | `resumen_pedido` | Jordi pulsa «Pedir el resumen a Antonio»: pásaselo a Día | `fecha` |

@@ -60,12 +60,12 @@ describe("meter las respuestas en el guion de un vídeo", () => {
   it("sin guion no hay nada que actualizar", () => {
     expect(guionConCuerpoNuevo(null, "x")).toBeNull();
   });
-  it("solo vídeos del panel y sin material entregado", () => {
+  it("solo sin material entregado, también en los que creó el PC", () => {
     const panel = { origen: "panel", estado: "guion_listo_falta_material" };
     expect(porQueNoSeEditaElGuion(panel, false)).toBeNull();
     expect(porQueNoSeEditaElGuion({ ...panel, estado: "esperando_material" }, false)).toBeNull();
     expect(porQueNoSeEditaElGuion(panel, true)).not.toBeNull();
-    expect(porQueNoSeEditaElGuion({ ...panel, origen: "pc" }, false)).not.toBeNull();
+    expect(porQueNoSeEditaElGuion({ ...panel, origen: "pc" }, false)).toBeNull();
     expect(porQueNoSeEditaElGuion({ ...panel, estado: "montando" }, false)).not.toBeNull();
   });
 });

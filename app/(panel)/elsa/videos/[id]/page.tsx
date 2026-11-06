@@ -132,7 +132,7 @@ export default async function Proyecto({ params }: PageProps<"/elsa/videos/[id]"
 
       {PETICIONES_ACTIVAS && !descarte && fase !== "hecho" && (
         <Seccion titulo="¿Este no?">
-          <p className="suave pequeno">Si no lo hiciste tú, no te gusta el planteamiento o ya no sirve, descártalo y el PC deja de trabajar en él.</p>
+          <p className="suave pequeno">Si no lo hiciste tú, no te gusta el planteamiento o ya no sirve, descártalo y Antonio lo archiva.</p>
           <FormDescartar videoId={video.id} />
         </Seccion>
       )}
@@ -140,7 +140,7 @@ export default async function Proyecto({ params }: PageProps<"/elsa/videos/[id]"
       {!descarte && !!preguntas.length && (
         <Seccion titulo="Preguntas" id="preguntas" cuenta={resumen.sinContestar}>
           {preguntas.map((p) => (
-            <FormPregunta key={p.id} videoId={video.id} p={p} quien={video.origen === "panel" ? "Antonio" : "el PC"} />
+            <FormPregunta key={p.id} videoId={video.id} p={p} />
           ))}
         </Seccion>
       )}

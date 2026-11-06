@@ -9,8 +9,11 @@ export type EventoAviso =
   | { evento: "idea_me_gusta"; idea_id: string; titulo: string; nota_jordi: string | null }
   | { evento: "guion_cambios"; guion_id: string; nota_jordi: string | null }
   | { evento: "guion_aprobado"; guion_id: string; video_id: string }
-  | { evento: "material_listo"; video_id: string }
-  | { evento: "montaje_revisado"; video_id: string; decision: string; texto: string | null }
+  | { evento: "material_listo"; video_id: string; peticion_id: string }
+  | { evento: "montaje_revisado"; video_id: string; decision: string; texto: string | null; peticion_id: string | null }
+  | { evento: "proyecto_descartado"; peticion_id: string; video_id: string; motivo: string; texto: string | null }
+  | { evento: "guion_pedido"; peticion_id: string; texto: string; fecha_trabajo: string | null }
+  | { evento: "peticion_deshecha"; peticion_id: string }
   | { evento: "pregunta_respondida"; video_id: string; clave: string; texto: string; respuesta: string }
   | { evento: "edicion_lista"; encargo_id: string; video_id: string; version: number; estado: "listo" | "bloqueado" | "fallido" }
   | { evento: "documento_nuevo"; documento_id: string; nombre: string; mime: string | null; categoria: string; subido_en: string }

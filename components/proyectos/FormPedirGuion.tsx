@@ -5,7 +5,7 @@ import { AreaTexto, BotonEnviar, Campo, Entrada, ErrorCampo, Tarjeta } from "@/c
 import { pedirGuion } from "@/lib/acciones";
 import s from "./Peticiones.module.css";
 
-// Pedir un guion para otro trabajo: qué es y qué día. El PC se lo pasa al guionista.
+// Pedir un guion para otro trabajo: qué es y qué día. Antonio se lo pasa al Guionista.
 export function FormPedirGuion() {
   const [estado, accion] = useActionState(pedirGuion, null);
   return (

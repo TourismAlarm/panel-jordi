@@ -55,7 +55,7 @@ export async function responder(_prev: Resultado, form: FormData): Promise<Resul
   return { ok: true };
 }
 
-// «Este proyecto no»: queda apuntado para el PC y sale de tu lista al momento.
+// «Este proyecto no»: sale de tu lista al momento y Antonio lo archiva (se le avisa aquí).
 export async function descartar(_prev: Resultado, form: FormData): Promise<Resultado> {
   if (!PETICIONES_ACTIVAS) return { error: "Todavía no está disponible." };
   const videoId = String(form.get("video_id") ?? "");
@@ -64,14 +64,14 @@ export async function descartar(_prev: Resultado, form: FormData): Promise<Resul
   if (!videoId) return { error: "Falta el proyecto." };
   if (!esMotivo(motivo)) return { error: "Elige un motivo." };
 
-  if (!(await descartarProyecto(videoId, motivo, texto))) {
-    return { error: "No se ha podido guardar. Puede que ya esté descartado." };
-  }
+  const peticion = await descartarProyecto(videoId, motivo, texto);
+  if (!peticion) return { error: "No se ha podido guardar. Puede que ya esté descartado." };
+  avisarAntonio({ evento: "proyecto_descartado", peticion_id: peticion, video_id: videoId, motivo, texto });
   revalidatePath("/", "layout");
   return { ok: true };
 }
 
-// Guion para otro trabajo: el PC se lo pasa al guionista.
+// Guion para otro trabajo: Antonio se lo pasa al Guionista.
 export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resultado> {
   if (!PETICIONES_ACTIVAS) return { error: "Todavía no está disponible." };
   const texto = String(form.get("texto") ?? "").trim();
@@ -79,7 +79,9 @@ export async function pedirGuion(_prev: Resultado, form: FormData): Promise<Resu
   if (!texto) return { error: "Cuenta qué trabajo es." };
   if (fecha && !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: "La fecha no es válida." };
 
-  if (!(await pedirGuionNuevo(texto, fecha))) return { error: "No se ha podido guardar. Prueba otra vez." };
+  const peticion = await pedirGuionNuevo(texto, fecha);
+  if (!peticion) return { error: "No se ha podido guardar. Prueba otra vez." };
+  avisarAntonio({ evento: "guion_pedido", peticion_id: peticion, texto, fecha_trabajo: fecha });
   revalidatePath("/", "layout");
   redirect("/elsa");
 }
@@ -107,24 +109,24 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   if (tipo === "cambios" && !texto) return { error: "Escribe qué quieres cambiar." };
 
   const siempre = tipo === "cambios" && form.get("siempre") === "on";
-  // Con encargo de la cola se decide al momento; si no, va al PC como siempre.
+  // Con encargo de la cola se decide al momento; si no, queda apuntada para que Antonio la cierre.
   const conEncargo = tipo === "corte_ok" ? false : await decidirEncargo(videoId, tipo, texto, siempre);
   if (conEncargo === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
-  if (!conEncargo && !(await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre))) {
-    return { error: "No se ha podido guardar. Prueba otra vez." };
-  }
-  avisarAntonio({ evento: "montaje_revisado", video_id: videoId, decision: tipo, texto: tipo === "cambios" ? texto : null });
+  const peticion = conEncargo ? null : await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre);
+  if (!conEncargo && !peticion) return { error: "No se ha podido guardar. Prueba otra vez." };
+  avisarAntonio({ evento: "montaje_revisado", video_id: videoId, decision: tipo, texto: tipo === "cambios" ? texto : null, peticion_id: peticion });
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
   return { ok: true };
 }
 
-// «Ya he subido todo el material»: hasta que lo pulsas, el PC no empieza a procesar ni a montar el vídeo.
+// «Ya he subido todo el material»: hasta que lo pulsas, Antonio no encarga el montaje.
 export async function materialListo(_prev: Resultado, form: FormData): Promise<Resultado> {
   const videoId = String(form.get("video_id") ?? "");
   if (!videoId) return { error: "Falta el proyecto." };
-  if (!(await confirmarMaterial(videoId))) return { error: "No se ha podido guardar. Prueba otra vez." };
-  avisarAntonio({ evento: "material_listo", video_id: videoId });
+  const peticion = await confirmarMaterial(videoId);
+  if (!peticion) return { error: "No se ha podido guardar. Prueba otra vez." };
+  avisarAntonio({ evento: "material_listo", video_id: videoId, peticion_id: peticion });
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
   return { ok: true };
@@ -180,11 +182,13 @@ export async function decidirGuion(_prev: Resultado, form: FormData): Promise<Re
   return { ok: true };
 }
 
-// Deshacer un descarte o una petición, mientras el PC no la haya recogido.
+// Deshacer un descarte o una petición, mientras Antonio no la haya recogido.
 export async function deshacer(_prev: Resultado, form: FormData): Promise<Resultado> {
-  const r = await borrarPeticion(String(form.get("id") ?? ""));
+  const id = String(form.get("id") ?? "");
+  const r = await borrarPeticion(id);
   if (r === "error") return { error: "No se ha podido deshacer. Prueba otra vez." };
-  if (r === "recogida") return { error: "El PC ya lo ha recogido: díselo al guionista." };
+  if (r === "recogida") return { error: "Antonio ya lo ha recogido: díselo a él." };
+  avisarAntonio({ evento: "peticion_deshecha", peticion_id: id });
   revalidatePath("/", "layout");
   return { ok: true };
 }

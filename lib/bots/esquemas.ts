@@ -160,6 +160,68 @@ export const InformarIn = z.discriminatedUnion("estado", [
   z.object({ estado: z.literal("final"), resultado_url: url }),
 ]);
 
+// Lo que Jordi pide en el panel y cierra Antonio: descartar, guion nuevo, material subido, revisión sin encargo.
+export const FiltroPeticion = z.enum(["pendiente", "procesando", "hecha", "fallida"]);
+export const PeticionCambioIn = z.discriminatedUnion("estado", [
+  z.object({ estado: z.literal("procesando") }),
+  z.object({ estado: z.literal("hecha") }),
+  z.object({ estado: z.literal("fallida"), error: texto(500) }),
+]);
+
+// Cifras de redes que deja Antonio: los mismos campos que daba Windsor, que es lo que el panel sabe leer.
+const cifra = z.number().min(0).nullish();
+const proporcion = z.number().min(0).max(1).nullish();
+const leyenda = z.string().max(5000).nullish();
+const ReelInstagram = z.looseObject({
+  timestamp: texto(40),
+  media_permalink: url,
+  media_caption: leyenda,
+  media_views: cifra,
+  media_reach: cifra,
+  media_reel_avg_watch_time: cifra, // ms
+  media_reel_skip_rate: proporcion,
+  media_saved: cifra,
+  media_shares: cifra,
+});
+const VideoTikTokIn = z.looseObject({
+  video_id: z.string().regex(/^\d{5,25}$/),
+  video_create_datetime: texto(40),
+  video_caption: leyenda,
+  video_share_url: url.nullish(),
+  video_views_count: cifra,
+  video_reach: cifra,
+  video_average_time_watched: cifra, // s
+  video_full_watched_rate: proporcion,
+  video_favorites: cifra,
+  video_shares: cifra,
+  video_duration: cifra,
+  video_new_followers: cifra,
+});
+export const FotoRedesIn = z.discriminatedUnion("red", [
+  z.object({ red: z.literal("instagram"), fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), datos: z.array(ReelInstagram).min(1).max(500) }),
+  z.object({ red: z.literal("tiktok"), fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), datos: z.array(VideoTikTokIn).min(1).max(500) }),
+]);
+const textoCorto = z.string().trim().max(300).nullish();
+export const ReelsRedesIn = z.object({
+  items: z
+    .array(
+      z.object({
+        permalink: url,
+        ge: z.string().regex(/^GE_\d{3,}$/).nullish(),
+        tema: textoCorto,
+        gancho: textoCorto,
+        tipo_gancho: z.string().trim().max(60).nullish(),
+        prueba: z.string().trim().max(40).nullish(),
+        duracion_s: z.number().min(0).max(3600).nullish(),
+        elsa: z.boolean().default(true),
+      }),
+    )
+    .min(1)
+    .max(200),
+});
+// semana «apuestas» = la lista de lo que se está probando (apuestas.md); las demás, un informe del analista.
+export const InformeRedesIn = z.object({ semana: z.string().trim().regex(/^[\w-]{1,60}$/), titulo: texto(200), fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), markdown: texto(50000) });
+
 export const FiltroAgente = z.enum(["guionista", "archivador", "observador", "montador", "analista", "coordinador", "ideas", "antonio"]);
 
 // Antonio cambia las reglas con un porqué: es lo que Jordi lee en Aprende antes de decidir si lo deshace.

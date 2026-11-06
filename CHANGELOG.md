@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Todo pasa por Antonio, nada espera al PC (2026-11-06)
+- **Peticiones**: descartar, pedir guion, «Ya he subido todo» y revisar un montaje sin encargo ya no esperan al PC (que solo monta). Al pulsar, se avisa a Antonio (`proyecto_descartado`, `guion_pedido`, `material_listo` y `montaje_revisado` con `peticion_id`; `peticion_deshecha` si Jordi lo deshace). Antonio las lee en `GET /api/bots/peticiones` y las cierra con `POST /api/bots/peticiones/{id}`. Un descarte hecho archiva el vídeo. En el panel sale «Esperando a Antonio».
+- **Preguntas**: también las de vídeos que creó el PC las recoge Antonio (`GET /api/bots/preguntas` y el aviso `pregunta_respondida`), y puede rellenar su guion mientras no haya material entregado.
+- **Redes**: las cifras las deja Antonio: `POST /api/bots/redes/fotos` (foto del día de Instagram o TikTok, mismos campos que Windsor), `/redes/reels` (qué es cada reel) y `/redes/informes` (informe semanal y apuestas). Sin migraciones: son las tablas de siempre.
+- Textos del panel sin «el PC» donde ya no hace nada (pasos, ficha, portada, revisión del montaje sin ChatCut).
 ## Documentos sin Anthropic (2026-11-06)
 - La lectura al subir ya no usa la IA del panel: al registrar los archivos se avisa a Antonio (`documento_nuevo`) y el bot Documentos deja la ficha. El botón de la ficha pasa a «Pedir a Antonio que lo lea» (reenvía el aviso).
 - Fuera el chat «Preguntar a mis documentos»: eso se le pregunta a Antonio.

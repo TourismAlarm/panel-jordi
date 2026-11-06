@@ -32,9 +32,8 @@ export function guionAMarkdown(g: Guion): string {
   return `${partes.join("\n\n")}\n`;
 }
 
-// El guion de un vídeo solo se toca si es del panel y aún no se ha entregado el material. null = se puede; si no, por qué.
+// El guion de un vídeo solo se toca si aún no se ha entregado el material (sea del panel o de los que creó el PC). null = se puede; si no, por qué.
 export function porQueNoSeEditaElGuion(video: Pick<Fila<"videos">, "origen" | "estado">, materialEntregado: boolean): string | null {
-  if (video.origen !== "panel") return "ese vídeo es del PC";
   if (materialEntregado || (video.estado !== "guion_listo_falta_material" && video.estado !== "esperando_material")) return "ese vídeo ya está en montaje: el guion no se toca";
   return null;
 }

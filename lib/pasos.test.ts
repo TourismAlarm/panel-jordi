@@ -31,11 +31,11 @@ describe("pasosDe", () => {
     expect(pasosDe({ ...video("guion_listo_esperando_material"), descartado: true })).toHaveLength(1);
   });
 
-  it("guion en borrador sin preguntas por contestar y con enviadas: guion en borrador y preguntas esperando al PC", () => {
+  it("guion en borrador sin preguntas por contestar y con enviadas: guion en borrador y preguntas esperando a Antonio", () => {
     const pasos = pasosDe(video("esperando_material", "borrador"), preguntas(0, 2, 2));
     expect(por(pasos, "guion")).toMatchObject({ estado: "sistema" });
     expect(por(pasos, "guion")?.titulo).toMatch(/borrador/);
-    expect(por(pasos, "preguntas")).toMatchObject({ estado: "sistema", titulo: "Enviadas · esperando al PC" });
+    expect(por(pasos, "preguntas")).toMatchObject({ estado: "sistema", titulo: "Enviadas · esperando a Antonio" });
   });
 
   it("guion listo y todas las preguntas recogidas: preguntas hecho", () => {
@@ -75,10 +75,10 @@ describe("pasosDe", () => {
     expect(por(pasosDe(video("acabado_listo"), preguntas(0, 0, 0)), "revisar")).toMatchObject({ estado: "tuyo", titulo: "Revisar el acabado" });
   });
 
-  it("exportacion_pendiente: aprobado y el PC exporta", () => {
+  it("exportacion_pendiente: aprobado y el PC lo deja en Drive", () => {
     const pasos = pasosDe(video("exportacion_pendiente"), preguntas(0, 0, 0));
     expect(por(pasos, "revisar")?.estado).toBe("hecho");
-    expect(por(pasos, "publicar")).toMatchObject({ estado: "sistema", detalle: "El PC exporta el vídeo final de ChatCut" });
+    expect(por(pasos, "publicar")).toMatchObject({ estado: "sistema", detalle: "El PC deja el vídeo final en Drive" });
   });
 
   it("publicado: todo hecho", () => {
@@ -102,9 +102,9 @@ describe("pasosDe", () => {
 
 describe("preguntas de un vídeo del panel", () => {
   const q = { total: 2, sinContestar: 0, enviadas: 2 };
-  it("las recoge Antonio, no el PC", () => {
+  it("las recoge Antonio, también las de vídeos del PC", () => {
     const paso = (origen: string) => pasosDe({ ...video("guion_listo_falta_material", null), origen }, q).find((x) => x.clave === "preguntas")?.titulo;
     expect(paso("panel")).toBe("Enviadas · esperando a Antonio");
-    expect(paso("pc")).toBe("Enviadas · esperando al PC");
+    expect(paso("pc")).toBe("Enviadas · esperando a Antonio");
   });
 });

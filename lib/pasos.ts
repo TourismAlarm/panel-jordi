@@ -8,7 +8,7 @@ import type { Proyecto } from "@/lib/datos/videos";
 import { faseVideo } from "@/lib/estados";
 import { diaCercano, hoy, plural } from "@/lib/formato";
 
-// hecho · tuyo (te toca a ti) · sistema (lo hacen el PC o los agentes) · pendiente (aún no toca)
+// hecho · tuyo (te toca a ti) · sistema (lo llevan Antonio y los bots; el PC solo monta) · pendiente (aún no toca)
 export type EstadoPaso = "hecho" | "tuyo" | "sistema" | "pendiente";
 
 export type Paso = {
@@ -56,7 +56,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
       accion: { texto: "Contestar", href: `/elsa/videos/${p.id}#preguntas` },
     });
   } else if (q.enviadas) {
-    pasos.push({ clave: "preguntas", titulo: `Enviadas · esperando ${p.origen === "panel" ? "a Antonio" : "al PC"}`, estado: "sistema" });
+    pasos.push({ clave: "preguntas", titulo: "Enviadas · esperando a Antonio", estado: "sistema" });
   } else if (q.total) {
     pasos.push({ clave: "preguntas", titulo: "Preguntas contestadas", estado: "hecho" });
   }
@@ -66,7 +66,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   if (yaGrabado) {
     pasos.push({ clave: "grabar", titulo: "Grabado y subido", estado: "hecho" });
   } else if (p.materialListo) {
-    pasos.push({ clave: "subir", titulo: "Material entregado", estado: "sistema", detalle: "Dijiste que está todo · el PC lo recoge y empieza el montaje" });
+    pasos.push({ clave: "subir", titulo: "Material entregado", estado: "sistema", detalle: "Dijiste que está todo · Antonio encarga el montaje" });
   } else if (p.sin_guion || (p.fecha_trabajo && p.fecha_trabajo < hoy())) {
     pasos.push({
       clave: "subir",
@@ -86,12 +86,12 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
     pasos.push({ clave: "subir", titulo: "Subir lo grabado", estado: "pendiente", detalle: "Súbelo todo y pulsa «Ya he subido todo»: hasta entonces no se monta" });
   }
 
-  // 4 · Montaje (lo hacen los agentes). En dos fases: primero el corte (ffmpeg) y, tras tu «Corte OK», el acabado (ChatCut).
+  // 4 · Montaje (lo encarga Antonio y lo monta el PC). En dos fases: primero el corte y, tras tu «Corte OK», el acabado.
   const enAcabado = /acabado|exportacion/.test(p.estado);
   if (fase === "hecho" || p.por_revisar || p.estado === "revision_jordi" || enAcabado) {
     pasos.push({ clave: "montaje", titulo: p.estado === "corte_listo" ? "Corte hecho" : "Montaje hecho", estado: "hecho" });
   } else if (fase === "montaje") {
-    pasos.push({ clave: "montaje", titulo: "Montando", estado: "sistema", detalle: "Lo hacen los agentes en el PC" });
+    pasos.push({ clave: "montaje", titulo: "Montando", estado: "sistema", detalle: "Lo encarga Antonio y lo monta el PC" });
   } else {
     pasos.push({ clave: "montaje", titulo: "Montaje", estado: "pendiente" });
   }
@@ -110,14 +110,14 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   } else if (enAcabado) {
     pasos.push({ clave: "corte", titulo: "Corte OK", estado: "hecho" });
     if (p.estado === "acabado_pendiente") {
-      pasos.push({ clave: "acabado", titulo: "Subtítulos y título en ChatCut", estado: "sistema", detalle: "Lo hace el PC · te avisa cuando esté" });
+      pasos.push({ clave: "acabado", titulo: "Subtítulos y título", estado: "sistema", detalle: "Antonio lo encarga al PC · te avisa cuando esté" });
       pasos.push({ clave: "revisar", titulo: "Revisar el acabado", estado: "pendiente" });
     } else if (p.estado === "acabado_listo") {
       pasos.push({
         clave: "revisar",
         titulo: "Revisar el acabado",
         estado: "tuyo",
-        detalle: p.origen === "panel" ? "Míralo: apruébalo o pide cambios" : "En ChatCut: apruébalo o pide cambios",
+        detalle: "Míralo: apruébalo o pide cambios",
         accion: { texto: "Revisar", href: `/elsa/videos/${p.id}#montaje` },
       });
     } else {
@@ -137,7 +137,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
 
   // 6 · Publicar
   if (/publicado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicado", estado: "hecho" });
-  else if (p.estado === "exportacion_pendiente") pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "El PC exporta el vídeo final de ChatCut" });
+  else if (p.estado === "exportacion_pendiente") pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "El PC deja el vídeo final en Drive" });
   else if (/aprobado|exportado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "Aprobado, falta publicarlo" });
   else pasos.push({ clave: "publicar", titulo: "Publicar", estado: "pendiente" });
 

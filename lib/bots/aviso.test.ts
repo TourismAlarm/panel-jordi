@@ -13,7 +13,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
-const evento = { evento: "material_listo", video_id: "GE_050" } as const;
+const evento = { evento: "material_listo", video_id: "GE_050", peticion_id: "00000000-0000-0000-0000-000000000001" } as const;
 
 beforeEach(() => {
   apuntado.length = 0;
