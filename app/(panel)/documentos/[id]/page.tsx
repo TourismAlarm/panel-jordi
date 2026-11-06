@@ -45,7 +45,7 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
       </header>
 
       {doc.estado === "pendiente" && <div className="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3"><p className="font-semibold">Todavía no se ha leído.</p><BotonLeer id={doc.id} /></div>}
-      {doc.estado === "error" && <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">No se pudo leer: {(doc.error ?? "motivo desconocido").replace(/\.$/, "")}. Puedes reintentarlo o rellenar la ficha a mano.</p>}
+      {doc.estado === "error" && <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">No se pudo leer: {(doc.error ?? "motivo desconocido").replace(/\.$/, "")}. Puedes pedir a Antonio que lo lea otra vez o rellenar la ficha a mano.</p>}
       {doc.estado === "error" && <BotonLeer id={doc.id} />}
 
       {v && (
@@ -65,7 +65,7 @@ export default async function Detalle({ params }: PageProps<"/documentos/[id]">)
         <Dato titulo="Condiciones clave">{ficha?.condiciones.length ? <ul className="list-disc pl-5">{ficha.condiciones.map((c, k) => <li key={k}>{c}</li>)}</ul> : NO}</Dato>
         <Dato titulo="Contacto">{ficha?.contacto ?? NO}</Dato>
       </Card>
-      {ficha && <p className="text-sm text-muted-foreground">Ficha {ficha.origen === "manual" ? "escrita por ti" : "leída por la IA: revísala"}. El panel explica el contenido pero no da interpretaciones legales.</p>}
+      {ficha && <p className="text-sm text-muted-foreground">Ficha {ficha.origen === "manual" ? "escrita por ti" : "leída por el bot Documentos: revísala"}. El panel explica el contenido pero no da interpretaciones legales.</p>}
 
       {url && (
         <section className="flex flex-col gap-2" aria-label="Documento">

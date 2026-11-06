@@ -4,7 +4,7 @@ Panel personal móvil primero: **Hoy · Finanzas · Salud · ELSA · Documentos*
 
 - Un solo login (email y contraseña de Supabase, solo `ALLOWED_EMAIL`), un solo proyecto Supabase («Panel-jordi»), un solo diseño.
 - Cada módulo vive en `app/(panel)/<modulo>/` y se registra en `config/modulos.ts`. Sus tablas llevan prefijo (`fin_`, `sal_`, `elsa_`, `doc_`) con `user_id` y RLS. (ELSA conserva por ahora sus nombres originales porque los escribe `sync_panel.py` desde el PC.)
-- `lib/` compartida: `supabase/`, `anthropic.ts`, `resend.ts`, `cron-auth.ts`, `dinero.ts`, `fechas.ts`, `acceso.ts`.
+- `lib/` compartida: `supabase/`, `resend.ts`, `cron-auth.ts`, `dinero.ts`, `fechas.ts`, `acceso.ts`.
 - El panel ELSA (vídeos, preguntas, redes) está en `/elsa`: ver [ARQUITECTURA.md](ARQUITECTURA.md). No se conecta al ERP.
 
 ## Instalación local
@@ -55,7 +55,7 @@ La **agenda** y una **selección de correo** de Hoy las publica Antonio (`POST /
 
 ## Documentos
 
-Subes archivos en **Documentos → Añadir**; la IA (API de Anthropic) los lee y rellena la ficha y el texto por página; el chat responde con citas. Variables en Vercel: `ANTHROPIC_API_KEY` (y `ANTHROPIC_MODEL` si quieres otro modelo; por defecto `claude-sonnet-5-5`). Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas).
+Subes archivos en **Documentos → Añadir**; el panel avisa a Antonio (evento `documento_nuevo`) y el bot Documentos los lee y deja la ficha (`/api/bots/documentos/{id}/ficha`). Si no llega, en la ficha del documento está «Pedir a Antonio que lo lea». El panel no usa la API de Anthropic. Pasos manuales en Supabase: ninguno (la migración crea el bucket privado y sus políticas).
 
 ## Despliegue (pasos manuales)
 
