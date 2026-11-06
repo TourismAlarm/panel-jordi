@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/tipos";
 import { ultimos4, type CuerpoResultado } from "./contrato";
 
-// Guarda lo leído de un documento (por la IA o por la tarea de Claude): estado, texto por página y ficha.
+// Guarda lo leído de un documento (por el bot Documentos): estado, texto por página y ficha.
 // Sirve con la sesión de Jordi (RLS) o con la service_role: siempre se escribe con el user_id del documento.
 export async function guardarResultado(db: SupabaseClient<Database>, userId: string, c: CuerpoResultado, de: { origen: "claude" | "bot"; titular?: string | null; resumen?: string | null } = { origen: "claude" }): Promise<string | null> {
   const { id, categoria, tipo, paginas, ficha } = c;
