@@ -109,9 +109,9 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
 
       {!lista.length &&
         (soloMios ? (
-          <Vacio titulo="Nada que hacer ahora mismo" texto="El resto lo lleva el PC." />
+          <Vacio titulo="Nada que hacer ahora mismo" texto="El resto lo llevan Antonio y los bots." />
         ) : (
-          <Vacio icono="videos" tono="neutro" titulo="No hay proyectos abiertos" texto="Aparecerán cuando el PC los suba." />
+          <Vacio icono="videos" tono="neutro" titulo="No hay proyectos abiertos" texto="Aparecerán cuando Antonio cree uno." />
         ))}
 
       {agruparPor(lista, ({ p }) => diaCercano(p.fecha_trabajo)).map((g) => (

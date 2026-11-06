@@ -161,7 +161,7 @@ export default function Piezas() {
       </Pieza>
 
       <Pieza nombre="Aviso" uso="Franja para avisar sin cortar el paso.">
-        <Aviso tono="info">2 respuestas guardadas. Pendiente de que las recoja el PC.</Aviso>
+        <Aviso tono="info">2 respuestas guardadas. Pendiente de que las recoja Antonio.</Aviso>
         <Aviso tono="bien">Enviada.</Aviso>
         <Aviso tono="mal">No se ha podido guardar.</Aviso>
       </Pieza>

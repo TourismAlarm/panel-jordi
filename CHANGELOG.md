@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Todo pasa por Antonio, nada espera al PC (2026-11-06)
+- **Peticiones**: descartar, pedir guion, «Ya he subido todo» y revisar un montaje sin encargo ya no esperan al PC (que solo monta). Al pulsar, se avisa a Antonio (`proyecto_descartado`, `guion_pedido`, `material_listo` y `montaje_revisado` con `peticion_id`; `peticion_deshecha` si Jordi lo deshace). Antonio las lee en `GET /api/bots/peticiones` y las cierra con `POST /api/bots/peticiones/{id}`. Un descarte hecho archiva el vídeo. En el panel sale «Esperando a Antonio».
+- **Preguntas**: también las de vídeos que creó el PC las recoge Antonio (`GET /api/bots/preguntas` y el aviso `pregunta_respondida`), y puede rellenar su guion mientras no haya material entregado.
+- **Redes**: las cifras las deja Antonio: `POST /api/bots/redes/fotos` (foto del día de Instagram o TikTok, mismos campos que Windsor), `/redes/reels` (qué es cada reel) y `/redes/informes` (informe semanal y apuestas). Sin migraciones: son las tablas de siempre.
+- Textos del panel sin «el PC» donde ya no hace nada (pasos, ficha, portada, revisión del montaje sin ChatCut).
+
 ## Fase 6 — Documentos (2026-10-21)
 - **Módulo `/documentos`**: índice maestro **ordenado por vencimiento** (vencido y ≤7 días en rojo, <30 días subrayado), filtro por categoría (Seguros, Contratos, Vehículos y maquinaria, Permisos y autorizaciones, Identidad y trámites, Salud, Hogar, Finanzas e impuestos, Notas), aviso de «N vencen en 60 días» y **búsqueda de texto completo en español** (Postgres `tsvector`) que devuelve documento, **página** y el fragmento con la coincidencia marcada.
 - **Subir varios archivos a la vez** (PDF, fotos, texto) directo del navegador a un **bucket privado** `documentos`, con políticas por carpeta de usuario (`<user_id>/…`). Notas de texto sin archivo, ya buscables. Detalle con ficha, visor de PDF/imagen (enlace que caduca a los 10 min), texto por página, edición manual de la ficha y borrado con confirmación.

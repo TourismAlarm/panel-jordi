@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { BotonEnviar, ErrorCampo } from "@/components/ui";
 import { deshacer } from "@/lib/acciones";
 
-// Deshace un descarte o una petición mientras el PC no la haya recogido.
+// Deshace un descarte o una petición mientras Antonio no la haya recogido.
 export function BotonDeshacer({ id }: { id: string }) {
   const [estado, accion] = useActionState(deshacer, null);
   return (

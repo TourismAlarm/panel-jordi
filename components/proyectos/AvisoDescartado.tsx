@@ -6,7 +6,7 @@ import { haceCuanto } from "@/lib/formato";
 import { BotonDeshacer } from "./BotonDeshacer";
 import s from "./Peticiones.module.css";
 
-// En la ficha de un proyecto descartado: por qué, si el PC ya lo sabe y cómo deshacerlo.
+// En la ficha de un proyecto descartado: por qué, si Antonio ya lo ha archivado y cómo deshacerlo.
 export function AvisoDescartado({ p }: { p: Peticion }) {
   return (
     <Tarjeta tono="mal">
@@ -19,7 +19,7 @@ export function AvisoDescartado({ p }: { p: Peticion }) {
       </div>
       {p.texto && <p className="suave">«{p.texto}»</p>}
       <span className="suave pequeno">
-        {p.estado === "hecha" ? "Hecho: el PC ya no trabaja más en él." : estadoPeticion(p).texto + "."}
+        {p.estado === "hecha" ? "Hecho: archivado, nadie trabaja más en él." : estadoPeticion(p).texto + "."}
       </span>
       <Link href="/elsa/nuevo" className={s.enlace}>
         ¿Hacemos un guion para otro trabajo? →

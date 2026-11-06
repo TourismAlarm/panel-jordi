@@ -3,7 +3,7 @@ import type { Paso } from "@/lib/pasos";
 import { MarcaPaso } from "./MarcaPaso";
 import s from "./Pasos.module.css";
 
-const QUIEN = { tuyo: "Te toca", sistema: "Lo hace el PC", pendiente: "Más adelante", hecho: "Hecho" } as const;
+const QUIEN = { tuyo: "Te toca", sistema: "En marcha", pendiente: "Más adelante", hecho: "Hecho" } as const;
 
 // Todos los pasos del proyecto en orden, con quién los hace y un botón en los que son tuyos.
 export function ListaPasos({ pasos }: { pasos: Paso[] }) {

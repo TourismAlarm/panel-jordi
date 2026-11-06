@@ -8,7 +8,7 @@ import { estadoPeticion } from "@/lib/estados";
 import { BotonDeshacer } from "./BotonDeshacer";
 import s from "./Peticiones.module.css";
 
-// «Ya he subido todo»: mientras no lo pulses, el PC no mira ni monta este material.
+// «Ya he subido todo»: mientras no lo pulses, Antonio no encarga el montaje.
 // Así los agentes trabajan una sola vez con todo y no se gastan tokens montando a medias.
 export function MaterialListo({ videoId, peticion }: { videoId: string; peticion?: Peticion }) {
   const [estado, accion] = useActionState(materialListo, null);
@@ -19,7 +19,7 @@ export function MaterialListo({ videoId, peticion }: { videoId: string; peticion
         <div className={s.cabecera}>
           <div>
             <strong>Material entregado</strong>
-            <span className="suave pequeno">{estadoPeticion(peticion).texto}. El montaje empieza en el siguiente ciclo del PC.</span>
+            <span className="suave pequeno">{estadoPeticion(peticion).texto}. Antonio encarga el montaje en cuanto lo recoge.</span>
           </div>
           {!peticion.recogida_en && <BotonDeshacer id={peticion.id} />}
         </div>
@@ -30,10 +30,10 @@ export function MaterialListo({ videoId, peticion }: { videoId: string; peticion
   return (
     <form action={accion} className={s.form}>
       <p className="suave pequeno">
-        Sube todo lo grabado a Drive, en <em>contenido para claude</em> › la carpeta que empieza por <strong>{videoId}</strong> (o en el PC, <code>videos/_entrada/{videoId}/</code>). Los agentes no tocan este vídeo hasta que pulses el botón: así montan una sola vez, con todo el material.
+        Sube todo lo grabado a Drive, en <em>contenido para claude</em> › la carpeta que empieza por <strong>{videoId}</strong>. Antonio no encarga el montaje hasta que pulses el botón: así se monta una sola vez, con todo el material.
       </p>
       <input type="hidden" name="video_id" value={videoId} />
-      <BotonEnviar texto="Ya he subido todo" enviando="Avisando al PC…" />
+      <BotonEnviar texto="Ya he subido todo" enviando="Avisando a Antonio…" />
       {estado?.error && <ErrorCampo>{estado.error}</ErrorCampo>}
     </form>
   );

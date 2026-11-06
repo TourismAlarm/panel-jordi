@@ -20,7 +20,7 @@ export default async function Nuevo({ searchParams }: PageProps<"/elsa/nuevo">) 
       subtitulo={
         grabado
           ? "Para una urgencia que ya has grabado sin guion. Se edita con lo que hay."
-          : "Para un trabajo que no está en la lista. El PC se lo pasa al guionista."
+          : "Para un trabajo que no está en la lista. Antonio se lo pasa al Guionista."
       }
       accion={false}
     >

@@ -9,10 +9,10 @@ import { BotonDeshacer } from "./BotonDeshacer";
 import s from "./Peticiones.module.css";
 
 // Revisar el montaje sin abrir el correo. Va en dos fases:
-// · corte (corte_listo): el vídeo de ffmpeg, sin subtítulos ni título → «Corte OK» o pedir cambios.
-// · acabado (acabado_listo): el proyecto de ChatCut con subtítulos y título → aprobar o pedir cambios.
+// · corte (corte_listo): el vídeo sin subtítulos ni título → «Corte OK» o pedir cambios.
+// · acabado (acabado_listo): con subtítulos y título → aprobar o pedir cambios.
 // (revision_jordi = vídeos del flujo antiguo, de una sola fase: aprobar o pedir cambios.)
-// Si ya has mandado una y el PC no la ha terminado, se enseña en qué punto está en vez de los botones.
+// Si ya has mandado una y Antonio no la ha cerrado, se enseña en qué punto está en vez de los botones.
 const TITULO_ENVIADA: Record<string, string> = { aprobar: "Aprobado", corte_ok: "Corte OK", cambios: "Cambios enviados" };
 const TITULO_FALLIDA: Record<string, string> = {
   aprobar: "No se pudo aprobar",
@@ -44,7 +44,7 @@ export function RevisarMontaje({
           <div>
             <strong>{TITULO_ENVIADA[revision.tipo] ?? "Enviado"}</strong>
             <span className="suave pequeno">
-              {estadoPeticion(revision).texto}. Se actualiza en el siguiente ciclo del PC.
+              {estadoPeticion(revision).texto}. Se actualiza cuando Antonio la recoge.
               {revision.tipo === "corte_ok" && " Luego le pone subtítulos y título en ChatCut y te avisa."}
             </span>
           </div>
@@ -67,12 +67,12 @@ export function RevisarMontaje({
 
       {corte && (
         <p className="suave pequeno">
-          Es el corte: sin subtítulos ni título. Mira qué planos entran, el orden y el ritmo. Con «Corte OK» el PC le pone subtítulos y
-          título en ChatCut y te lo vuelve a pasar.
+          Es el corte: sin subtítulos ni título. Mira qué planos entran, el orden y el ritmo. Con «Corte OK» Antonio encarga el acabado
+          (subtítulos y título) y te lo vuelve a pasar.
         </p>
       )}
       {acabado && (
-        <p className="suave pequeno">Acabado en ChatCut: subtítulos, título y transiciones. Al aprobarlo, el PC exporta el vídeo final.</p>
+        <p className="suave pequeno">Acabado: subtítulos, título y transiciones. Al aprobarlo, el PC deja el vídeo final en Drive.</p>
       )}
 
       {montajeUrl ? (
@@ -82,7 +82,7 @@ export function RevisarMontaje({
         </BotonEnlace>
       ) : (
         <Tarjeta>
-          <span className="suave">Todavía no hay enlace al montaje. Aparece aquí en el siguiente ciclo del PC.</span>
+          <span className="suave">Todavía no hay enlace al montaje. Aparece aquí cuando se entregue el montaje.</span>
         </Tarjeta>
       )}
 

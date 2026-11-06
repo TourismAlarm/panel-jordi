@@ -120,7 +120,7 @@ export function infoTikTok(pareja: Map<string, string>, info: InfoReel[]): InfoR
 
 export type Foto = { fecha: string; reels: ReelWindsor[] };
 
-// Lo que el PC sabe de cada reel (registro.csv + estado del vídeo).
+// Lo que se sabe de cada reel (lo deja Antonio en redes_reels).
 export type InfoReel = {
   permalink: string;
   ge: string | null;
@@ -151,7 +151,7 @@ export type Reel = {
   completo: number | null; // % que lo ve entero (solo TikTok)
   seguidores: number | null; // seguidores nuevos que trajo (solo TikTok)
   tiempoMedio: number | null; // segundos
-  duracion: number | null; // segundos del montaje (Instagram: lo sabe el PC; TikTok: lo da TikTok)
+  duracion: number | null; // segundos del montaje (Instagram: de la ficha que deja Antonio; TikTok: lo da TikTok)
   pctVisto: number | null; // tiempo medio ÷ duración del montaje (solo si sabemos la duración)
   guardados: number;
   compartidos: number;
@@ -357,7 +357,7 @@ export function conclusiones(reels: Reel[], hoyISO: string): Conclusion[] {
     });
   }
 
-  // 3 · Temas que tiran (solo los que el PC tiene clasificados, con 2 o más reels)
+  // 3 · Temas que tiran (solo los que tienen ficha, con 2 o más reels)
   const porTema = new Map<string, Reel[]>();
   for (const r of maduros) if (r.tema) porTema.set(r.tema, [...(porTema.get(r.tema) ?? []), r]);
   const temas = [...porTema.entries()]

@@ -1,4 +1,4 @@
-// Traduce los estados técnicos que sube el PC a palabras de Jordi y a un tono de color.
+// Traduce los estados técnicos de la base de datos a palabras de Jordi y a un tono de color.
 // Es el único sitio donde se decide qué significa cada estado: las pantallas solo lo pintan.
 
 import type { Fila } from "@/lib/supabase/tipos";
@@ -52,14 +52,14 @@ export function faseVideo(estado: string): Fase {
 
 type PreguntaEstado = Pick<Fila<"preguntas">, "respondida_en" | "recogida_en">;
 
-// pendiente → la contestas tú · enviada → la recoge el PC · recogida → ya está en preguntas.md
+// pendiente → la contestas tú · enviada → la recoge Antonio · recogida → ya está en el guion
 export function fasePregunta(p: PreguntaEstado): "pendiente" | "enviada" | "recogida" {
   if (p.recogida_en) return "recogida";
   if (p.respondida_en) return "enviada";
   return "pendiente";
 }
 
-export function estadoPregunta(p: PreguntaEstado, quien = "el PC"): Estado {
+export function estadoPregunta(p: PreguntaEstado, quien = "Antonio"): Estado {
   const fase = fasePregunta(p);
   if (fase === "recogida") return { texto: `Recogida por ${quien}`, tono: "bien" };
   if (fase === "enviada") return { texto: `Enviada · la recoge ${quien}`, tono: "info" };
@@ -96,7 +96,7 @@ export function textoMotivo(m: string | null) {
   return m && esMotivo(m) ? MOTIVOS[m] : "Descartado";
 }
 
-// ── Peticiones (lo que pides al PC) ───────────────────────
+// ── Peticiones (lo que pides a Antonio) ───────────────────────
 
 type PeticionEstado = Pick<Fila<"peticiones">, "estado" | "error">;
 
@@ -107,8 +107,8 @@ export function estadoPeticion(p: PeticionEstado): Estado {
     case "fallida":
       return { texto: `Falló: ${p.error ?? "sin detalle"}`, tono: "mal" };
     case "procesando":
-      return { texto: "El PC lo está haciendo", tono: "info" };
+      return { texto: "Antonio lo está haciendo", tono: "info" };
     default:
-      return { texto: "Esperando al PC", tono: "info" };
+      return { texto: "Esperando a Antonio", tono: "info" };
   }
 }

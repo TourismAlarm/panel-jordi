@@ -5,8 +5,8 @@ import type { Fila } from "@/lib/supabase/tipos";
 import { deTikTok, type Foto, type InfoReel, type ReelWindsor, type VideoTikTok } from "@/lib/redes";
 import { comprobar } from "./comun";
 
-// Redes: fotos diarias de Instagram y TikTok (las toma la tarea en la nube «ELSA - windsor») y lo que el PC
-// sabe de cada reel (GE, tema, duración) y el informe del analista (los sube sync_panel.py).
+// Redes: fotos diarias de Instagram y TikTok, qué es cada reel (GE, tema, duración) y el informe del analista.
+// Todo lo deja Antonio por /api/bots/redes/* (antes lo subían Windsor y el PC).
 export type Informe = Fila<"informes_redes">;
 
 // Las fotos de los últimos días (la última y la de hace una semana bastan, pero traemos margen).
@@ -41,7 +41,7 @@ export const ultimoInforme = cache(async (): Promise<Informe | null> => {
   return comprobar(r, "el informe del analista")[0] ?? null;
 });
 
-// apuestas.md tal cual (el PC lo sube como una fila más de informes_redes, semana «apuestas»).
+// La lista de apuestas tal cual (una fila más de informes_redes, semana «apuestas»).
 export const apuestasMd = cache(async (): Promise<string | null> => {
   const supabase = await supabaseServidor();
   const r = await supabase.from("informes_redes").select("markdown").eq("semana", "apuestas").limit(1);
