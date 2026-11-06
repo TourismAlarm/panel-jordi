@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Revisas tú en cuanto el PC entrega (2026-11-06)
+- El corte y el acabado salen al momento como «Te toca revisar», con «Ver en Drive» y los botones «Corte OK» / «Aprobar» / «Pedir cambios». Ya no esperan a que Antonio lo marque por la API (no lo hacía y se quedaban en «Montado: lo revisa Antonio»).
+- Tu decisión cierra el encargo al momento (también en el corte) y Antonio recibe `montaje_revisado` para encargar lo siguiente. Si Antonio pide cambios antes, sale de tu lista.
+- Migración `20261106120000_jordi_revisa_al_entregar.sql`: `decidir_encargo` y `encargo_revisado` nuevas, y lo ya entregado (GE_031 v7) pasa a tu lista.
+
 ## Todo pasa por Antonio, nada espera al PC (2026-11-06)
 - **Peticiones**: descartar, pedir guion, «Ya he subido todo» y revisar un montaje sin encargo ya no esperan al PC (que solo monta). Al pulsar, se avisa a Antonio (`proyecto_descartado`, `guion_pedido`, `material_listo` y `montaje_revisado` con `peticion_id`; `peticion_deshecha` si Jordi lo deshace). Antonio las lee en `GET /api/bots/peticiones` y las cierra con `POST /api/bots/peticiones/{id}`. Un descarte hecho archiva el vídeo. En el panel sale «Esperando a Antonio».
 - **Preguntas**: también las de vídeos que creó el PC las recoge Antonio (`GET /api/bots/preguntas` y el aviso `pregunta_respondida`), y puede rellenar su guion mientras no haya material entregado.

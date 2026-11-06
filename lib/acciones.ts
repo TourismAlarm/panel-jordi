@@ -110,7 +110,7 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
 
   const siempre = tipo === "cambios" && form.get("siempre") === "on";
   // Con encargo de la cola se decide al momento; si no, queda apuntada para que Antonio la cierre.
-  const conEncargo = tipo === "corte_ok" ? false : await decidirEncargo(videoId, tipo, texto, siempre);
+  const conEncargo = await decidirEncargo(videoId, tipo, texto, siempre);
   if (conEncargo === "error") return { error: "No se ha podido guardar. Prueba otra vez." };
   const peticion = conEncargo ? null : await pedirRevision(videoId, tipo, tipo === "cambios" ? texto : null, siempre);
   if (!conEncargo && !peticion) return { error: "No se ha podido guardar. Prueba otra vez." };

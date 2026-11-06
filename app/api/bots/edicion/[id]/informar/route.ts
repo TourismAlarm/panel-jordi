@@ -6,7 +6,7 @@ import { InformarIn } from "@/lib/bots/esquemas";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const SIGUIENTE = {
-  listo: "Montado: lo revisa Antonio",
+  listo: null, // sale a Jordi como «Te toca revisar»
   bloqueado: "El PC ha preguntado algo a Antonio",
   fallido: "El montaje ha fallado: lo ve Antonio",
 };
@@ -45,12 +45,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       })
       .eq("id", id)
       .eq("estado", "en_curso")
-      .select("video_id, version, tomado_en");
+      .select("video_id, version, tomado_en, fase, resultado_url");
     if (error) throw new Error(error.message);
     if (!data.length) return NextResponse.json({ error: "ese encargo no está en curso" }, { status: 409 });
     const e = data[0];
 
-    const { error: eVideo } = await db.from("videos").update({ siguiente_paso: SIGUIENTE[d.estado], actualizado_en: ahora }).eq("id", e.video_id);
+    // Entregado: a la lista de Jordi al momento, con el enlace de Drive. Antonio lo revisa en paralelo si quiere.
+    const aJordi = d.estado === "listo" ? { estado: e.fase === "corte" ? "corte_listo" : "acabado_listo", por_revisar: true, montaje_url: e.resultado_url } : {};
+    const { error: eVideo } = await db.from("videos").update({ ...aJordi, siguiente_paso: SIGUIENTE[d.estado], actualizado_en: ahora }).eq("id", e.video_id);
     if (eVideo) throw new Error(eVideo.message);
     const { error: eActividad } = await db.from("actividad_bots").insert({
       bot: "editor",
