@@ -73,6 +73,7 @@ export function senalesFinanzas(p: {
   porDia: number | null; // lo que toca gastar por día hasta la nómina
   diasNomina: number | null;
   propuestas?: number; // categorías que propone el bot y esperan tu sí o tu no
+  avisos?: { nivel: string; titulo: string }[]; // lo que Antonio te dice como asesor y aún no has visto
 }): Senal[] {
   const s: Senal[] = [];
   for (const e of p.enlaces) {
@@ -99,6 +100,10 @@ export function senalesFinanzas(p: {
       });
     }
   }
+  // De lo que dice Antonio, a Hoy solo suben los problemas y lo que hay que vigilar. Los consejos se leen en Finanzas.
+  (p.avisos ?? []).forEach((a, i) => {
+    if (a.nivel === "problema" || a.nivel === "ojo") s.push({ id: `fin-aviso-${i}`, modulo: "finanzas", nivel: a.nivel === "problema" ? "hoy" : "saber", titulo: a.titulo, detalle: a.nivel === "problema" ? "Antonio ve un problema" : "Antonio dice que lo vigiles", href: "/finanzas" });
+  });
   if (p.propuestas) {
     s.push({ id: "fin-propuestas", modulo: "finanzas", nivel: "hoy", titulo: `Antonio propone categoría para ${plural(p.propuestas, "movimiento")}`, detalle: "Solo tienes que decir sí o no", href: "/finanzas" });
   }

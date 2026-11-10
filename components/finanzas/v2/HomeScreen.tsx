@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGlobalToast } from '@/components/finanzas/Toaster';
 import { C, Card, Bar, Sheet, money, shortDate, Loading, ErrorBox } from './ui';
+import { Consejos } from './Consejos';
 import { Propuestas } from './Propuestas';
 
 type Role = 'daily' | 'debts' | 'savings' | 'home';
@@ -205,6 +206,8 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
           </span>
         </Card>
       )}
+
+      <Consejos />
 
       <Propuestas />
 

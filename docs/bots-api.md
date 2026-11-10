@@ -478,7 +478,32 @@ Las citas también salen como señales de agenda, pero no se repiten en «Para h
 | `GET /api/bots/finanzas/resumen?mes=YYYY-MM` | El mes financiero, de cobro a cobro: `queda`, `por_dia`, `proximo_cobro`, `ingresos`, `gastado`, `gasto`, `cobros_previstos` y `cobros_deducidos`. |
 | `POST /api/bots/finanzas/informe` | Deja un informe. Sale en Finanzas, en «Último informe». |
 | `GET /api/bots/finanzas/propuestas` | Lo que hay por categorizar: `movimientos` sin categoría (`id, fecha, tipo, importe, descripcion, counterparty, cuenta, propuesta`) y las `categorias` entre las que elegir (`id, nombre, tipo`). |
+| `GET` y `POST /api/bots/finanzas/consejos` | Avisos y consejos de asesor: «Lo que ve Antonio» en Finanzas. |
 | `POST /api/bots/finanzas/propuestas` | Propones categoría para movimientos sin categoría. **No cambia ningún movimiento:** Jordi dice sí o no en Finanzas. |
+
+### Consejos y avisos: «Lo que ve Antonio»
+
+Aquí haces de asesor financiero. Lo que mandes sale arriba en Finanzas, debajo de lo que le queda. Los `problema` y `ojo` suben además a Hoy.
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/bots/finanzas/consejos` | Lo que le has dicho y sigue en pie, con `estado`: `activo` (aún no lo ha leído) o `visto`. |
+| `POST /api/bots/finanzas/consejos` | Dices algo nuevo, actualizas algo dicho o retiras lo que ya no es cierto. |
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/finanzas/consejos \
+  -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" -H "Content-Type: application/json" \
+  -d '{"bot":"finanzas","items":[{"clave":"ocio-noviembre","nivel":"ojo","titulo":"Ocio va un 40 % por encima de tu media","detalle":"Llevas 210 € a día 16; tu media a estas alturas son 150 €. Si sigues así, cierras el mes en unos 400 €.","enlace":"/finanzas?tab=movements"}],"retirar":["cuota-coche-duplicada"]}'
+```
+
+- **`nivel`:** `problema` (algo va mal y hay que actuar: un cobro duplicado, la cuenta no llega a la nómina, una cuota que no se ha pagado) · `ojo` (una tendencia a vigilar) · `consejo` (algo que mejoraría sus cuentas) · `bien` (algo que va bien: también se dice).
+- **`clave`:** tu nombre para ese asunto, en minúsculas con guiones (`suscripciones-duplicadas`). La misma clave **actualiza**, no repite.
+- **`titulo`** (hasta 120) dice qué pasa; **`detalle`** (hasta 1000) da las cifras y qué harías tú. Sin cifras no es un consejo.
+- **`enlace`:** opcional; una ruta del panel o una web `https`.
+- **`retirar`:** claves de lo que ya no es cierto (se arregló, cambió el mes). Retíralo tú: nada caduca solo.
+- **Si Jordi pulsa «Visto»,** deja de salirle. Mandarlo igual otra vez no lo devuelve (`sin_cambios`); solo reaparece si cambias el texto o el nivel. No insistas con lo mismo: actualiza las cifras cuando cambien.
+- **Qué mirar, como haría un buen asesor:** si llega a la nómina al ritmo que lleva, gastos que se salen de su media, cobros o suscripciones duplicados o que han subido, cuotas de deuda próximas sin saldo, dinero parado en la cuenta del día a día, ingresos esperados que no han entrado y cuánto podría apartar este mes. Hasta 30 por llamada; mejor pocos y claros.
+- El informe largo sigue yendo por `finanzas/informe` («Último informe»). Esto es lo corto y accionable.
 
 ### Proponer categorías
 

@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aISODia, sumarDias } from "@/lib/fechas";
+import { consejosActivos } from "@/lib/finanzas/consejos";
 import { propuestasPendientes } from "@/lib/finanzas/propuestas";
 import { resumenInicio } from "@/lib/finanzas/resumen-inicio";
 import { fichaDeGuion } from "@/lib/guion";
@@ -96,9 +97,10 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     }),
 
     intentar(fallos, "Finanzas", async () => {
-      const [r, propuestas, links, loans] = await Promise.all([
+      const [r, propuestas, consejos, links, loans] = await Promise.all([
         resumenInicio(userId, null, { soloLectura: opciones.soloLectura }),
         propuestasPendientes(userId),
+        consejosActivos(userId),
         sinTipos.from("fin_bank_links").select("aspsp_name, status, valid_until, last_error").eq("user_id", userId),
         sinTipos.from("fin_loans").select("contact_name, monthly_payment, payment_day").eq("user_id", userId).eq("status", "active"),
       ]);
@@ -111,6 +113,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
         prestamos: ((loans.data ?? []) as { contact_name: string; monthly_payment: number | string | null; payment_day: number | null }[]).filter((l) => l.payment_day && Number(l.monthly_payment) > 0).map((l) => ({ nombre: l.contact_name, importe: Number(l.monthly_payment), dia: Number(l.payment_day) })),
         sinCategoria: r.uncategorized.count,
         propuestas: propuestas.length,
+        avisos: consejos.map((c) => ({ nivel: c.nivel, titulo: c.titulo })),
         restante: r.remaining,
         porDia: r.perDay,
         diasNomina: r.payday?.daysLeft ?? null,

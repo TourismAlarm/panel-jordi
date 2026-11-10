@@ -46,6 +46,7 @@ export type Permiso =
   | "finanzas:leer"
   | "finanzas:informe"
   | "finanzas:proponer" // propone categorías; quien las aplica es Jordi
+  | "finanzas:aconsejar" // avisos y consejos de asesor: «Lo que ve Antonio» en Finanzas
   | "salud:leer"
   | "salud:escribir" // lo que lee de Garmin: solo métricas y entrenos
   | "salud:informe"
@@ -63,7 +64,7 @@ const PERMISOS: Record<Bot, Permiso[]> = {
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
   editor: ["edicion:tomar", "edicion:informar", "edicion:entregar", "reglas:leer"],
   dia: [...COMUNES, "hoy:leer", "hoy:escribir", "videos:leer", "documentos:vencimientos", "finanzas:resumen"],
-  finanzas: [...COMUNES, "finanzas:resumen", "finanzas:leer", "finanzas:informe", "finanzas:proponer"],
+  finanzas: [...COMUNES, "finanzas:resumen", "finanzas:leer", "finanzas:informe", "finanzas:proponer", "finanzas:aconsejar"],
   salud: [...COMUNES.filter((p) => p !== "memoria:escribir"), "salud:leer", "salud:escribir", "salud:informe"],
   documentos: [...COMUNES, "documentos:vencimientos", "documentos:leer", "documentos:ficha"],
 };

@@ -6,7 +6,7 @@ import { clavePuede, moduloDeBot, puede, resolverAutor, type Bot, type Permiso }
 import { FechaIso, FichaBotIn, InformeIn, ResumenHoyIn } from "./esquemas";
 import { cobrosDeducidos, gastoPorCategoria, ocultarIban, proximaCuota, type Movimiento } from "./vida";
 
-const PRIVADOS: Permiso[] = ["finanzas:resumen", "finanzas:leer", "finanzas:informe", "finanzas:proponer", "salud:leer", "salud:escribir", "salud:informe", "documentos:vencimientos", "documentos:leer", "documentos:ficha"];
+const PRIVADOS: Permiso[] = ["finanzas:resumen", "finanzas:leer", "finanzas:informe", "finanzas:proponer", "finanzas:aconsejar", "salud:leer", "salud:escribir", "salud:informe", "documentos:vencimientos", "documentos:leer", "documentos:ficha"];
 
 describe("permisos de los bots de vida", () => {
   it("ideas y guionista no llegan a dinero, salud ni documentos", () => {
@@ -108,11 +108,11 @@ describe("cálculos", () => {
 describe("las rutas de los bots nunca escriben en dinero ni borran", () => {
   const archivos = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? archivos(join(dir, f)) : f.endsWith(".ts") ? [join(dir, f)] : []));
   const rutas = [...archivos("app/api/bots"), "lib/bots/informes.ts", "lib/bots/salud-lectura.ts"];
-  // Única excepción: fin_propuestas_categoria, donde el bot deja propuestas que solo Jordi aplica. Los movimientos no los toca.
+  // Únicas excepciones: fin_propuestas_categoria (propuestas que solo Jordi aplica) y fin_consejos (lo que le dice como asesor). Los movimientos no los toca.
   it("ninguna toca fin_* para escribir", () => {
     for (const a of rutas) {
       for (const consulta of readFileSync(a, "utf8").split(/(?=\.from\()/)) {
-        if (/^\.from\(\s*["'](fin_(?!propuestas_categoria["'])|transactions|categories|accounts|loans)/.test(consulta)) expect(consulta, a).not.toMatch(/\.(insert|update|upsert|delete)\(/);
+        if (/^\.from\(\s*["'](fin_(?!(?:propuestas_categoria|consejos)["'])|transactions|categories|accounts|loans)/.test(consulta)) expect(consulta, a).not.toMatch(/\.(insert|update|upsert|delete)\(/);
       }
     }
   });

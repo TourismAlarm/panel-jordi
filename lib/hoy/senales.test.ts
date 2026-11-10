@@ -95,6 +95,10 @@ describe("cosas de hoy que se tachan solas", () => {
     expect(resueltaSola("/finanzas?ver=propuestas", abierto)).toBeNull();
     expect(senalesFinanzas({ hoy, enlaces: [], prestamos: [], sinCategoria: 0, restante: null, porDia: null, diasNomina: null, propuestas: 2 })[0]).toMatchObject({ nivel: "hoy", href: "/finanzas" });
   });
+  it("de lo que dice Antonio como asesor, a Hoy suben problemas y cosas a vigilar, no los consejos", () => {
+    const s = senalesFinanzas({ hoy, enlaces: [], prestamos: [], sinCategoria: 0, restante: null, porDia: null, diasNomina: null, avisos: [{ nivel: "problema", titulo: "Dos seguros iguales" }, { nivel: "ojo", titulo: "Ocio sube" }, { nivel: "consejo", titulo: "Ahorra" }, { nivel: "bien", titulo: "Vas bien" }] });
+    expect(s.map((x) => [x.nivel, x.titulo])).toEqual([["hoy", "Dos seguros iguales"], ["saber", "Ocio sube"]]);
+  });
   it("lo que el panel no puede saber se deja para tachar a mano", () => {
     for (const e of [undefined, "/salud", "/elsa", "/antonio", "https://example.com"]) expect(resueltaSola(e, abierto)).toBeNull();
     expect(resueltaSola("/elsa/videos/GE_031", { videos: null, bandeja: null, documentos: null })).toBeNull();
