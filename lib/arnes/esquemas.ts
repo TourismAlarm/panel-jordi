@@ -22,6 +22,7 @@ export const RutinaIn = z.object({
   resultado: z.enum(["ok", "fallo", "nada"]).nullable().default(null),
   proxima: instante.nullable().default(null),
   nota: z.string().trim().max(2000).nullable().optional(),
+  activa: z.boolean().default(true), // false = en pausa a propósito
 });
 
 // Siempre una lista (aunque sea de una). Un id repetido en la misma llamada no vale: no se sabría cuál gana.

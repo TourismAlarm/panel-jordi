@@ -37,12 +37,12 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
   const [elsa, redes, salud, dia, documentos, actividad] = await Promise.all([
     intentar(fallos, "ELSA", null, async () => {
       const [v, q, pe, gu, id, en] = await Promise.all([
-        db.from("videos").select("id, titulo, estado, por_revisar, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md"),
+        db.from("videos").select("id, titulo, estado, por_revisar, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md, montaje_url"),
         db.from("preguntas").select("video_id, respondida_en, recogida_en").is("recogida_en", null),
         db.from("peticiones").select("id, tipo, video_id, estado, creada_en"),
         db.from("guiones_propuestos").select("id, titulo, estado, actualizado").in("estado", ["propuesto", "cambios"]),
         db.from("ideas").select("creado").eq("estado", "nueva"),
-        db.from("encargos_edicion").select("id, video_id, version, fase, estado, revisado_en, terminado_en, creado, error").in("estado", ["listo", "bloqueado", "fallido"]),
+        db.from("encargos_edicion").select("id, video_id, version, fase, estado, revisado_en, tomado_en, terminado_en, creado, error").in("estado", ["listo", "bloqueado", "fallido", "en_curso", "pendiente"]),
       ]);
       const videos = sinError(v, "vídeos");
       const preguntas = sinError(q, "preguntas");
@@ -65,14 +65,24 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
           return pasos.some((p) => p.clave === "subir" && p.estado === "tuyo");
         })
         .map((x) => ({ id: x.id, actualizado_en: x.actualizado_en }));
+      // El estado del vídeo y la cola de edición tienen que cuadrar: lo que no cuadra sale como pendiente.
+      const encargos = sinError(en, "encargos");
+      const conListo = new Set(encargos.filter((x) => x.estado === "listo").map((x) => x.video_id));
+      const conAbierto = new Set(encargos.map((x) => x.video_id));
+      const porRevisarSinEncargo = videos
+        .filter((x) => (x.estado === "corte_listo" || x.estado === "acabado_listo") && !conListo.has(x.id) && !descartados.has(x.id))
+        .map((x) => ({ id: x.id, estado: x.estado, montaje_url: x.montaje_url, actualizado_en: x.actualizado_en }));
+      const montandoSinEncargo = videos.filter((x) => x.estado === "montando" && !conAbierto.has(x.id) && !descartados.has(x.id)).map((x) => ({ id: x.id, actualizado_en: x.actualizado_en }));
       return {
+        porRevisarSinEncargo,
+        montandoSinEncargo,
         titulos: Object.fromEntries(videos.map((x) => [x.id, x.titulo])),
         preguntas: preguntas.filter((x) => !descartados.has(x.video_id)),
         sinMaterial,
         peticiones: peticiones.filter((x) => x.estado === "pendiente" || x.estado === "procesando"),
         guiones: sinError(gu, "guiones"),
         ideasNuevas: sinError(id, "ideas"),
-        encargos: sinError(en, "encargos"),
+        encargos,
       };
     }),
 
@@ -119,6 +129,7 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
 
   // Un módulo que no se ha podido leer no da pendientes falsos («sin métricas», «sin resumen»…): sale en `fallos`.
   const pendientes = calcularPendientes({
+    ahora: ahora.getTime(),
     hoy,
     horaMadrid: horaMadrid(ahora),
     titulos: elsa?.titulos ?? {},
@@ -127,6 +138,8 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
     guiones: elsa?.guiones ?? [],
     ideasNuevas: elsa?.ideasNuevas ?? [],
     encargos: elsa?.encargos ?? [],
+    porRevisarSinEncargo: elsa?.porRevisarSinEncargo ?? [],
+    montandoSinEncargo: elsa?.montandoSinEncargo ?? [],
     peticiones: elsa?.peticiones ?? [],
     redesUltima: redes?.redesUltima ?? null,
     informeRedes: redes?.informeRedes ?? null,

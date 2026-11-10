@@ -47,16 +47,18 @@ export type RutinaFila = {
   proxima: string | null;
   nota: string | null;
   actualizado: string;
+  activa?: boolean; // false = en pausa a propósito: sale, pero no cuenta como saltada
 };
 export type RutinaVista = RutinaFila & { atrasada: boolean };
 
 // Una rutina cuya próxima ejecución pasó hace más de una hora y no ha vuelto a informar: se ha saltado.
 export function rutinasVista(filas: RutinaFila[], ahora: number): RutinaVista[] {
   return filas
-    .map((r) => ({ ...r, atrasada: !!r.proxima && new Date(r.proxima).getTime() < ahora - 3_600_000 }))
+    .map((r) => ({ ...r, atrasada: r.activa !== false && !!r.proxima && new Date(r.proxima).getTime() < ahora - 3_600_000 }))
     .sort((a, b) => peso(b) - peso(a) || (a.proxima ?? "9").localeCompare(b.proxima ?? "9"));
 }
-const peso = (r: RutinaVista) => (r.resultado === "fallo" ? 2 : r.atrasada ? 1 : 0);
+// Fallo, después saltada, después las demás; las pausadas, al final.
+const peso = (r: RutinaVista) => (r.activa === false ? -1 : r.resultado === "fallo" ? 2 : r.atrasada ? 1 : 0);
 
 // ── Pendientes calculados con los datos del panel ────────────
 export type Pendiente = {
@@ -70,6 +72,7 @@ export type Pendiente = {
 };
 
 export type DatosPanel = {
+  ahora: number;
   hoy: string; // AAAA-MM-DD en Madrid
   horaMadrid: number;
   titulos: Record<string, string | null>; // id de vídeo → título
@@ -77,7 +80,9 @@ export type DatosPanel = {
   sinMaterial: { id: string; actualizado_en: string }[];
   guiones: { id: string; titulo: string; estado: string; actualizado: string }[]; // propuesto o cambios
   ideasNuevas: { creado: string }[];
-  encargos: { id: string; video_id: string; version: number; fase: string; estado: string; revisado_en: string | null; terminado_en: string | null; creado: string; error: string | null }[];
+  encargos: { id: string; video_id: string; version: number; fase: string; estado: string; revisado_en: string | null; tomado_en: string | null; terminado_en: string | null; creado: string; error: string | null }[]; // listo, bloqueado, fallido, en_curso o pendiente
+  porRevisarSinEncargo: { id: string; estado: string; montaje_url: string | null; actualizado_en: string }[]; // corte_listo / acabado_listo sin encargo listo
+  montandoSinEncargo: { id: string; actualizado_en: string }[]; // «montando» sin ningún encargo abierto: estado desfasado
   peticiones: { id: string; tipo: string; video_id: string | null; estado: string; creada_en: string }[];
   redesUltima: string | null; // fecha de la última foto de Instagram
   informeRedes: string | null; // fecha del último informe del analista
@@ -146,9 +151,21 @@ export function calcularPendientes(d: DatosPanel): Pendiente[] {
     if (e.estado === "listo") {
       // En cuanto el PC entrega, revisa Jordi: no espera a Antonio (su revisión es opcional).
       p.push({ id: `encargo-${e.id}`, agente: "editor", que, detalle: e.fase === "corte" ? "Corte listo: te toca revisarlo" : "Acabado listo: te toca aprobarlo", desde: e.terminado_en ?? e.creado, quien: "jordi", enlace });
+    } else if (e.estado === "en_curso" || e.estado === "pendiente") {
+      // Más de 2 h montándose o sin que nadie lo tome: algo se ha quedado colgado.
+      const desde = e.estado === "en_curso" ? (e.tomado_en ?? e.creado) : e.creado;
+      const horas = Math.floor((d.ahora - new Date(desde).getTime()) / 3_600_000);
+      if (horas < 2) continue;
+      p.push({ id: `encargo-${e.id}`, agente: "editor", que, detalle: e.estado === "en_curso" ? `Lleva ${horas} h montándose` : `Lleva ${horas} h en la cola sin que nadie lo tome`, desde, quien: "antonio", enlace });
     } else {
       p.push({ id: `encargo-${e.id}`, agente: "editor", que, detalle: `${e.estado === "bloqueado" ? "Bloqueado" : "Fallido"}${e.error ? `: ${e.error}` : ""}`, desde: e.terminado_en ?? e.creado, quien: "antonio", enlace });
     }
+  }
+  for (const v of d.porRevisarSinEncargo) {
+    p.push({ id: `revisar-${v.id}`, agente: "editor", que: `${v.estado === "corte_listo" ? "Corte" : "Montaje"} por revisar · ${video(d, v.id)}`, detalle: v.montaje_url ? "Te toca revisarlo" : "Te toca revisarlo, pero no tiene enlace al montaje", desde: v.actualizado_en, quien: "jordi", enlace: `/elsa/videos/${v.id}#montaje` });
+  }
+  for (const v of d.montandoSinEncargo) {
+    p.push({ id: `desfasado-${v.id}`, agente: "antonio", que: `${video(d, v.id)} dice «montando», pero no hay ningún encargo abierto`, detalle: "Estado desfasado: entrega el montaje o corrige el estado", desde: v.actualizado_en, quien: "antonio", enlace: `/elsa/videos/${v.id}` });
   }
   for (const v of d.sinMaterial) {
     p.push({ id: `material-${v.id}`, agente: "editor", que: `Sin material · ${video(d, v.id)}`, detalle: "Sube lo grabado y pulsa «Ya he subido todo»", desde: v.actualizado_en, quien: "jordi", enlace: `/elsa/videos/${v.id}#material` });

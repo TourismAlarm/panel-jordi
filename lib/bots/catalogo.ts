@@ -31,6 +31,8 @@ export type Permiso =
   | "edicion:leer"
   | "edicion:tomar"
   | "edicion:informar"
+  | "edicion:entregar" // montaje hecho fuera de la cola: Antonio o el Editor
+  | "edicion:cerrar"
   | "memoria:escribir"
   | "memoria:leer"
   | "videos:leer"
@@ -55,10 +57,10 @@ export type Permiso =
 const COMUNES: Permiso[] = ["actividad:escribir", "bandeja:escribir", "bandeja:leer", "reglas:leer", "memoria:escribir", "memoria:leer"];
 
 const PERMISOS: Record<Bot, Permiso[]> = {
-  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer", "peticiones:leer", "peticiones:escribir", "redes:leer", "redes:escribir", "arnes:leer", "arnes:escribir"],
+  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer", "peticiones:leer", "peticiones:escribir", "redes:leer", "redes:escribir", "arnes:leer", "arnes:escribir", "edicion:entregar", "edicion:cerrar"],
   ideas: [...COMUNES, "ideas:escribir", "ideas:leer"],
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
-  editor: ["edicion:tomar", "edicion:informar", "reglas:leer"],
+  editor: ["edicion:tomar", "edicion:informar", "edicion:entregar", "reglas:leer"],
   dia: [...COMUNES, "hoy:leer", "hoy:escribir", "videos:leer", "documentos:vencimientos", "finanzas:resumen"],
   finanzas: [...COMUNES, "finanzas:resumen", "finanzas:leer", "finanzas:informe"],
   salud: [...COMUNES.filter((p) => p !== "memoria:escribir"), "salud:leer", "salud:escribir", "salud:informe"],

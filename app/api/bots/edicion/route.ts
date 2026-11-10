@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 
     let consulta = supabaseAdmin()
       .from("encargos_edicion")
-      .select("id, video_id, version, reemplaza_id, fase, estado, resultado_url, resultado_notas, preguntas, duracion_real_s, final_url, revisado_en, decision_jordi, creado, tomado_en, terminado_en, error")
+      .select("id, video_id, version, reemplaza_id, fase, estado, resultado_url, resultado_notas, preguntas, duracion_real_s, final_url, revisado_en, decision_jordi, creado, creado_por, version_externa, tomado_en, terminado_en, error")
       .order("creado", { ascending: false })
       .limit(100);
     if (estado.valor) consulta = consulta.eq("estado", estado.valor);

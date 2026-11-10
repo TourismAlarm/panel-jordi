@@ -67,15 +67,15 @@ function FilaRutina({ r }: { r: RutinaVista }) {
   return (
     <Fila
       href="/elsa/actividad/bots?bot=antonio"
-      inicio={<Punto tono={r.atrasada ? "mal" : (res?.tono ?? "neutro")} titulo={r.atrasada ? "Atrasada" : res?.texto} />}
-      titulo={r.nombre}
+      inicio={<Punto tono={r.activa === false ? "neutro" : r.atrasada ? "mal" : (res?.tono ?? "neutro")} titulo={r.activa === false ? "En pausa" : r.atrasada ? "Atrasada" : res?.texto} />}
+      titulo={r.activa === false ? `${r.nombre} · en pausa` : r.nombre}
       detalle={
         <>
           <span>{r.horario}</span>
           <span>
             Última: {r.ultima_ejecucion ? `${fecha(r.ultima_ejecucion)} · ${res?.texto ?? "sin resultado"}` : "aún no ha corrido"}
           </span>
-          <span>Próxima: {r.proxima ? fecha(r.proxima) : "sin fecha"}</span>
+          {r.activa !== false && <span>Próxima: {r.proxima ? fecha(r.proxima) : "sin fecha"}</span>}
           {r.atrasada && (
             <span>
               <Etiqueta tono="mal">Se ha saltado la última</Etiqueta>
