@@ -6,9 +6,9 @@ Cada llamada dice para quién trabaja con el campo `bot` (`antonio`, `ideas` o `
 `bot` sirve para ver quién hizo cada cosa y para que un bot no haga lo que no le toca (Ideas no puede subir guiones). **No es seguridad:** quien tenga la clave puede firmar como cualquiera.
 
 - **Dirección:** `https://panel-jordi.vercel.app` (las previews de Vercel están protegidas y no responden a los bots).
-- **Clave:** cabecera `Authorization: Bearer <clave>`. Variable en Vercel: `BOTS_API_KEY_ANTONIO` (mínimo 16 caracteres). `BOTS_API_KEY_IDEAS` y `BOTS_API_KEY_GUIONISTA` son opcionales: esas claves solo pueden firmar como su bot. `BOTS_API_KEY_EDITOR` es la del PC: solo toma encargos, los entrega y lee reglas.
+- **Clave:** cabecera `Authorization: Bearer <clave>`. Variable en Vercel: `BOTS_API_KEY_ANTONIO` (mínimo 16 caracteres). `BOTS_API_KEY_IDEAS` y `BOTS_API_KEY_GUIONISTA` son opcionales: esas claves solo pueden firmar como su bot. `BOTS_API_KEY_EDITOR` es la del Editor (el PC o Claude Code en el ordenador de Antonio): toma encargos, los entrega, entrega montajes hechos fuera de la cola (`videos/{id}/entrega`) y lee reglas. Ya está creada en Vercel.
 - **Límite:** 60 llamadas por minuto y bot. Cada llamada con clave válida queda en `bots_llamadas`.
-- **Respuestas:** `201`/`200` bien · `400` datos no válidos (`detalle` dice qué) · `401` clave mala · `403` ese bot no hace eso · `404` no existe · `409` conflicto (`error` dice cuál) · `422` lleva datos de clientes (`detalle` dice dónde) · `429` espera 60 s · `500`/`503` reintenta más tarde.
+- **Respuestas:** `201`/`200` bien · `400` datos no válidos (`detalle` dice qué) · `401` clave mala · `403` ese bot no hace eso · `404` no existe (también una ruta que no existe: siempre JSON, nunca una página) · `409` conflicto (`error` dice cuál) · `422` lleva datos de clientes (`detalle` dice dónde) · `429` espera 60 s · `500`/`503` reintenta más tarde.
 - **Nada de borrar:** ninguna ruta borra.
 
 ## `POST /api/bots/actividad`
@@ -149,6 +149,32 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/<id>/responder   -H
 ```
 
 En cuanto el PC entrega, el vídeo sale a Jordi como «Te toca revisar» (`corte_listo` o `acabado_listo`) con el enlace de Drive: no espera a tu revisión. Tu revisión por `POST /api/bots/revisiones` es opcional: `corte` ok da el corte por bueno (encarga el acabado); `acabado` ok solo apunta que lo viste; `cambios` deja el encargo en `cambios` y lo quita de la lista de Jordi para que crees la versión siguiente. El «Corte OK», «Aprobar» o «Pedir cambios» de Jordi se aplica al momento y llega por el webhook como `montaje_revisado` (`peticion_id` null). Tras su «Corte OK», encarga el acabado; tras «Pedir cambios», la versión siguiente con su texto.
+
+## `POST /api/bots/videos/{id}/entrega` (Antonio o Editor)
+
+Un montaje hecho **fuera de la cola del PC** (por ejemplo, el Editor con Claude Code en el ordenador de Antonio). Es una sola escritura: crea el encargo `listo` y sustituye lo que hubiera abierto de ese vídeo. El vídeo pasa a `corte_listo` o `acabado_listo`, con `montaje_url` = `resultado_url`, y sale a Jordi en «Te toca revisar». La ficha, ELSA, el arnés y la portada lo recalculan solos. Los botones «Corte OK», «Aprobar» y «Pedir cambios» funcionan igual que con un encargo del PC, y llegan por el webhook como `montaje_revisado`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/videos/GE_033/entrega \
+  -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" -H "Content-Type: application/json" \
+  -d '{"fase":"acabado","version":"claude-v2","resultado_url":"https://drive.google.com/file/d/xxx/view","duracion_real_s":34.9,"notas":"Orden cronológico","hecho_por":"editor-claude-code"}'
+```
+
+- Obligatorios: `fase` (`corte` | `acabado`), `version` (tu etiqueta: letras, números, `-`, `_`, `.`, hasta 60), `resultado_url` (**https**) y `duracion_real_s`. Opcionales: `notas` y `hecho_por` (por defecto `antonio`).
+- Responde `201` `{"ok":true,"id":"<uuid del encargo>","version":3,"nuevo":true}`. `version` es el número del panel; la tuya queda guardada como `version_externa`.
+- **La misma `version` otra vez actualiza** la entrega (enlace, duración, notas) y responde `200` con `"nuevo":false`: no duplica. Si Jordi ya la decidió, da `409`. Para otra versión, usa otra etiqueta.
+- `404` si el vídeo no existe · `409` si está archivado o el PC lo está montando (`en_curso`) · `422` si las notas llevan datos de clientes.
+- Se apunta sola en Actividad («Montaje entregado GE_033 claude-v2»). Si la sube el Editor con su llave, a ti te llega `edicion_lista` como con el PC.
+
+## `POST /api/bots/edicion/{id}/cerrar` (solo Antonio)
+
+Da por cerrado un encargo que ya no cuenta (obsoleto, o hecho por otro camino). Pasa a `cerrado` con tu motivo. No toca el vídeo: su estado lo marcan la entrega o la decisión de Jordi.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/<id>/cerrar -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" -H "Content-Type: application/json" -d '{"motivo":"GE_032 ya está aprobado por otro camino"}'
+```
+
+Se puede cerrar un encargo `pendiente`, `bloqueado`, `fallido`, `cambios` o `listo`. Si está `en_curso` o `aprobado`, da `409`. Si ya estaba cerrado, responde `200` con `"ya_estaba":true`. Sin `motivo`, `400`.
 
 ## `POST /api/bots/edicion/tomar` (PC)
 
@@ -309,7 +335,7 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/arnes/rutinas \
   -d '[{"id":"resumen-manana","nombre":"Resumen de la mañana","horario":"Cada día a las 7:30","ultima_ejecucion":"2026-11-10T07:30:00+01:00","resultado":"ok","proxima":"2026-11-11T07:30:00+01:00","nota":"Sin incidencias"}]'
 ```
 
-Obligatorios: `id` (hasta 100 caracteres), `nombre` y `horario` (texto libre). `ultima_ejecucion` y `proxima` son instantes con zona, `resultado` es `ok`, `fallo` o `nada`, y los tres pueden ir a `null` si aún no ha corrido. `nota` es opcional. Una rutina que pasa más de una hora de su `proxima` sin volver a informar sale en rojo como «se ha saltado».
+Obligatorios: `id` (hasta 100 caracteres), `nombre` y `horario` (texto libre). `ultima_ejecucion` y `proxima` son instantes con zona, `resultado` es `ok`, `fallo` o `nada`, y los tres pueden ir a `null` si aún no ha corrido. `nota` es opcional. `activa` (por defecto `true`): manda `false` mientras esté en pausa a propósito. Así sale al final, en gris, y no cuenta como saltada; repítelo en cada envío, porque si no viene vuelve a `true`. Una rutina activa que pasa más de una hora de su `proxima` sin volver a informar sale en rojo como «se ha saltado».
 
 ### `POST /api/bots/arnes/tareas`
 
@@ -349,7 +375,7 @@ curl https://panel-jordi.vercel.app/api/bots/arnes -H "Authorization: Bearer $BO
 ```
 
 - `tareas`: solo las abiertas. Primero las que esperan a Jordi y después de la más vieja a la más nueva.
-- `por_agente`: siempre los diez, en el mismo orden. `quien` es `jordi`, `antonio` o `agente`. Finanzas sale `congelado` y sin pendientes.
+- `por_agente`: siempre los diez, en el mismo orden. Además de lo de arriba, el panel calcula solo lo que no cuadra entre el vídeo y la cola de edición: vídeos `corte_listo` o `acabado_listo` sin encargo listo (le tocan a Jordi), vídeos `montando` sin ningún encargo abierto (estado desfasado, para Antonio) y encargos con más de 2 h `en_curso` o `pendiente` sin que nadie los tome. `quien` es `jordi`, `antonio` o `agente`. Finanzas sale `congelado` y sin pendientes.
 - `memoria`: la memoria común entera (hechos, preferencias, decisiones, skills y problemas). Cualquiera que llegue sabe lo mismo.
 - `fallos`: lo que no se ha podido leer. Si sale algo, el resto es bueno, pero ese módulo puede estar incompleto.
 - Los enlaces del panel salen completos (`https://…`).

@@ -55,6 +55,7 @@ export type Database = {
       }
       arnes_rutinas: {
         Row: {
+          activa: boolean
           actualizado: string
           horario: string
           id: string
@@ -66,6 +67,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activa?: boolean
           actualizado?: string
           horario: string
           id: string
@@ -77,6 +79,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activa?: boolean
           actualizado?: string
           horario?: string
           id?: string
@@ -413,6 +416,7 @@ export type Database = {
           terminado_en: string | null
           tomado_en: string | null
           version: number
+          version_externa: string | null
           video_id: string
         }
         Insert: {
@@ -438,6 +442,7 @@ export type Database = {
           terminado_en?: string | null
           tomado_en?: string | null
           version: number
+          version_externa?: string | null
           video_id: string
         }
         Update: {
@@ -463,6 +468,7 @@ export type Database = {
           terminado_en?: string | null
           tomado_en?: string | null
           version?: number
+          version_externa?: string | null
           video_id?: string
         }
         Relationships: [
@@ -2132,6 +2138,18 @@ export type Database = {
           p_instrucciones: Json
           p_quien: string
           p_reemplaza: string
+          p_video: string
+        }
+        Returns: Json
+      }
+      entregar_montaje: {
+        Args: {
+          p_duracion: number
+          p_fase: string
+          p_notas: string
+          p_quien: string
+          p_url: string
+          p_version: string
           p_video: string
         }
         Returns: Json

@@ -13,6 +13,7 @@ const ESTADO: Record<string, { texto: string; tono: Tono }> = {
   sustituido: { texto: "Sustituido", tono: "neutro" },
   bloqueado: { texto: "El PC pregunta", tono: "ojo" },
   fallido: { texto: "Ha fallado", tono: "mal" },
+  cerrado: { texto: "Cerrado", tono: "neutro" },
 };
 const FASE: Record<string, string> = { corte: "Corte", acabado: "Acabado" };
 

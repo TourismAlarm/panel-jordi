@@ -148,7 +148,20 @@ export const EncargoIn = z
   })
   .refine((e) => !e.reemplaza_id || !!e.feedback, { message: "una versión nueva dice qué cambia", path: ["feedback"] });
 
-export const FiltroEncargo = z.enum(["pendiente", "en_curso", "listo", "aprobado", "cambios", "sustituido", "bloqueado", "fallido"]);
+export const FiltroEncargo = z.enum(["pendiente", "en_curso", "listo", "aprobado", "cambios", "sustituido", "bloqueado", "fallido", "cerrado"]);
+
+// Un montaje hecho fuera de la cola del PC (el Editor con Claude Code). La misma `version` otra vez actualiza, no duplica.
+export const EntregaIn = z.object({
+  fase: z.enum(["corte", "acabado"]),
+  version: z.string().trim().regex(/^[\w.-]{1,60}$/, "letras, números, «-», «_» o «.» (hasta 60)"),
+  resultado_url: z.url({ protocol: /^https$/ }).max(1000),
+  duracion_real_s: z.number().positive().max(3600),
+  notas: z.string().trim().max(5000).optional(),
+  hecho_por: z.string().trim().regex(/^[\w.-]{1,60}$/).default("antonio"),
+});
+
+// Cerrar un encargo que ya no cuenta (obsoleto, hecho por otro camino). Dice por qué.
+export const CerrarEncargoIn = z.object({ motivo: texto(500) });
 
 export const ResponderEncargoIn = z.object({ respuestas: z.array(z.object({ n: z.number().int().min(1), respuesta: texto(2000) })).min(1).max(50) });
 

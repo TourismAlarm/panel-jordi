@@ -16,7 +16,7 @@ export type Arnes = {
 };
 
 const COLUMNAS_TAREA = "id, titulo, agente, estado, paso_actual, falta, enlace, empezada_en, actualizado_en";
-const COLUMNAS_RUTINA = "id, nombre, horario, ultima_ejecucion, resultado, proxima, nota, actualizado";
+const COLUMNAS_RUTINA = "id, nombre, horario, ultima_ejecucion, resultado, proxima, nota, actualizado, activa";
 
 // Todo el arnés de una vez: lo que escribe Antonio (rutinas y tareas) y lo que se calcula del panel.
 export async function leerArnes(db: SupabaseClient<Database>, userId: string): Promise<Arnes> {

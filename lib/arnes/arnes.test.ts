@@ -147,6 +147,7 @@ describe("una tarea hecha desaparece de la vista", () => {
 
 describe("pendientes calculados", () => {
   const base: DatosPanel = {
+    ahora: new Date("2026-11-10T12:00:00Z").getTime(),
     hoy: "2026-11-10",
     horaMadrid: 12,
     titulos: { GE_031: "Jacuzzi al ático" },
@@ -155,6 +156,8 @@ describe("pendientes calculados", () => {
     guiones: [],
     ideasNuevas: [],
     encargos: [],
+    porRevisarSinEncargo: [],
+    montandoSinEncargo: [],
     peticiones: [],
     redesUltima: "2026-11-09",
     informeRedes: "2026-11-05",
@@ -174,7 +177,7 @@ describe("pendientes calculados", () => {
         { video_id: "GE_031", respondida_en: null, recogida_en: null },
         { video_id: "GE_031", respondida_en: "2026-11-09T10:00:00Z", recogida_en: null },
       ],
-      encargos: [{ id: "e1", video_id: "GE_031", version: 2, fase: "corte", estado: "listo", revisado_en: null, terminado_en: "2026-11-10T08:00:00Z", creado: "2026-11-09T00:00:00Z", error: null }],
+      encargos: [{ id: "e1", video_id: "GE_031", version: 2, fase: "corte", estado: "listo", revisado_en: null, tomado_en: null, terminado_en: "2026-11-10T08:00:00Z", creado: "2026-11-09T00:00:00Z", error: null }],
       peticiones: [{ id: "p1", tipo: "material_listo", video_id: "GE_031", estado: "pendiente", creada_en: "2026-11-09T00:00:00Z" }],
       saludUltima: "2026-11-07",
       resumenHoy: false,
@@ -188,6 +191,21 @@ describe("pendientes calculados", () => {
     expect(de("salud-metricas")).toMatchObject({ que: "2 días sin métricas de salud", enlace: "/salud" });
     expect(de("dia-resumen")).toMatchObject({ agente: "dia", enlace: "/" });
     expect(de("fallo-7")).toMatchObject({ agente: "dia", enlace: "/elsa/actividad/bots?bot=dia" });
+  });
+  it("el estado del vídeo y la cola cuadran: lo que no, sale (y lo atascado más de 2 h)", () => {
+    const enc = (id: string, estado: string, tomado_en: string | null, creado: string) => ({ id, video_id: "GE_032", version: 1, fase: "acabado", estado, revisado_en: null, tomado_en, terminado_en: null, creado, error: null });
+    const p = calcularPendientes({
+      ...base,
+      encargos: [enc("viejo", "en_curso", "2026-11-10T09:00:00Z", "2026-11-10T08:00:00Z"), enc("reciente", "en_curso", "2026-11-10T11:30:00Z", "2026-11-10T11:00:00Z"), enc("cola", "pendiente", null, "2026-11-10T07:00:00Z")],
+      porRevisarSinEncargo: [{ id: "GE_033", estado: "acabado_listo", montaje_url: "https://drive.google.com/x", actualizado_en: "2026-11-10T07:14:00Z" }],
+      montandoSinEncargo: [{ id: "GE_030", actualizado_en: "2026-11-06T11:58:00Z" }],
+    });
+    const de = (id: string) => p.find((x) => x.id === id);
+    expect(de("encargo-viejo")).toMatchObject({ quien: "antonio", detalle: "Lleva 3 h montándose" });
+    expect(de("encargo-reciente")).toBeUndefined();
+    expect(de("encargo-cola")).toMatchObject({ detalle: "Lleva 5 h en la cola sin que nadie lo tome" });
+    expect(de("revisar-GE_033")).toMatchObject({ agente: "editor", quien: "jordi", enlace: "/elsa/videos/GE_033#montaje" });
+    expect(de("desfasado-GE_030")).toMatchObject({ agente: "antonio", quien: "antonio" });
   });
   it("por agente: todos en orden, con su chat; Finanzas congelado y sin pendientes", () => {
     const g = porAgente(calcularPendientes({ ...base, fallos: [{ id: 1, bot: "finanzas", tarea: "x", creado: "2026-11-10T00:00:00Z", enlace: null }] }), []);
@@ -203,5 +221,10 @@ describe("rutinas", () => {
     const r = (id: string, resultado: string, proxima: string) => ({ id, nombre: id, horario: "h", ultima_ejecucion: null, resultado, proxima, nota: null, actualizado: "" });
     const v = rutinasVista([r("bien", "ok", "2026-11-10T18:00:00Z"), r("saltada", "ok", "2026-11-10T08:00:00Z"), r("rota", "fallo", "2026-11-11T08:00:00Z")], ahora);
     expect(v.map((x) => [x.id, x.atrasada])).toEqual([["rota", false], ["saltada", true], ["bien", false]]);
+  });
+  it("una pausada no cuenta como saltada y va al final", () => {
+    const ahora = new Date("2026-11-10T12:00:00Z").getTime();
+    const v = rutinasVista([{ id: "pausa", nombre: "p", horario: "h", ultima_ejecucion: null, resultado: "ok", proxima: "2026-11-01T00:00:00Z", nota: null, actualizado: "", activa: false }, { id: "bien", nombre: "b", horario: "h", ultima_ejecucion: null, resultado: "ok", proxima: null, nota: null, actualizado: "" }], ahora);
+    expect(v.map((x) => [x.id, x.atrasada])).toEqual([["bien", false], ["pausa", false]]);
   });
 });

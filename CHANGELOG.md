@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Entregas fuera de la cola y el arnés más listo (2026-11-10)
+- **`POST /api/bots/videos/{id}/entrega`** (Antonio o el Editor): un montaje hecho fuera de la cola del PC se registra con una sola llamada. Crea el encargo `listo`, el vídeo sale a Jordi en «Te toca revisar» con el enlace, y «Aprobar», «Corte OK» y «Pedir cambios» funcionan como siempre. La misma versión otra vez actualiza, no duplica.
+- **`POST /api/bots/edicion/{id}/cerrar`** (Antonio): cierra un encargo que ya no cuenta, con su motivo (estado nuevo `cerrado`).
+- Una ruta de `/api/bots/*` que no existe responde JSON 404, no una página.
+- Arnés: calcula también los vídeos por revisar sin encargo, los que dicen «montando» sin encargo abierto y los encargos atascados más de 2 h. Las rutinas pueden ir en pausa (`activa: false`).
+- Migración `20261110120000_entrega_externa.sql` (aplicada): `version_externa` y `entregar_montaje()`.
+
 ## El arnés de Antonio (2026-11-10)
 - **`/antonio`** (enlace en la portada): todo lo que Antonio tiene entre manos, en tres bloques. «A medias» son las tareas abiertas: lo que te espera a ti y lo más viejo van arriba, y lo que lleva más de 24 h sin tocar sale en rojo. «Por agente» son los pendientes de los diez agentes, con su chat. «Rutinas» enlaza al registro de Actividad. Debajo, «Para saber» con la memoria común. Cada fila enlaza a su fuente real.
 - Los pendientes se calculan de lo que el panel ya tiene (preguntas, peticiones, ediciones, guiones, material, redes, salud, resumen de Hoy, vencimientos y fallos de los bots). Solo se escribe lo que el panel no sabe: `POST /api/bots/arnes/rutinas` y `POST /api/bots/arnes/tareas` (upsert por `id`). Antonio lo lee todo junto en `GET /api/bots/arnes`. Solo con la clave de Antonio.
