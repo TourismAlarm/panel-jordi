@@ -1,0 +1,258 @@
+<title>Panel Jordi Rediseño</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Concepto: cuatro pantallas de móvil lado a lado, cada una con sus notas debajo. Base neutra del panel + un color por módulo. */
+:root {
+  --fondo: #f3f3f1; --sup: #ffffff; --sup2: #eaeae7; --texto: #101112; --suave: #5d5f63; --borde: #dfdfdb;
+  --salud: #0e8f7e; --fin: #4f56d3; --elsa: #d95f14; --doc: #8355c4;
+  --bien: #1f7a3d; --ojo: #8a5a00; --ojo-f: #fbefd2; --mal: #c4251c; --mal-f: #fde6e3;
+  --marco: #17181a;
+  --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --cuerpo: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --fondo: #0c0d0e; --sup: #17181a; --sup2: #232527; --texto: #f5f5f3; --suave: #a2a4a8; --borde: #2c2e31;
+  --salud: #3fc4b1; --fin: #8a90f2; --elsa: #f58a45; --doc: #b48ae8;
+  --bien: #5cc07f; --ojo: #e3b341; --ojo-f: #3a2e0c; --mal: #ff6b60; --mal-f: #3d1512; --marco: #3a3c40; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --fondo: #0c0d0e; --sup: #17181a; --sup2: #232527; --texto: #f5f5f3; --suave: #a2a4a8; --borde: #2c2e31;
+  --salud: #3fc4b1; --fin: #8a90f2; --elsa: #f58a45; --doc: #b48ae8;
+  --bien: #5cc07f; --ojo: #e3b341; --ojo-f: #3a2e0c; --mal: #ff6b60; --mal-f: #3d1512; --marco: #3a3c40; color-scheme: dark }
+
+body { background: var(--fondo); color: var(--texto); font: 15px/1.5 var(--cuerpo); padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pagina { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1 { font: 700 clamp(28px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
+h2 { font: 600 22px/1.2 var(--display); margin: 0; }
+.entrada { max-width: 62ch; color: var(--suave); font-size: 17px; margin: 12px 0 0; }
+.aviso { display: inline-block; margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--suave); border: 1px dashed var(--borde); border-radius: 999px; padding: 4px 12px; }
+
+.fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 36px 28px; }
+.pieza { display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 0; }
+.notas { width: 100%; max-width: 330px; }
+.notas h3 { font: 600 17px/1.2 var(--display); margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+.notas h3 i { width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--texto)); }
+.notas ul { margin: 0; padding-left: 18px; color: var(--suave); display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.notas b { color: var(--texto); font-weight: 600; }
+
+/* Móvil */
+.movil { width: 100%; max-width: 330px; background: var(--fondo); border: 8px solid var(--marco); border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; }
+.pantalla { padding: 18px 14px 14px; display: flex; flex-direction: column; gap: 12px; min-height: 610px; }
+.cab { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.cab small { display: block; color: var(--suave); font-size: 12px; font-weight: 500; }
+.cab strong { font: 700 24px/1.1 var(--display); letter-spacing: -0.02em; }
+.campana { position: relative; width: 36px; height: 36px; border-radius: 50%; background: var(--sup); border: 1px solid var(--borde); display: grid; place-items: center; }
+.campana b { position: absolute; top: -3px; right: -3px; background: var(--mal); color: #fff; font-size: 10px; min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; }
+.caja { background: var(--sup); border: 1px solid var(--borde); border-radius: 18px; padding: 12px; }
+.rot { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suave); margin: 0 0 8px; }
+.num { font: 700 26px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.sub { font-size: 12px; color: var(--suave); }
+svg { display: block; }
+
+.tres { background: var(--texto); color: var(--fondo); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.tres .rot { color: inherit; opacity: 0.6; margin: 0; }
+.tarea { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 500; line-height: 1.3; }
+.tarea span.ck { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid currentColor; opacity: 0.55; margin-top: 1px; }
+.tarea em { font-style: normal; display: block; font-size: 11px; opacity: 0.65; font-weight: 500; }
+
+.cuatro { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mod { background: var(--sup); border: 1px solid var(--borde); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mod .et { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--c); }
+.mod .et i { width: 18px; height: 18px; border-radius: 6px; background: var(--c); opacity: 0.18; }
+.mod .et i + span { margin-left: -24px; padding-left: 24px; }
+.mod .num { font-size: 20px; }
+.barra { height: 6px; border-radius: 3px; background: var(--sup2); overflow: hidden; }
+.barra i { display: block; height: 100%; border-radius: 3px; background: var(--c, var(--texto)); }
+
+.linea { display: grid; grid-template-columns: 44px 12px 1fr; gap: 0 8px; font-size: 13px; }
+.linea time { font-weight: 600; font-variant-numeric: tabular-nums; padding-bottom: 12px; }
+.linea .p { position: relative; }
+.linea .p::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: -6px; width: 2px; background: var(--borde); }
+.linea .p::after { content: ""; position: absolute; left: 1px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--texto)); }
+.linea .p.fin::before { display: none; }
+.linea div b { display: block; font-weight: 600; line-height: 1.3; }
+.linea div span { color: var(--suave); font-size: 12px; }
+
+.antonio { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.antonio .av { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--sup2); display: grid; place-items: center; font: 700 14px var(--display); position: relative; }
+.antonio .av::after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; background: var(--bien); border: 2px solid var(--sup); }
+.antonio b { display: block; }
+.antonio span { color: var(--suave); font-size: 12px; }
+
+.nav { margin-top: auto; display: flex; justify-content: space-around; background: var(--sup); border-top: 1px solid var(--borde); padding: 8px 6px 12px; font-size: 10px; font-weight: 600; color: var(--suave); }
+.nav span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.nav i { width: 44px; height: 24px; border-radius: 12px; display: grid; place-items: center; }
+.nav i::before { content: ""; width: 14px; height: 14px; border-radius: 4px; border: 2px solid currentColor; }
+.nav .on { color: var(--texto); }
+.nav .on i { background: var(--sup2); }
+
+.anillo { display: flex; align-items: center; gap: 14px; }
+.anillo .dentro { position: relative; flex: none; }
+.anillo .dentro b { position: absolute; inset: 0; display: grid; place-items: center; font: 700 26px var(--display); }
+.sem { display: flex; align-items: flex-end; gap: 6px; height: 64px; }
+.sem span { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--suave); height: 100%; justify-content: flex-end; }
+.sem i { width: 100%; border-radius: 5px; background: var(--salud); opacity: 0.35; }
+.sem .hoy i { opacity: 1; }
+.pastilla { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 9px; background: var(--ojo-f); color: var(--ojo); }
+.pastilla.mal { background: var(--mal-f); color: var(--mal); }
+.boton { background: var(--texto); color: var(--fondo); border-radius: 14px; padding: 11px; text-align: center; font-weight: 600; font-size: 14px; }
+.boton.c { background: var(--c); color: #fff; }
+.cat { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; gap: 8px; font-size: 12px; }
+.cat b { font-variant-numeric: tabular-nums; }
+.fases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.fases div { background: var(--sup); border: 1px solid var(--borde); border-radius: 12px; padding: 8px 2px; font-size: 10px; color: var(--suave); font-weight: 600; }
+.fases b { display: block; font: 700 20px var(--display); color: var(--texto); }
+.fases .toca { border-color: var(--elsa); }
+.fases .toca b { color: var(--elsa); }
+.video { display: flex; gap: 10px; }
+.video .mini { flex: none; width: 54px; height: 76px; border-radius: 10px; background: linear-gradient(160deg, var(--elsa), var(--sup2)); }
+.video h4 { margin: 0; font-size: 14px; line-height: 1.25; }
+.pasos { display: flex; gap: 3px; margin: 6px 0; }
+.pasos i { flex: 1; height: 5px; border-radius: 3px; background: var(--sup2); }
+.pasos i.h { background: var(--bien); }
+.pasos i.t { background: var(--elsa); }
+
+.principios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 32px; }
+.principios div { border-top: 2px solid var(--texto); padding-top: 12px; }
+.principios h3 { font: 600 16px/1.3 var(--display); margin: 0 0 6px; }
+.principios p { margin: 0; color: var(--suave); font-size: 14px; }
+</style>
+
+<div class="pagina">
+  <header>
+    <h1>Panel Jordi, más visual y para el día a día</h1>
+    <p class="entrada">Cuatro pantallas de ejemplo con la misma base neutra que ya tiene la app, más un color por módulo y números dibujados. La regla es abrir, entender en cinco segundos y tocar una sola cosa.</p>
+    <span class="aviso">Datos de ejemplo, no son los tuyos</span>
+  </header>
+
+  <section class="fila">
+    <!-- HOY -->
+    <div class="pieza">
+      <div class="movil"><div class="pantalla">
+        <div class="cab"><div><small>Martes, 10 de noviembre</small><strong>Buenos días</strong></div><div class="campana"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 5l6 4 6-4M2 4h12v9H2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><b>2</b></div></div>
+        <div class="tres">
+          <p class="rot">Tus 3 cosas de hoy</p>
+          <div class="tarea"><span class="ck"></span><div>Revisar el montaje del reel de la grúa<em>ELSA · 2 min</em></div></div>
+          <div class="tarea"><span class="ck"></span><div>Confirmar el trabajo de mañana a las 8:15<em>Agenda</em></div></div>
+          <div class="tarea"><span class="ck"></span><div>Renovar el seguro, vence en 12 días<em>Documentos</em></div></div>
+        </div>
+        <div class="cuatro">
+          <div class="mod" style="--c: var(--salud)"><div class="et"><i></i><span>Salud</span></div><div class="num">7 h 40</div><div class="sub">sueño · energía 78</div></div>
+          <div class="mod" style="--c: var(--fin)"><div class="et"><i></i><span>Finanzas</span></div><div class="num">412 €</div><div class="barra"><i style="width: 62%"></i></div><div class="sub">quedan · 20 €/día</div></div>
+          <div class="mod" style="--c: var(--elsa)"><div class="et"><i></i><span>ELSA</span></div><div class="num">2</div><div class="sub">te tocan a ti</div></div>
+          <div class="mod" style="--c: var(--doc)"><div class="et"><i></i><span>Documentos</span></div><div class="num">1</div><div class="sub">vence este mes</div></div>
+        </div>
+        <div class="caja">
+          <p class="rot">Agenda</p>
+          <div class="linea"><time>08:15</time><span class="p" style="--c: var(--elsa)"></span><div><b>Grúa 23, descarga en obra</b><span>Polígono norte</span></div>
+          <time>13:00</time><span class="p"></span><div><b>Comida con el gestor</b><span>Centro</span></div>
+          <time>18:30</time><span class="p fin" style="--c: var(--salud)"></span><div><b>Entreno de fuerza</b><span>45 min</span></div></div>
+        </div>
+        <div class="caja antonio"><div class="av">A</div><div><b>Antonio está al día</b><span>2 tareas en curso · 3 correos resumidos</span></div></div>
+      </div>
+      <div class="nav"><span class="on"><i></i>Hoy</span><span><i></i>Finanzas</span><span><i></i>Salud</span><span><i></i>ELSA</span><span><i></i>Docs</span></div></div>
+      <div class="notas"><h3><i></i>Hoy</h3><ul>
+        <li><b>Tres cosas, no un párrafo.</b> El resumen de Antonio pasa a ser una lista que se tacha. El texto largo queda detrás de «ver más».</li>
+        <li><b>Un azulejo por módulo</b> con su número clave. Tocar lleva a esa sección: son las conexiones entre páginas, visibles.</li>
+        <li><b>Agenda como línea de tiempo</b> y el correo dentro de la tarjeta de Antonio, no como otra lista.</li>
+      </ul></div>
+    </div>
+
+    <!-- SALUD -->
+    <div class="pieza">
+      <div class="movil"><div class="pantalla">
+        <div class="cab"><div><small>Garmin · hace 20 min</small><strong>Salud</strong></div></div>
+        <div class="caja anillo">
+          <div class="dentro"><svg width="92" height="92" viewBox="0 0 92 92"><circle cx="46" cy="46" r="38" fill="none" stroke="var(--sup2)" stroke-width="9"/><circle cx="46" cy="46" r="38" fill="none" stroke="var(--salud)" stroke-width="9" stroke-linecap="round" stroke-dasharray="186 239" transform="rotate(-90 46 46)"/></svg><b>78</b></div>
+          <div><p class="rot" style="margin: 0">Energía de hoy</p><div style="font-weight: 600; line-height: 1.3">Buen día para apretar</div><div class="sub">Mejor que tu media de la semana</div></div>
+        </div>
+        <div class="caja">
+          <p class="rot">Sueño, últimos 7 días</p>
+          <div class="sem"><span><i style="height: 58%"></i>M</span><span><i style="height: 70%"></i>X</span><span><i style="height: 52%"></i>J</span><span><i style="height: 64%"></i>V</span><span><i style="height: 88%"></i>S</span><span><i style="height: 80%"></i>D</span><span class="hoy"><i style="height: 76%"></i>L</span></div>
+        </div>
+        <div class="cuatro">
+          <div class="mod"><div class="sub">FC en reposo</div><div class="num">52</div><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none"><polyline points="0,14 16,12 33,15 50,10 66,11 83,8 100,7" fill="none" stroke="var(--salud)" stroke-width="2"/></svg></div>
+          <div class="mod"><div class="sub">Estrés medio</div><div class="num">31</div><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none"><polyline points="0,8 16,12 33,9 50,15 66,12 83,14 100,11" fill="none" stroke="var(--salud)" stroke-width="2"/></svg></div>
+          <div class="mod"><div class="sub">Pasos</div><div class="num">8.420</div><div class="barra" style="--c: var(--salud)"><i style="width: 84%"></i></div></div>
+          <div class="mod"><div class="sub">HRV</div><div class="num">64</div><div class="sub" style="color: var(--bien); font-weight: 600">▲ sube 3 días</div></div>
+        </div>
+        <div class="caja"><p class="rot">Lo que ve Antonio</p><div style="font-size: 13px">Duermes mejor desde que te acuestas antes de las 23:30. Mantén la hora.</div></div>
+        <div class="boton c" style="--c: var(--salud)">Apuntar cómo estoy</div>
+      </div>
+      <div class="nav"><span><i></i>Hoy</span><span><i></i>Finanzas</span><span class="on"><i></i>Salud</span><span><i></i>ELSA</span><span><i></i>Docs</span></div></div>
+      <div class="notas"><h3 style="--c: var(--salud)"><i></i>Salud</h3><ul>
+        <li><b>Un número arriba</b> (energía) con frase corta. Hoy son ocho tarjetas iguales y cuesta saber cuál importa.</li>
+        <li><b>Tendencias dibujadas</b> en cada métrica. Los datos de Garmin ya están; solo falta pintarlos.</li>
+        <li><b>El informe del bot en dos líneas</b>, con el completo al tocar.</li>
+      </ul></div>
+    </div>
+
+    <!-- FINANZAS -->
+    <div class="pieza">
+      <div class="movil"><div class="pantalla">
+        <div class="cab"><div><small>Bancos al día · hoy 06:47</small><strong>Finanzas</strong></div></div>
+        <div class="caja" style="--c: var(--fin)">
+          <p class="rot">Te quedan hasta la nómina</p>
+          <div class="num" style="font-size: 38px">412 €</div>
+          <div class="sub" style="margin: 4px 0 10px">20 € al día · faltan 20 días</div>
+          <div class="barra"><i style="width: 62%"></i></div>
+          <div class="sub" style="display: flex; justify-content: space-between; margin-top: 4px"><span>Gastado 668 €</span><span>de 1.080 €</span></div>
+        </div>
+        <div class="caja" style="display: flex; flex-direction: column; gap: 8px; --c: var(--fin)">
+          <p class="rot" style="margin: 0">En qué se va</p>
+          <div class="cat"><span>Comida</span><div class="barra"><i style="width: 78%"></i></div><b>241 €</b></div>
+          <div class="cat"><span>Coche</span><div class="barra"><i style="width: 46%"></i></div><b>142 €</b></div>
+          <div class="cat"><span>Ocio</span><div class="barra"><i style="width: 30%"></i></div><b>93 €</b></div>
+        </div>
+        <div class="caja">
+          <span class="pastilla">12 movimientos sin categoría</span>
+          <div style="font-size: 13px; margin: 8px 0">Antonio propone la categoría de cada uno. Tú solo confirmas.</div>
+          <div class="boton">Revisar en 1 minuto</div>
+        </div>
+        <div class="caja" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px"><div><b>Próxima cuota</b><div class="sub">Préstamo coche · día 15</div></div><b class="num" style="font-size: 18px">186 €</b></div>
+      </div>
+      <div class="nav"><span><i></i>Hoy</span><span class="on"><i></i>Finanzas</span><span><i></i>Salud</span><span><i></i>ELSA</span><span><i></i>Docs</span></div></div>
+      <div class="notas"><h3 style="--c: var(--fin)"><i></i>Finanzas</h3><ul>
+        <li><b>Una pregunta, una respuesta:</b> cuánto me queda y a cuánto salgo al día.</li>
+        <li><b>Antonio hace el trabajo sucio.</b> Hoy solo puede leer; con una ruta para proponer categorías, tú apruebas en lote.</li>
+        <li><b>Informe mensual del bot</b> en la misma pantalla, igual que en Salud.</li>
+      </ul></div>
+    </div>
+
+    <!-- ELSA -->
+    <div class="pieza">
+      <div class="movil"><div class="pantalla">
+        <div class="cab"><div><small>Contenido de ELSA</small><strong>ELSA</strong></div><span class="pastilla">2 te tocan</span></div>
+        <div class="fases"><div><b>3</b>Guion</div><div><b>2</b>Grabar</div><div><b>1</b>Montando</div><div class="toca"><b>2</b>Revisar</div></div>
+        <div class="caja">
+          <div class="video"><div class="mini"></div><div style="min-width: 0; flex: 1"><h4>Toro eléctrico contra gasolina</h4><div class="pasos"><i class="h"></i><i class="h"></i><i class="h"></i><i class="h"></i><i class="t"></i><i></i></div><div class="sub">Acabado v2 · 58 s · entregado hace 1 h</div></div></div>
+          <div class="boton c" style="--c: var(--elsa); margin-top: 10px">Ver y decidir</div>
+        </div>
+        <div class="caja">
+          <div class="video"><div class="mini"></div><div style="min-width: 0; flex: 1"><h4>Grúa de 80 toneladas en el puerto</h4><div class="pasos"><i class="h"></i><i class="t"></i><i></i><i></i><i></i><i></i></div><div class="sub">3 preguntas del guionista</div></div></div>
+          <div class="boton c" style="--c: var(--elsa); margin-top: 10px">Contestar</div>
+        </div>
+        <div class="caja antonio"><div class="av">E</div><div><b>Editor en la nube</b><span>Montando 1 vídeo · sin depender del PC</span></div></div>
+        <div class="caja" style="display: flex; justify-content: space-between; font-size: 13px"><div><b>Esta semana en redes</b><div class="sub">Mejor reel: retención 61 %</div></div><b class="num" style="font-size: 18px">48 mil</b></div>
+      </div>
+      <div class="nav"><span><i></i>Hoy</span><span><i></i>Finanzas</span><span><i></i>Salud</span><span class="on"><i></i>ELSA</span><span><i></i>Docs</span></div></div>
+      <div class="notas"><h3 style="--c: var(--elsa)"><i></i>ELSA</h3><ul>
+        <li><b>El embudo arriba:</b> cuántos vídeos hay en cada fase y cuál te espera.</li>
+        <li><b>Una tarjeta, un botón.</b> Solo lo que te toca; el resto se pliega en «En marcha».</li>
+        <li><b>Estado del Editor a la vista,</b> para saber si la nube está montando sin abrir Actividad.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom: 20px">Las cinco reglas detrás</h2>
+    <div class="principios">
+      <div><h3>Un color por módulo</h3><p>La base sigue neutra. El color solo dice dónde estás y de qué módulo viene cada aviso.</p></div>
+      <div><h3>Primero el número, luego la frase</h3><p>Cada pantalla abre con un dato grande y una línea que lo explica. Las listas van debajo.</p></div>
+      <div><h3>Dibujar en vez de escribir</h3><p>Anillos, barras y líneas para lo que hoy es texto. La librería de gráficos ya está instalada.</p></div>
+      <div><h3>Una acción por tarjeta</h3><p>Si algo te toca, lleva un botón. Si no te toca, no ocupa sitio.</p></div>
+      <div><h3>Antonio siempre visible</h3><p>Una franja con su estado en Hoy y en cada módulo, en lugar de una página escondida.</p></div>
+    </div>
+  </section>
+</div>
