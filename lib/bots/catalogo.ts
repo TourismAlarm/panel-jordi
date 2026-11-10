@@ -48,12 +48,14 @@ export type Permiso =
   | "salud:informe"
   | "documentos:vencimientos" // lo único de documentos que lee Día: sin texto
   | "documentos:leer"
-  | "documentos:ficha";
+  | "documentos:ficha"
+  | "arnes:leer" // el arnés (/api/bots/arnes): solo Antonio lo escribe y lo lee
+  | "arnes:escribir";
 
 const COMUNES: Permiso[] = ["actividad:escribir", "bandeja:escribir", "bandeja:leer", "reglas:leer", "memoria:escribir", "memoria:leer"];
 
 const PERMISOS: Record<Bot, Permiso[]> = {
-  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer", "peticiones:leer", "peticiones:escribir", "redes:leer", "redes:escribir"],
+  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer", "peticiones:leer", "peticiones:escribir", "redes:leer", "redes:escribir", "arnes:leer", "arnes:escribir"],
   ideas: [...COMUNES, "ideas:escribir", "ideas:leer"],
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
   editor: ["edicion:tomar", "edicion:informar", "reglas:leer"],

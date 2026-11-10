@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## El arnés de Antonio (2026-11-10)
+- **`/antonio`** (enlace en la portada): todo lo que Antonio tiene entre manos, en tres bloques. «A medias» son las tareas abiertas: lo que te espera a ti y lo más viejo van arriba, y lo que lleva más de 24 h sin tocar sale en rojo. «Por agente» son los pendientes de los diez agentes, con su chat. «Rutinas» enlaza al registro de Actividad. Debajo, «Para saber» con la memoria común. Cada fila enlaza a su fuente real.
+- Los pendientes se calculan de lo que el panel ya tiene (preguntas, peticiones, ediciones, guiones, material, redes, salud, resumen de Hoy, vencimientos y fallos de los bots). Solo se escribe lo que el panel no sabe: `POST /api/bots/arnes/rutinas` y `POST /api/bots/arnes/tareas` (upsert por `id`). Antonio lo lee todo junto en `GET /api/bots/arnes`. Solo con la clave de Antonio.
+- Migración `20261110100000_arnes_antonio.sql`: tablas `arnes_rutinas` y `arnes_tareas` con RLS solo para el dueño (escribe el servidor y Jordi lee). La memoria común admite también `skill` y `problema`.
+
 ## Todo pasa por Antonio, nada espera al PC (2026-11-06)
 - **Peticiones**: descartar, pedir guion, «Ya he subido todo» y revisar un montaje sin encargo ya no esperan al PC (que solo monta). Al pulsar, se avisa a Antonio (`proyecto_descartado`, `guion_pedido`, `material_listo` y `montaje_revisado` con `peticion_id`; `peticion_deshecha` si Jordi lo deshace). Antonio las lee en `GET /api/bots/peticiones` y las cierra con `POST /api/bots/peticiones/{id}`. Un descarte hecho archiva el vídeo. En el panel sale «Esperando a Antonio».
 - **Preguntas**: también las de vídeos que creó el PC las recoge Antonio (`GET /api/bots/preguntas` y el aviso `pregunta_respondida`), y puede rellenar su guion mientras no haya material entregado.
