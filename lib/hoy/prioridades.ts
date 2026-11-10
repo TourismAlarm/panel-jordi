@@ -19,7 +19,7 @@ export function enlaceValido(enlace: string) {
 }
 
 // Lo que todavía te espera en cada módulo. null = no se ha podido leer: entonces no se tacha nada solo.
-export type Abierto = { videos: string[] | null; bandeja: number | null; documentos: string[] | null };
+export type Abierto = { videos: string[] | null; bandeja: number | null; documentos: string[] | null; propuestas?: number | null };
 
 // ¿Está ya resuelta la cosa a la que lleva el enlace? Sirve para tachar sola una cosa de hoy cuando la haces en su página
 // (aprobar un montaje, contestar las preguntas, leer la bandeja). null = el panel no lo puede saber: se tacha a mano.
@@ -31,5 +31,7 @@ export function resueltaSola(enlace: string | undefined, a: Abierto | undefined)
   if (ruta === "/bandeja") return a.bandeja === null ? null : a.bandeja === 0;
   const doc = ruta.match(/^\/documentos\/([0-9a-f-]{36})$/i);
   if (doc) return a.documentos ? !a.documentos.includes(doc[1]) : null;
+  // «Revisa las categorías que te propongo»: hecho cuando no queda ninguna por decidir.
+  if (ruta === "/finanzas" && /(^|[?&])ver=propuestas(&|#|$)/.test(enlace.split("?")[1] ?? "")) return a.propuestas == null ? null : a.propuestas === 0;
   return null;
 }

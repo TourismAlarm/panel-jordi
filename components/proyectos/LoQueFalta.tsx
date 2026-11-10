@@ -3,13 +3,15 @@ import { MarcaPaso } from "./MarcaPaso";
 import s from "./Pasos.module.css";
 
 // En la tarjeta: los próximos pasos sin hacer, en orden, y el resto resumido en una línea.
-export function LoQueFalta({ pasos, cuantos = 2 }: { pasos: Paso[]; cuantos?: number }) {
+// `breve`: solo lo que toca ahora, sin el «Después» (para la portada, donde manda lo corto).
+export function LoQueFalta({ pasos, cuantos = 2, breve }: { pasos: Paso[]; cuantos?: number; breve?: boolean }) {
   const numerados = pasos.map((p, i) => ({ ...p, numero: i + 1 }));
   const falta = numerados.filter((p) => p.estado !== "hecho");
   if (!falta.length) return null;
-  const ahora = falta.slice(0, cuantos);
+  // Lo tuyo va delante aunque haya algo del sistema antes sin acabar.
+  const ahora = breve ? [falta.find((p) => p.estado === "tuyo") ?? falta[0]] : falta.slice(0, cuantos);
   const primeroTuyo = ahora.find((p) => p.estado === "tuyo");
-  const despues = falta.slice(cuantos);
+  const despues = breve ? [] : falta.slice(cuantos);
   return (
     <div>
       <ul className={s.falta}>

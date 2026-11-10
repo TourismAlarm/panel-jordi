@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Rotulo, Seccion, Segmentos, Vacio } from "@/components/ui";
+import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Punto, Rotulo, Seccion, Vacio } from "@/components/ui";
+import { Embudo } from "@/components/proyectos/Embudo";
 import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
 import { TarjetaGuion } from "@/components/bots/TarjetaGuion";
@@ -12,13 +13,14 @@ import { listarProyectos } from "@/lib/datos/videos";
 import { estadoPeticion, faseVideo, textoMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 import { agruparPor, dia, diaCercano, hoyLargo, plural } from "@/lib/formato";
-import { pasosDe, teToca } from "@/lib/pasos";
+import { encargosAbiertos } from "@/lib/datos/encargos";
+import { embudo, etapaDe, ETAPAS, pasoActual, pasosDe, teToca, TONO_PASO } from "@/lib/pasos";
 
-// Portada: todos los proyectos abiertos en orden de fecha, cada uno con sus pasos.
-// «Me toca» deja solo los que tienen algo tuyo pendiente. Arriba, lo que has pedido (guiones y ediciones sin guion);
-// al final, plegados, los hechos y los que has descartado.
+// Portada: arriba, el embudo (cuántos vídeos hay en cada etapa) y qué hace el Editor. Después, solo lo que te toca,
+// con una tarjeta y un botón por vídeo; el resto va en una lista corta («En marcha»).
+// Tocar una etapa del embudo deja solo sus vídeos. Al final, plegados, los hechos y los descartados.
 export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
-  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas] = await Promise.all([
+  const [{ ver, fase: qFase }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas, cola] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
@@ -28,6 +30,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
     contarPorDecidir(),
     guionesAbiertos(),
     textosDeReglas(),
+    encargosAbiertos(),
   ]);
   const revisionesGuion = await revisionesDeGuiones(guiones.map((g) => g.id));
 
@@ -40,7 +43,22 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
   const mios = abiertos.filter(({ pasos }) => teToca(pasos));
   const hechos = vivos.filter(({ p }) => faseVideo(p.estado) === "hecho").reverse();
   const soloMios = ver === "mios";
-  const lista = soloMios ? mios : abiertos;
+  const fase = ETAPAS.find((e) => e.id === qFase)?.id ?? null;
+  const deFase = fase ? abiertos.filter(({ pasos }) => etapaDe(pasos) === fase) : [];
+  const enMarcha = abiertos.filter(({ pasos }) => !teToca(pasos));
+
+  // Qué hace el Editor ahora: lo que falla o pregunta va primero; si no, lo que monta; si no, lo que espera.
+  const idsDe = (estado: string) => cola.filter((e) => e.estado === estado).map((e) => e.video_id);
+  const [fallidos, bloqueados, montando, enCola] = ["fallido", "bloqueado", "en_curso", "pendiente"].map(idsDe);
+  const editor = fallidos.length
+    ? { tono: "mal" as const, texto: `Ha fallado el montaje de ${fallidos.join(", ")}`, detalle: "Lo está viendo Antonio" }
+    : bloqueados.length
+      ? { tono: "ojo" as const, texto: `Tiene una pregunta sobre ${bloqueados.join(", ")}`, detalle: "Se la contesta Antonio" }
+      : montando.length
+        ? { tono: "info" as const, texto: `Montando ${montando.join(", ")}`, detalle: enCola.length ? `${plural(enCola.length, "vídeo", "vídeos")} más en cola` : "Nada más en cola" }
+        : enCola.length
+          ? { tono: "neutro" as const, texto: `${plural(enCola.length, "vídeo", "vídeos")} en cola`, detalle: "Esperando a que el Editor los coja" }
+          : { tono: "bien" as const, texto: "Sin nada en cola", detalle: "Todo lo encargado está entregado" };
 
   return (
     <Pantalla
@@ -62,12 +80,11 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         </>
       }
     >
-      <Segmentos
-        opciones={[
-          { href: "/elsa", texto: `Todos (${abiertos.length})`, activo: !soloMios },
-          { href: "/elsa?ver=mios", texto: `Me toca (${mios.length})`, activo: soloMios },
-        ]}
-      />
+      <Embudo tramos={embudo(abiertos)} activa={fase} />
+
+      <Lista>
+        <Fila href="/elsa/actividad/bots?bot=editor" inicio={<Punto tono={editor.tono} />} titulo={`Editor: ${editor.texto.charAt(0).toLowerCase()}${editor.texto.slice(1)}`} detalle={editor.detalle} />
+      </Lista>
 
       {!!reglas && (
         <Aviso tono="ojo" icono="bombilla">
@@ -107,23 +124,56 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         </Seccion>
       )}
 
-      {!lista.length &&
-        (soloMios ? (
-          <Vacio titulo="Nada que hacer ahora mismo" texto="El resto lo llevan Antonio y los bots." />
-        ) : (
-          <Vacio icono="videos" tono="neutro" titulo="No hay proyectos abiertos" texto="Aparecerán cuando Antonio cree uno." />
-        ))}
+      {fase ? (
+        <Seccion titulo={ETAPAS.find((e) => e.id === fase)!.nombre} cuenta={deFase.length} extra={{ texto: "Ver todo", href: "/elsa" }}>
+          {deFase.length ? (
+            deFase.map(({ p, pasos }) => <TarjetaProyecto key={p.id} p={p} pasos={pasos} breve />)
+          ) : (
+            <Vacio icono="videos" tono="neutro" titulo="Ningún vídeo en esta etapa" texto="Toca otra etapa o «Ver todo»." />
+          )}
+        </Seccion>
+      ) : (
+        <>
+          {!abiertos.length && <Vacio icono="videos" tono="neutro" titulo="No hay proyectos abiertos" texto="Aparecerán cuando Antonio cree uno." />}
 
-      {agruparPor(lista, ({ p }) => diaCercano(p.fecha_trabajo)).map((g) => (
-        <section key={g.etiqueta} style={{ display: "contents" }}>
-          <Rotulo acento={g.etiqueta === "Hoy" || g.etiqueta === "Mañana"}>{g.etiqueta}</Rotulo>
-          {g.items.map(({ p, pasos }) => (
-            <TarjetaProyecto key={p.id} p={p} pasos={pasos} conFecha={false} />
-          ))}
-        </section>
-      ))}
+          {!!abiertos.length &&
+            (mios.length ? (
+              <Seccion titulo="Te toca" cuenta={mios.length}>
+                {agruparPor(mios, ({ p }) => diaCercano(p.fecha_trabajo)).map((g) => (
+                  <section key={g.etiqueta} style={{ display: "contents" }}>
+                    <Rotulo acento={g.etiqueta === "Hoy" || g.etiqueta === "Mañana"}>{g.etiqueta}</Rotulo>
+                    {g.items.map(({ p, pasos }) => (
+                      <TarjetaProyecto key={p.id} p={p} pasos={pasos} conFecha={false} breve />
+                    ))}
+                  </section>
+                ))}
+              </Seccion>
+            ) : (
+              <Vacio titulo="Nada que hacer ahora mismo" texto="El resto lo llevan Antonio y los bots." />
+            ))}
 
-      {!soloMios && !!hechos.length && (
+          {!soloMios && !!enMarcha.length && (
+            <Seccion titulo="En marcha" cuenta={enMarcha.length}>
+              <Lista>
+                {enMarcha.map(({ p, pasos }) => {
+                  const actual = pasoActual(pasos);
+                  return (
+                    <Fila
+                      key={p.id}
+                      href={`/elsa/videos/${p.id}`}
+                      inicio={<Punto tono={actual ? TONO_PASO[actual.estado] : "neutro"} />}
+                      titulo={p.titulo ?? p.id}
+                      detalle={[actual?.titulo, p.fecha_trabajo ? diaCercano(p.fecha_trabajo) : null].filter(Boolean).join(" · ")}
+                    />
+                  );
+                })}
+              </Lista>
+            </Seccion>
+          )}
+        </>
+      )}
+
+      {!soloMios && !fase && !!hechos.length && (
         <Desplegable titulo={`Hechos (${hechos.length})`}>
           {hechos.map(({ p, pasos }) => (
             <TarjetaProyecto key={p.id} p={p} pasos={pasos} />
@@ -131,7 +181,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         </Desplegable>
       )}
 
-      {!soloMios && !!descartados.length && (
+      {!soloMios && !fase && !!descartados.length && (
         <Desplegable titulo={`Descartados (${descartados.length})`}>
           <Lista>
             {descartados.map(({ p }) => {

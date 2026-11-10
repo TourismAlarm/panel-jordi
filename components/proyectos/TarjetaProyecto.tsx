@@ -10,11 +10,12 @@ type Props = {
   p: Pick<Proyecto, "id" | "titulo" | "fecha_trabajo" | "ficha" | "tieneGuion">;
   pasos: Paso[];
   conFecha?: boolean; // en la portada la fecha ya va en el rótulo del día
+  breve?: boolean; // solo lo que toca ahora y su botón
 };
 
 // Un proyecto: cuándo, qué, dónde, camión, cómo va (barra de pasos), lo que falta en orden
 // y el botón para hacer lo que te toca. Toda la tarjeta lleva a la ficha.
-export function TarjetaProyecto({ p, pasos, conFecha = true }: Props) {
+export function TarjetaProyecto({ p, pasos, conFecha = true, breve }: Props) {
   const cuando = diaCercano(p.fecha_trabajo);
   const pronto = cuando === "Hoy" || cuando === "Mañana";
   const hechos = pasos.filter((x) => x.estado === "hecho").length;
@@ -58,7 +59,7 @@ export function TarjetaProyecto({ p, pasos, conFecha = true }: Props) {
         </span>
       </div>
 
-      <LoQueFalta pasos={pasos} />
+      <LoQueFalta pasos={pasos} breve={breve} />
 
       {(accion || p.tieneGuion) && (
         <div className={s.botones}>
