@@ -448,7 +448,9 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/hoy/resumen   -H "Authoriza
 ```
 
 - **`nivel`:** `urgente` · `importante` · `futuro`.
+- **Cuántas:** las que el día pida (hasta 20), no hay un número fijo. En Hoy salen todas como «Tus cosas de hoy», en tu orden, y Jordi las tacha; las de `futuro` van aparte en «Más adelante». El `resumen` queda plegado debajo.
 - **`enlace`:** opcional; una ruta del panel (`/finanzas`) o una web `https`.
+- **Se tachan solas:** si el `enlace` lleva a algo concreto, Hoy tacha la cosa en cuanto Jordi la resuelve en su página: `/elsa/videos/GE_045` (cuando ese vídeo deja de esperarle: aprobó, contestó, subió el material), `/bandeja` (cuando no queda nada sin leer) y `/documentos/{id}` (cuando deja de vencer). Con un enlace general (`/elsa`, `/salud`) o sin enlace, solo se tacha a mano: **enlaza siempre lo más concreto que puedas.**
 - **`senales`:** opcional. Si no la mandas, se quedan las que había.
 
 ### Cómo se ve en Hoy

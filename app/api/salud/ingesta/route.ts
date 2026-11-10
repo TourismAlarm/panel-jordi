@@ -18,6 +18,8 @@ export async function POST(request: Request) {
   try {
     return NextResponse.json({ ok: true, ...(await guardarIngesta(parsed.data)) });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "no se pudo guardar" }, { status: 500 });
+    // El detalle se queda en el log: hacia fuera no salen mensajes de la base de datos.
+    console.error("Salud · ingesta:", e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: "no se pudo guardar" }, { status: 500 });
   }
 }

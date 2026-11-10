@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { Azulejos } from "@/components/hoy/Azulejos";
+import { CosasDeHoy } from "@/components/hoy/CosasDeHoy";
 import { BotonResumen } from "@/components/hoy/BotonResumen";
 import { ListaSenales } from "@/components/hoy/ListaSenales";
 import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
 import { estadoBloque } from "@/lib/hoy/contexto";
-import { leerPrioridades } from "@/lib/hoy/prioridades";
+import { leerPrioridades, resueltaSola } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
 
@@ -24,24 +27,32 @@ export default async function Hoy() {
   const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar, calendario: e.calendario }));
   const estadoAgenda = foto.contexto === "error" ? "error" : estadoBloque(foto.agendaEn, agenda);
   const estadoCorreo = foto.contexto === "error" ? "error" : estadoBloque(foto.correosEn, foto.correos);
-  const prioridades = leerPrioridades(guardado?.prioridades);
+  const prioridades = leerPrioridades(guardado?.prioridades).map((p) => ({ ...p, resuelta: resueltaSola(p.enlace, foto.abierto) }));
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
   const saber = foto.senales.filter((s) => s.nivel === "saber");
   const nada = !urgentes.length && !deHoy.length && !agenda.length;
   const actualizado = (en: string | null) => (en ? <p className="text-sm text-muted-foreground">Actualizado el {formatearFechaHora(en)}</p> : null);
 
+  const horaMadrid = Number(new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", hour: "numeric", hour12: false }).format(new Date()));
+  const saludo = horaMadrid < 6 ? "Buenas noches" : horaMadrid < 14 ? "Buenos días" : horaMadrid < 21 ? "Buenas tardes" : "Buenas noches";
+
+  // Lo que Antonio tiene entre manos, para la franja que lleva a /antonio. Si no se puede leer, la franja sale igual, sin cifras.
+  const tareas = await supabase.from("arnes_tareas").select("estado").eq("user_id", userId).in("estado", ["en_curso", "esperando_agente", "esperando_jordi"]);
+  const enCurso = tareas.error ? null : tareas.data.length;
+  const teEsperan = tareas.error ? 0 : tareas.data.filter((t) => t.estado === "esperando_jordi").length;
+  const cuentaCosas = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+  const lineaAntonio = [
+    enCurso === null ? null : enCurso === 0 ? "Nada a medias" : cuentaCosas(enCurso, "tarea a medias", "tareas a medias"),
+    teEsperan > 0 ? cuentaCosas(teEsperan, "te espera a ti", "te esperan a ti") : null,
+  ].filter(Boolean).join(" · ");
+
   return (
     <main className="mx-auto flex max-w-[var(--ancho)] flex-col gap-5 px-4 py-5">
       <header>
-        <h1 className="text-3xl font-bold">Hoy</h1>
-        <p className="text-muted-foreground">{hoyLargo()}</p>
+        <p className="font-semibold text-muted-foreground">{hoyLargo()}</p>
+        <h1 className="text-3xl font-bold">{saludo}</h1>
       </header>
-
-      <Link href="/antonio" className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-border px-4 py-3 text-lg font-semibold">
-        <span>Antonio: lo que tiene a medias y lo que te toca</span>
-        <span aria-hidden>→</span>
-      </Link>
 
       {foto.fallos.length > 0 && (
         <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">
@@ -49,30 +60,7 @@ export default async function Hoy() {
         </p>
       )}
 
-      {guardado ? (
-        <Card className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">Resumen de la mañana</h2>
-          <p className="text-lg leading-snug">{guardado.resumen}</p>
-          {prioridades.length > 0 && (
-            <ol className="flex list-decimal flex-col gap-1 pl-5 text-lg">
-              {prioridades.map((p, i) => (
-                <li key={i}>
-                  {p.nivel === "urgente" && <span className="font-semibold text-destructive">Urgente: </span>}
-                  {p.nivel === "futuro" && <span className="text-muted-foreground">Más adelante: </span>}
-                  {p.enlace ? (
-                    <a href={p.enlace} className="underline">
-                      {p.texto}
-                    </a>
-                  ) : (
-                    p.texto
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
-          {guardado.generado_en && <p className="text-sm text-muted-foreground">Preparado el {formatearFechaHora(guardado.generado_en)}</p>}
-        </Card>
-      ) : null}
+      {guardado && <CosasDeHoy fecha={foto.fecha} cosas={prioridades} resumen={guardado.resumen} pie={guardado.generado_en ? `Preparado el ${formatearFechaHora(guardado.generado_en)}` : null} />}
 
       <ListaSenales titulo="Urgente" senales={urgentes} urgente />
 
@@ -83,19 +71,27 @@ export default async function Hoy() {
         </Card>
       )}
 
+      {foto.azulejos && <Azulejos datos={foto.azulejos} />}
+
       <section className="flex flex-col gap-2" aria-label="Agenda de hoy">
         <h2 className="text-xl font-bold">Agenda</h2>
         {estadoAgenda === "lista" ? (
-          <Card className="flex flex-col divide-y divide-border py-1">
-            {agenda.map((e, i) => (
-              <div key={i} className="flex min-h-14 items-center gap-4 py-2">
-                <p className="w-16 shrink-0 font-bold tabular-nums">{e.hora || "Hoy"}</p>
-                <div className="min-w-0">
-                  <p className="text-lg font-semibold leading-snug">{e.titulo}</p>
-                  {(e.lugar || e.calendario) && <p className="truncate text-muted-foreground">{[e.lugar, e.calendario].filter(Boolean).join(" · ")}</p>}
-                </div>
-              </div>
-            ))}
+          <Card className="py-4">
+            <ol className="m-0 flex list-none flex-col p-0">
+              {agenda.map((e, i) => (
+                <li key={i} className="grid grid-cols-[4.5rem_1rem_1fr] gap-x-3">
+                  <p className={e.hora.includes(":") ? "pt-0.5 text-right font-bold tabular-nums" : "pt-1 text-right text-sm font-bold leading-tight"}>{e.hora}</p>
+                  <span className="relative" aria-hidden>
+                    {i < agenda.length - 1 && <span className="absolute bottom-0 left-1/2 top-3 w-0.5 -translate-x-1/2 bg-border" />}
+                    <span className="absolute left-1/2 top-2 size-3 -translate-x-1/2 rounded-full bg-foreground" />
+                  </span>
+                  <div className={i < agenda.length - 1 ? "min-w-0 pb-5" : "min-w-0"}>
+                    <p className="text-lg font-semibold leading-snug">{e.titulo}</p>
+                    {(e.lugar || e.calendario) && <p className="text-muted-foreground">{[e.lugar, e.calendario].filter(Boolean).join(" · ")}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
           </Card>
         ) : (
           <p className="text-muted-foreground">
@@ -104,6 +100,15 @@ export default async function Hoy() {
         )}
         {actualizado(foto.agendaEn)}
       </section>
+
+      <Link href="/antonio" className="flex min-h-16 items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-inherit no-underline active:scale-[0.99]">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-bold" aria-hidden>A</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-semibold leading-snug">Antonio</span>
+          <span className="block text-muted-foreground">{lineaAntonio || "Lo que tiene a medias y lo que te toca"}</span>
+        </span>
+        <ChevronRight className="shrink-0 text-muted-foreground" size={22} aria-hidden />
+      </Link>
 
       <ListaSenales titulo="Para hoy" senales={deHoy} plegable />
 
