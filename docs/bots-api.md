@@ -284,10 +284,90 @@ El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida:
 
 ## `POST` y `GET /api/bots/memoria`
 
-Lo que todos los bots deben saber. La misma `clave` actualiza. `tipo`: `hecho` · `preferencia` · `decision`. El `GET` admite `?tipo=`. Claude del PC todavía no la lee.
+Lo que todos los bots deben saber. La misma `clave` actualiza. `tipo`: `hecho` · `preferencia` · `decision` · `skill` (cómo se hace algo) · `problema` (qué falla y cómo se sortea). Sale también en `GET /api/bots/arnes`. El `GET` admite `?tipo=`. Claude del PC todavía no la lee.
 
 ```bash
 curl -X POST https://panel-jordi.vercel.app/api/bots/memoria   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"clave":"tono-videos","contenido":"Directo, sin música épica","tipo":"preferencia"}'
+```
+
+## El arnés de Antonio: `/api/bots/arnes`
+
+Todo lo que Antonio tiene entre manos, en un sitio. Así, si se corta el uso o se reinicia, no se pierde el contexto. Jordi lo ve en **`/antonio`** (enlace en la portada). **Solo la clave de Antonio** lee y escribe aquí: cualquier otra recibe `403`.
+
+Lo que el panel ya sabe no se escribe: se calcula. Preguntas sin contestar o sin recoger, peticiones abiertas, ediciones listas, bloqueadas o fallidas, guiones por aprobar, vídeos sin material, días sin métricas de salud, vencimientos y fallos del registro de Actividad. Lo único que escribe Antonio son sus **rutinas** y sus **tareas a medias**.
+
+**Al arrancar cada turno o rutina, lee `GET /api/bots/arnes`.**
+
+### `POST /api/bots/arnes/rutinas`
+
+Siempre una lista. Hace upsert por `id`: mandar la misma rutina otra vez la actualiza y no la duplica. Un `id` repetido en la misma lista da `400`.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/arnes/rutinas \
+  -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" \
+  -H "Content-Type: application/json" \
+  -d '[{"id":"resumen-manana","nombre":"Resumen de la mañana","horario":"Cada día a las 7:30","ultima_ejecucion":"2026-11-10T07:30:00+01:00","resultado":"ok","proxima":"2026-11-11T07:30:00+01:00","nota":"Sin incidencias"}]'
+```
+
+Obligatorios: `id` (hasta 100 caracteres), `nombre` y `horario` (texto libre). `ultima_ejecucion` y `proxima` son instantes con zona, `resultado` es `ok`, `fallo` o `nada`, y los tres pueden ir a `null` si aún no ha corrido. `nota` es opcional. Una rutina que pasa más de una hora de su `proxima` sin volver a informar sale en rojo como «se ha saltado».
+
+### `POST /api/bots/arnes/tareas`
+
+Una tarea por llamada. Hace upsert por `id`: lo que no mandas no se toca, y `empezada_en` es la primera vez que llegó.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/arnes/tareas \
+  -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"guion-ge031","titulo":"Guion de GE_031","agente":"guionista","estado":"esperando_agente","paso_actual":"Jordi ha contestado las preguntas","falta":"Que el Guionista las pase al guion","enlace":"/elsa/videos/GE_031","actualizado_en":"2026-11-10T09:00:00+01:00"}'
+```
+
+- `agente`: `antonio` · `guionista` · `editor` · `analista` · `ideas` · `dia` · `salud` · `documentos` · `finanzas` · `revisor`.
+- `estado`: `en_curso` (le toca al agente; si el agente es `antonio`, a Antonio) · `esperando_agente` · `esperando_jordi` (le toca a Jordi y sale arriba) · `hecha` · `cancelada`.
+- Mientras esté abierta, `paso_actual`, `falta` y `enlace` son obligatorios. El `enlace` lleva a donde se comprueba: una ruta del panel (`/elsa/videos/GE_031`, `/salud`, `/documentos/<id>`), una web `https://…` o el chat del agente (`grokbot://app/v1/agent?id=<id>`).
+- Para cerrarla basta con `id`, `titulo`, `agente`, `estado` (`hecha` o `cancelada`) y `actualizado_en`. Sale de la vista y no se borra.
+- Una tarea con `actualizado_en` de hace más de 24 h sale en rojo: actualízala aunque solo sea para decir que sigue igual.
+
+Responde `{"ok":true,"id":"guion-ge031","abierta":true}`.
+
+### `GET /api/bots/arnes`
+
+```bash
+curl https://panel-jordi.vercel.app/api/bots/arnes -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+```
+
+```json
+{
+  "generado_en": "2026-11-10T09:05:00.000Z",
+  "tareas": [{ "id": "guion-ge031", "titulo": "…", "agente": "guionista", "estado": "esperando_agente", "paso_actual": "…", "falta": "…", "enlace": "https://panel-jordi.vercel.app/elsa/videos/GE_031", "empezada_en": "…", "actualizado_en": "…", "quien": "agente", "sin_tocar_24h": false }],
+  "por_agente": [{ "agente": "guionista", "nombre": "Guionista", "chat": "grokbot://app/v1/agent?id=19f8baf3-…", "congelado": false, "a_medias": 1,
+                   "pendientes": [{ "id": "recoger-GE_031", "que": "2 respuestas sin recoger · GE_031 · …", "detalle": "…", "desde": "…", "quien": "agente", "enlace": "https://…/elsa/videos/GE_031#preguntas" }] }],
+  "rutinas": [{ "id": "resumen-manana", "nombre": "…", "horario": "…", "ultima_ejecucion": "…", "resultado": "ok", "proxima": "…", "nota": null, "actualizado": "…", "atrasada": false }],
+  "memoria": [{ "clave": "…", "contenido": "…", "tipo": "problema", "autor": "antonio", "actualizado": "…" }],
+  "fallos": []
+}
+```
+
+- `tareas`: solo las abiertas. Primero las que esperan a Jordi y después de la más vieja a la más nueva.
+- `por_agente`: siempre los diez, en el mismo orden. `quien` es `jordi`, `antonio` o `agente`. Finanzas sale `congelado` y sin pendientes.
+- `memoria`: la memoria común entera (hechos, preferencias, decisiones, skills y problemas). Cualquiera que llegue sabe lo mismo.
+- `fallos`: lo que no se ha podido leer. Si sale algo, el resto es bueno, pero ese módulo puede estar incompleto.
+- Los enlaces del panel salen completos (`https://…`).
+
+### Prueba manual (tras desplegar)
+
+```bash
+B=https://panel-jordi.vercel.app/api/bots/arnes; H="Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+curl -X POST $B/rutinas -H "$H" -H "Content-Type: application/json" -d '[{"id":"prueba-1","nombre":"Prueba 1","horario":"Cada hora","resultado":"ok","ultima_ejecucion":"2026-11-10T09:00:00+01:00","proxima":"2026-11-10T10:00:00+01:00"},{"id":"prueba-2","nombre":"Prueba 2","horario":"Lunes","resultado":"fallo","ultima_ejecucion":"2026-11-10T08:00:00+01:00","proxima":"2026-11-17T08:00:00+01:00"}]'
+for n in 1 2 3; do curl -X POST $B/tareas -H "$H" -H "Content-Type: application/json" -d "{\"id\":\"prueba-$n\",\"titulo\":\"Prueba $n\",\"agente\":\"editor\",\"estado\":\"en_curso\",\"paso_actual\":\"Paso $n\",\"falta\":\"Nada\",\"enlace\":\"/elsa\",\"actualizado_en\":\"2026-11-0${n}T09:00:00+01:00\"}"; done
+curl $B -H "$H"   # y abrir /antonio: 3 tareas (en rojo las de hace más de 24 h) y 2 rutinas, la del fallo arriba
+```
+
+Ninguna ruta borra. Para quitar los datos de ejemplo, en el SQL de Supabase:
+
+```sql
+delete from public.arnes_tareas where id like 'prueba-%';
+delete from public.arnes_rutinas where id like 'prueba-%';
 ```
 
 # Bots de vida: Día, Finanzas, Salud y Documentos

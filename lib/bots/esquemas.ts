@@ -105,9 +105,9 @@ export const MemoriaIn = z.object({
   ...firma,
   clave: texto(120),
   contenido: texto(5000),
-  tipo: z.enum(["hecho", "preferencia", "decision"]),
+  tipo: z.enum(["hecho", "preferencia", "decision", "skill", "problema"]),
 });
-export const FiltroMemoria = z.enum(["hecho", "preferencia", "decision"]);
+export const FiltroMemoria = z.enum(["hecho", "preferencia", "decision", "skill", "problema"]);
 
 // Lo que escribe Antonio para el PC. Sin cortes, el montador los decide viendo el material y lo dice en sus notas.
 const segundos = z.number().min(0).max(3600);

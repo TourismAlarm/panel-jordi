@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BotonResumen } from "@/components/hoy/BotonResumen";
 import { ListaSenales } from "@/components/hoy/ListaSenales";
 import { Card } from "@/components/shadcn/card";
@@ -36,6 +37,11 @@ export default async function Hoy() {
         <h1 className="text-3xl font-bold">Hoy</h1>
         <p className="text-muted-foreground">{hoyLargo()}</p>
       </header>
+
+      <Link href="/antonio" className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-border px-4 py-3 text-lg font-semibold">
+        <span>Antonio: lo que tiene a medias y lo que te toca</span>
+        <span aria-hidden>→</span>
+      </Link>
 
       {foto.fallos.length > 0 && (
         <p role="alert" className="rounded-md border border-destructive/50 px-4 py-3 font-semibold text-destructive">

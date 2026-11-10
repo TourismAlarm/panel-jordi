@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## El arnés de Antonio (2026-11-10)
+- **`/antonio`** (enlace en la portada): todo lo que Antonio tiene entre manos, en tres bloques. «A medias» son las tareas abiertas: lo que te espera a ti y lo más viejo van arriba, y lo que lleva más de 24 h sin tocar sale en rojo. «Por agente» son los pendientes de los diez agentes, con su chat. «Rutinas» enlaza al registro de Actividad. Debajo, «Para saber» con la memoria común. Cada fila enlaza a su fuente real.
+- Los pendientes se calculan de lo que el panel ya tiene (preguntas, peticiones, ediciones, guiones, material, redes, salud, resumen de Hoy, vencimientos y fallos de los bots). Solo se escribe lo que el panel no sabe: `POST /api/bots/arnes/rutinas` y `POST /api/bots/arnes/tareas` (upsert por `id`). Antonio lo lee todo junto en `GET /api/bots/arnes`. Solo con la clave de Antonio.
+- Migración `20261110100000_arnes_antonio.sql`: tablas `arnes_rutinas` y `arnes_tareas` con RLS solo para el dueño (escribe el servidor y Jordi lee). La memoria común admite también `skill` y `problema`.
+
 ## Revisas tú en cuanto el PC entrega (2026-11-06)
 - El corte y el acabado salen al momento como «Te toca revisar», con «Ver en Drive» y los botones «Corte OK» / «Aprobar» / «Pedir cambios». Ya no esperan a que Antonio lo marque por la API (no lo hacía y se quedaban en «Montado: lo revisa Antonio»).
 - Tu decisión cierra el encargo al momento (también en el corte) y Antonio recibe `montaje_revisado` para encargar lo siguiente. Si Antonio pide cambios antes, sale de tu lista.

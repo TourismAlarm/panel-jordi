@@ -53,6 +53,84 @@ export type Database = {
         }
         Relationships: []
       }
+      arnes_rutinas: {
+        Row: {
+          actualizado: string
+          horario: string
+          id: string
+          nombre: string
+          nota: string | null
+          proxima: string | null
+          resultado: string | null
+          ultima_ejecucion: string | null
+          user_id: string
+        }
+        Insert: {
+          actualizado?: string
+          horario: string
+          id: string
+          nombre: string
+          nota?: string | null
+          proxima?: string | null
+          resultado?: string | null
+          ultima_ejecucion?: string | null
+          user_id: string
+        }
+        Update: {
+          actualizado?: string
+          horario?: string
+          id?: string
+          nombre?: string
+          nota?: string | null
+          proxima?: string | null
+          resultado?: string | null
+          ultima_ejecucion?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      arnes_tareas: {
+        Row: {
+          actualizado_en: string
+          agente: string
+          cerrada_en: string | null
+          empezada_en: string
+          enlace: string | null
+          estado: string
+          falta: string | null
+          id: string
+          paso_actual: string | null
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          actualizado_en: string
+          agente: string
+          cerrada_en?: string | null
+          empezada_en?: string
+          enlace?: string | null
+          estado: string
+          falta?: string | null
+          id: string
+          paso_actual?: string | null
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          actualizado_en?: string
+          agente?: string
+          cerrada_en?: string | null
+          empezada_en?: string
+          enlace?: string | null
+          estado?: string
+          falta?: string | null
+          id?: string
+          paso_actual?: string | null
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bandeja: {
         Row: {
           created_at: string
