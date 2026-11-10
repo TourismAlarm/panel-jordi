@@ -1,19 +1,21 @@
 import type { ReactNode } from "react";
 import { Etiqueta, Tarjeta, type Tono } from "@/components/ui";
 import { dia } from "@/lib/formato";
-import { miles, NOMBRE_RED, type Apuesta, type Conclusion, type Pareja, type Reel } from "@/lib/redes";
+import { miles, NOMBRE_RED, type Apuesta, type Conclusion, type Pareja, type Reel, type Referencia } from "@/lib/redes";
+import { Medidor } from "./Graficas";
 import s from "./Redes.module.css";
 
 const coma = (x: number, d = 1) => x.toFixed(d).replace(".", ",");
 const pct = (x: number | null) => (x === null ? "sin dato" : `${Math.round(x)} %`);
 
 // Número grande con su comparación debajo («un número suelto no dice nada»).
-export function Indicador({ valor, texto, comparacion, tono = "neutro" }: { valor: string; texto: string; comparacion?: ReactNode; tono?: Tono }) {
+export function Indicador({ valor, texto, comparacion, tono = "neutro", children }: { valor: string; texto: string; comparacion?: ReactNode; tono?: Tono; children?: ReactNode }) {
   return (
     <div className={s.indicador} data-tono={tono}>
       <b>{valor}</b>
       <span className={s.nombre}>{texto}</span>
       {comparacion && <span className={s.comparacion}>{comparacion}</span>}
+      {children}
     </div>
   );
 }
@@ -52,7 +54,10 @@ export function GraficaVistas({ reels }: { reels: Reel[] }) {
 export const ancla = (r: Reel) => `reel-${r.permalink.split("/").filter(Boolean).at(-1)}`;
 
 // Ficha de un reel: números clave y su diagnóstico en frases.
-export function TarjetaReel({ r }: { r: Reel }) {
+// Con `refs` (lo normal de la cuenta y los máximos), las medidas clave salen como barras con una raya en lo normal.
+export type Refs = { normal: Referencia; maxVistas: number; maxSocial: number; maxTiempo: number };
+
+export function TarjetaReel({ r, refs }: { r: Reel; refs?: Refs }) {
   const malo = r.senales.some((x) => x.tono === "mal");
   return (
     <div id={ancla(r)} className={s.ancla}>
@@ -74,10 +79,19 @@ export function TarjetaReel({ r }: { r: Reel }) {
             </span>
           </div>
         </div>
+        {refs && (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+            <Medidor nombre={r.edad < 7 ? "Vistas (aún sube)" : "Vistas"} texto={miles(r.vistas)} valor={r.vistas} normal={refs.normal.vistas} max={refs.maxVistas} mejor="alto" sinJuzgar={r.edad < 7} />
+            {r.red === "instagram" && <Medidor nombre="Se van al empezar" texto={pct(r.salto)} valor={r.salto} normal={refs.normal.salto} max={100} mejor="bajo" />}
+            <Medidor nombre="Lo ven entero" texto={pct(r.completo)} valor={r.completo} normal={refs.normal.completo} max={100} mejor="alto" />
+            <Medidor nombre="Lo miran de media" texto={r.tiempoMedio === null ? "" : `${coma(r.tiempoMedio)} s`} valor={r.tiempoMedio} normal={refs.normal.tiempoMedio} max={refs.maxTiempo} mejor="alto" />
+            <Medidor nombre="Guardan y comparten ‰" texto={coma(r.guardadosMil + r.compartidosMil)} valor={r.guardadosMil + r.compartidosMil} normal={refs.normal.socialMil} max={refs.maxSocial} mejor="alto" />
+          </div>
+        )}
         <dl className={s.datos}>
-          {r.red === "instagram" && <Dato nombre="Se van al empezar" valor={pct(r.salto)} />}
-          {r.completo !== null && <Dato nombre="Lo ven entero" valor={pct(r.completo)} />}
-          <Dato nombre="Lo miran de media" valor={r.tiempoMedio === null ? "sin dato" : `${coma(r.tiempoMedio)} s`} />
+          {!refs && r.red === "instagram" && <Dato nombre="Se van al empezar" valor={pct(r.salto)} />}
+          {!refs && r.completo !== null && <Dato nombre="Lo ven entero" valor={pct(r.completo)} />}
+          {!refs && <Dato nombre="Lo miran de media" valor={r.tiempoMedio === null ? "sin dato" : `${coma(r.tiempoMedio)} s`} />}
           {r.pctVisto !== null && <Dato nombre="Visto del vídeo" valor={pct(r.pctVisto)} />}
           <Dato nombre="Personas" valor={miles(r.alcance)} />
           <Dato nombre="Guardados" valor={`${r.guardados}`} />
