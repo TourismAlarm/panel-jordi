@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const SIGUIENTE = {
   listo: null, // sale a Jordi como «Te toca revisar»
-  bloqueado: "El PC ha preguntado algo a Antonio",
+  bloqueado: "El Editor ha preguntado algo a Antonio",
   fallido: "El montaje ha fallado: lo ve Antonio",
 };
 

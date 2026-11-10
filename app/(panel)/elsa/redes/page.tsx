@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Aviso, Desplegable, Pantalla, Seccion, Segmentos, Vacio } from "@/components/ui";
 import { GraficaVistas, Indicador, Indicadores, TarjetaApuesta, TarjetaConclusion, TarjetaPareja, TarjetaReel } from "@/components/redes/Redes";
+import { ColumnasVistas, Comparado, LineaGancho, Meta } from "@/components/redes/Graficas";
 import { Guion } from "@/components/videos/Guion";
 import { apuestasMd, fotosRecientes, fotosTikTok, infoReels, ultimoInforme } from "@/lib/datos/redes";
 import { dia, hoy, plural } from "@/lib/formato";
@@ -14,6 +15,7 @@ import {
   leerApuestas,
   miles,
   NOMBRE_RED,
+  referencia,
   resumen,
   type Foto,
   type Red,
@@ -106,6 +108,8 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
   const apuestas = leerApuestas(md ?? "");
   const abiertas = apuestas.filter((a) => !a.cerrada);
   const cerradas = apuestas.filter((a) => a.cerrada);
+  const normal = referencia(reels);
+  const refs = { normal, maxVistas: Math.max(1, ...reels.map((x) => x.vistas)), maxSocial: Math.max(1, ...reels.map((x) => x.guardadosMil + x.compartidosMil)), maxTiempo: Math.max(1, ...reels.map((x) => x.tiempoMedio ?? 0)) };
   const vieja = Date.parse(`${hoyISO}T12:00:00Z`) - Date.parse(`${foto}T12:00:00Z`) > 864e5;
 
   return (
@@ -129,29 +133,40 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
           texto={vista === "tiktok" ? "Vídeos en 30 días" : "Reels en 30 días"}
           comparacion="objetivo: 8 (2 por semana)"
           tono={r.reelsMes >= 6 ? "bien" : r.reelsMes >= 3 ? "ojo" : "mal"}
-        />
+        >
+          <Meta valor={r.reelsMes} objetivo={8} />
+        </Indicador>
         {vista === "tiktok" ? (
           <Indicador
             valor={pct(r.completoReciente)}
             texto="Lo ven entero"
-            comparacion={`últimos 5 · la cuenta: ${pct(r.completoTotal)}`}
+            comparacion="mediana de los últimos 5"
             tono={r.completoReciente === null || r.completoTotal === null ? "neutro" : r.completoReciente >= r.completoTotal ? "bien" : "ojo"}
-          />
+          >
+            <Comparado reciente={r.completoReciente} total={r.completoTotal} formato={pct} />
+          </Indicador>
         ) : (
           <Indicador
             valor={pct(r.saltoReciente)}
             texto="Se van al empezar"
-            comparacion={`últimos 5 · la cuenta: ${pct(r.saltoTotal)}`}
+            comparacion="mediana de los últimos 5"
             tono={r.saltoReciente === null || r.saltoTotal === null ? "neutro" : r.saltoReciente <= r.saltoTotal ? "bien" : "ojo"}
-          />
+          >
+            <Comparado reciente={r.saltoReciente} total={r.saltoTotal} formato={pct} />
+          </Indicador>
         )}
         <Indicador
           valor={coma(r.socialReciente)}
           texto="Guardados + compartidos por mil"
-          comparacion={`últimos 5 · la cuenta: ${coma(r.socialTotal)}`}
+          comparacion="mediana de los últimos 5"
           tono={r.socialReciente === null || r.socialTotal === null ? "neutro" : r.socialReciente >= r.socialTotal ? "bien" : "ojo"}
-        />
+        >
+          <Comparado reciente={r.socialReciente} total={r.socialTotal} formato={coma} />
+        </Indicador>
       </Indicadores>
+
+      <ColumnasVistas reels={reels} medianaVistas={normal.vistas} />
+      <LineaGancho reels={reels} red={vista} />
 
       <Seccion titulo="Qué cambiar o enfocar">
         {ideas.map((c) => (
@@ -194,12 +209,13 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
 
       <Seccion titulo={vista === "tiktok" ? "Vistas por vídeo" : "Vistas por reel"}>
         <GraficaVistas reels={reels} />
-        <p className="suave pequeno">En naranja, el último. Toca uno para ver su ficha.</p>
+        <p className="suave pequeno">Todos, del más nuevo al más antiguo. Toca uno para ver su ficha.</p>
       </Seccion>
 
       <Seccion titulo={vista === "tiktok" ? "Vídeo a vídeo" : "Reel a reel"} cuenta={reels.length}>
+        <p className="suave pequeno">En cada barra, la raya negra es lo normal de la cuenta. Verde: mejor que lo normal; ámbar: peor.</p>
         {reels.map((x) => (
-          <TarjetaReel key={x.permalink} r={x} />
+          <TarjetaReel key={x.permalink} r={x} refs={refs} />
         ))}
       </Seccion>
 

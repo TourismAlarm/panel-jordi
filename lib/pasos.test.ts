@@ -78,7 +78,7 @@ describe("pasosDe", () => {
   it("exportacion_pendiente: aprobado y el PC lo deja en Drive", () => {
     const pasos = pasosDe(video("exportacion_pendiente"), preguntas(0, 0, 0));
     expect(por(pasos, "revisar")?.estado).toBe("hecho");
-    expect(por(pasos, "publicar")).toMatchObject({ estado: "sistema", detalle: "El PC deja el vídeo final en Drive" });
+    expect(por(pasos, "publicar")).toMatchObject({ estado: "sistema", detalle: "El Editor deja el vídeo final en Drive" });
   });
 
   it("publicado: todo hecho", () => {

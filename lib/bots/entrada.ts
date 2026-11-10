@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { BOTS, clavePuede, IDS_BOTS, LIMITE_POR_MINUTO, resolverAutor, type Bot, type Permiso } from "./catalogo";
 import { IdBot } from "./esquemas";
 import { revisarDatos } from "./limpieza";
+import { detalleDeRechazo } from "./rechazos";
 
 function identificar(request: Request): Bot | null {
   return IDS_BOTS.find((b) => bearerNoAutorizado(request, BOTS[b].variable) === null) ?? null;
@@ -38,7 +39,12 @@ export async function conBot(request: Request, permiso: Permiso, trabajo: (bot: 
     }
   }
 
-  const { error: eLog } = await db.from("bots_llamadas").insert({ bot, metodo: request.method, ruta: new URL(request.url).pathname, estado: respuesta.status });
+  // Si se rechaza, se apunta también por qué (lo mismo que se le devuelve): Antonio lo ve luego en el arnés.
+  const detalle = respuesta.status >= 400 ? detalleDeRechazo(await respuesta.clone().json().catch(() => null)) : null;
+  const llamada = { bot, metodo: request.method, ruta: new URL(request.url).pathname, estado: respuesta.status };
+  let { error: eLog } = await db.from("bots_llamadas").insert({ ...llamada, detalle } as typeof llamada);
+  // Sin la columna «detalle» (migración sin aplicar), la llamada se apunta igual, sin el motivo.
+  if (eLog && /detalle/.test(eLog.message)) ({ error: eLog } = await db.from("bots_llamadas").insert(llamada));
   if (eLog) console.error("Bots · log:", eLog.message);
   return respuesta;
 }
