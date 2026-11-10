@@ -7,7 +7,7 @@ const ahora = new Date("2026-10-21T08:00:00Z").getTime();
 describe("senalesElsa", () => {
   it("lo de hoy o atrasado es urgente; lo lejano, solo para saber", () => {
     const s = senalesElsa({
-      hoy, ahora, reglasPorDecidir: 0, pcUltimoOk: "2026-10-21T07:50:00Z",
+      hoy, ahora, reglasPorDecidir: 0, ultimaSenal: "2026-10-21T07:50:00Z",
       proyectos: [
         { id: "a", titulo: "A", fecha_trabajo: "2026-10-20", pasoTuyo: "Subir lo grabado" },
         { id: "b", titulo: "B", fecha_trabajo: "2026-10-22", pasoTuyo: "Contestar" },
@@ -16,9 +16,9 @@ describe("senalesElsa", () => {
     });
     expect(s.map((x) => x.nivel)).toEqual(["urgente", "hoy", "saber"]);
   });
-  it("avisa si el PC lleva más de 12 h sin sincronizar", () => {
-    const s = senalesElsa({ hoy, ahora, proyectos: [], reglasPorDecidir: 2, pcUltimoOk: "2026-10-20T10:00:00Z" });
-    expect(s.map((x) => x.id)).toEqual(["elsa-reglas", "elsa-pc"]);
+  it("avisa si nadie (ni los bots ni el PC) da señal en más de 12 h", () => {
+    const s = senalesElsa({ hoy, ahora, proyectos: [], reglasPorDecidir: 2, ultimaSenal: "2026-10-20T10:00:00Z" });
+    expect(s.map((x) => x.id)).toEqual(["elsa-reglas", "elsa-sin-senal"]);
   });
 });
 
@@ -103,5 +103,19 @@ describe("cosas de hoy que se tachan solas", () => {
     for (const e of [undefined, "/salud", "/elsa", "/antonio", "https://example.com"]) expect(resueltaSola(e, abierto)).toBeNull();
     expect(resueltaSola("/elsa/videos/GE_031", { videos: null, bandeja: null, documentos: null })).toBeNull();
     expect(resueltaSola("/elsa/videos/GE_031", undefined)).toBeNull();
+  });
+});
+
+import { masReciente } from "./senales";
+
+describe("señal de vida del sistema", () => {
+  it("vale la más reciente, venga del PC o de un bot", () => {
+    expect(masReciente("2026-11-10T08:00:00Z", "2026-11-10T12:00:00+01:00")).toBe("2026-11-10T12:00:00+01:00");
+    expect(masReciente(null, "2026-11-10T08:00:00Z", undefined)).toBe("2026-11-10T08:00:00Z");
+    expect(masReciente(null, undefined, "no es fecha")).toBeNull();
+  });
+  it("con el PC apagado pero los bots activos no hay aviso", () => {
+    const s = senalesElsa({ hoy, ahora, proyectos: [], reglasPorDecidir: 0, ultimaSenal: masReciente("2026-10-01T10:00:00Z", new Date(ahora - 3_600_000).toISOString()) });
+    expect(s.find((x) => x.id === "elsa-sin-senal")).toBeUndefined();
   });
 });

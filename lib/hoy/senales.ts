@@ -27,7 +27,7 @@ const plural = (n: number, uno: string, varios = `${uno}s`) => `${n} ${n === 1 ?
 // ── ELSA ─────────────────────────────────────────────────────
 export type ProyectoElsa = { id: string; titulo: string | null; fecha_trabajo: string | null; pasoTuyo: string }; // solo los que te tocan
 
-export function senalesElsa(p: { hoy: string; proyectos: ProyectoElsa[]; reglasPorDecidir: number; pcUltimoOk: string | null; ahora: number; ideasNuevas?: number; guionesPorAprobar?: number; revisionesConFallos?: number }): Senal[] {
+export function senalesElsa(p: { hoy: string; proyectos: ProyectoElsa[]; reglasPorDecidir: number; ultimaSenal: string | null; ahora: number; ideasNuevas?: number; guionesPorAprobar?: number; revisionesConFallos?: number }): Senal[] {
   const s: Senal[] = [];
   for (const x of p.proyectos) {
     const dias = x.fecha_trabajo ? diasHasta(x.fecha_trabajo, p.hoy) : null;
@@ -53,9 +53,10 @@ export function senalesElsa(p: { hoy: string; proyectos: ProyectoElsa[]; reglasP
   if (p.ideasNuevas) {
     s.push({ id: "elsa-ideas", modulo: "elsa", nivel: "saber", titulo: `${plural(p.ideasNuevas, "idea nueva", "ideas nuevas")} por decidir`, detalle: "¿Te gustan?", href: "/elsa/ideas" });
   }
-  const horas = p.pcUltimoOk ? (p.ahora - new Date(p.pcUltimoOk).getTime()) / 3_600_000 : null;
+  // Señal de vida del sistema: lo último que ha apuntado cualquier bot (o el PC, mientras siga encendido).
+  const horas = p.ultimaSenal ? (p.ahora - new Date(p.ultimaSenal).getTime()) / 3_600_000 : null;
   if (horas === null || horas > 12) {
-    s.push({ id: "elsa-pc", modulo: "sistema", nivel: "hoy", titulo: "El PC no ha sincronizado ELSA", detalle: horas === null ? "Aún no hay señal suya" : `Última vez hace ${Math.round(horas)} h`, href: "/elsa" });
+    s.push({ id: "elsa-sin-senal", modulo: "sistema", nivel: "hoy", titulo: "Antonio y los bots no dan señal", detalle: horas === null ? "Aún no han apuntado nada" : `Lo último que apuntaron fue hace ${Math.round(horas)} h`, href: "/antonio" });
   }
   return s;
 }
@@ -172,4 +173,11 @@ export function senalesAgenda(eventos: Evento[], hora: (iso: string) => string):
     titulo: e.titulo,
     detalle: [e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), e.lugar].filter(Boolean).join(" · "),
   }));
+}
+
+// La más reciente de varias fechas ISO (null si no hay ninguna). Sirve para saber si el sistema sigue vivo
+// sin depender de un solo ordenador: vale la señal del PC o la de cualquier bot.
+export function masReciente(...fechas: (string | null | undefined)[]): string | null {
+  const validas = fechas.filter((f): f is string => !!f && !Number.isNaN(Date.parse(f)));
+  return validas.length ? validas.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a)) : null;
 }

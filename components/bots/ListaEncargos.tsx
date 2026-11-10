@@ -11,7 +11,7 @@ const ESTADO: Record<string, { texto: string; tono: Tono }> = {
   aprobado: { texto: "Aprobado", tono: "bien" },
   cambios: { texto: "Con cambios", tono: "ojo" },
   sustituido: { texto: "Sustituido", tono: "neutro" },
-  bloqueado: { texto: "El PC pregunta", tono: "ojo" },
+  bloqueado: { texto: "El Editor pregunta", tono: "ojo" },
   fallido: { texto: "Ha fallado", tono: "mal" },
   cerrado: { texto: "Cerrado", tono: "neutro" },
 };

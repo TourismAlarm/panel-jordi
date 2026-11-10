@@ -13,7 +13,7 @@ import { leerCorreos, leerEventos } from "./contexto";
 import type { Abierto } from "./prioridades";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
-import { senalesAgenda, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
+import { masReciente, senalesAgenda, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
 
 export type Foto = {
   fecha: string;
@@ -60,7 +60,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
 
   const [elsa, finanzas, salud, nuevos, documentos, dia] = await Promise.all([
     intentar(fallos, "ELSA", async () => {
-      const [v, p, q, pe, rg, sy, id, gu, rv] = await Promise.all([
+      const [v, p, q, pe, rg, sy, id, gu, rv, act] = await Promise.all([
         supabase.from("videos").select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md").order("fecha_trabajo", { ascending: true, nullsFirst: false }),
         Promise.resolve(null),
         supabase.from("preguntas").select("video_id, respondida_en, recogida_en"),
@@ -70,9 +70,10 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
         supabase.from("ideas").select("id", { count: "exact", head: true }).eq("estado", "nueva"),
         supabase.from("guiones_propuestos").select("id", { count: "exact", head: true }).eq("estado", "propuesto"),
         supabase.from("revisiones").select("id", { count: "exact", head: true }).eq("resultado", "cambios").gte("creado", new Date(ahora - 7 * 86_400_000).toISOString()),
+        supabase.from("actividad_bots").select("inicio").order("inicio", { ascending: false }).limit(1),
       ]);
       void p;
-      for (const x of [v, q, pe, rg, sy, id, gu, rv]) if (x.error) throw new Error(x.error.message);
+      for (const x of [v, q, pe, rg, sy, id, gu, rv, act]) if (x.error) throw new Error(x.error.message);
       const peticiones = pe.data ?? [];
       const descartados = new Set(peticiones.filter((x) => x.tipo === "descartar" && x.estado !== "fallida" && x.video_id).map((x) => x.video_id as string));
       const resumenP = new Map<string, { total: number; sinContestar: number; enviadas: number }>();
@@ -93,7 +94,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
         })
         .filter((x) => teToca(x.pasos))
         .map((x) => ({ id: x.id, titulo: x.titulo, fecha_trabajo: x.fecha_trabajo, pasoTuyo: pasoActual(x.pasos)?.titulo ?? "Te toca" }));
-      return { teTocan: proyectos.length, videos: proyectos.map((x) => x.id), senales: senalesElsa({ hoy, ahora, proyectos, reglasPorDecidir: rg.count ?? 0, pcUltimoOk: sy.data?.ultimo_ok ?? null, ideasNuevas: id.count ?? 0, guionesPorAprobar: gu.count ?? 0, revisionesConFallos: rv.count ?? 0 }) };
+      return { teTocan: proyectos.length, videos: proyectos.map((x) => x.id), senales: senalesElsa({ hoy, ahora, proyectos, reglasPorDecidir: rg.count ?? 0, ultimaSenal: masReciente(sy.data?.ultimo_ok, act.data?.[0]?.inicio), ideasNuevas: id.count ?? 0, guionesPorAprobar: gu.count ?? 0, revisionesConFallos: rv.count ?? 0 }) };
     }),
 
     intentar(fallos, "Finanzas", async () => {

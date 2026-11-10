@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Inbox, Settings } from "lucide-react";
+import { Bot, Inbox, Settings } from "lucide-react";
 import { contarNuevos } from "@/lib/datos/bandeja";
 import { NavInferior } from "./NavInferior";
 import { NavLateral } from "./NavLateral";
@@ -16,6 +16,9 @@ export async function MarcoApp({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
         <span className="text-lg font-bold">Panel Jordi</span>
         <div className="flex items-center">
+          <Link href="/antonio" aria-label="Antonio" className="flex size-12 items-center justify-center">
+            <Bot size={26} />
+          </Link>
           <Link href="/bandeja" aria-label={`Bandeja${nuevos ? `, ${nuevos} nuevos` : ""}`} className="relative flex size-12 items-center justify-center">
             <Inbox size={26} />
             {nuevos > 0 && (

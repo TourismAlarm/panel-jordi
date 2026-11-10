@@ -8,7 +8,7 @@ import type { Proyecto } from "@/lib/datos/videos";
 import { faseVideo } from "@/lib/estados";
 import { diaCercano, hoy, plural } from "@/lib/formato";
 
-// hecho · tuyo (te toca a ti) · sistema (lo llevan Antonio y los bots; el PC solo monta) · pendiente (aún no toca)
+// hecho · tuyo (te toca a ti) · sistema (lo llevan Antonio y los bots; el Editor monta, en el PC o en la nube) · pendiente (aún no toca)
 export type EstadoPaso = "hecho" | "tuyo" | "sistema" | "pendiente";
 
 export type Paso = {
@@ -91,7 +91,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   if (fase === "hecho" || p.por_revisar || p.estado === "revision_jordi" || enAcabado) {
     pasos.push({ clave: "montaje", titulo: p.estado === "corte_listo" ? "Corte hecho" : "Montaje hecho", estado: "hecho" });
   } else if (fase === "montaje") {
-    pasos.push({ clave: "montaje", titulo: "Montando", estado: "sistema", detalle: "Lo encarga Antonio y lo monta el PC" });
+    pasos.push({ clave: "montaje", titulo: "Montando", estado: "sistema", detalle: "Lo encarga Antonio y lo monta el Editor" });
   } else {
     pasos.push({ clave: "montaje", titulo: "Montaje", estado: "pendiente" });
   }
@@ -110,7 +110,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
   } else if (enAcabado) {
     pasos.push({ clave: "corte", titulo: "Corte OK", estado: "hecho" });
     if (p.estado === "acabado_pendiente") {
-      pasos.push({ clave: "acabado", titulo: "Subtítulos y título", estado: "sistema", detalle: "Antonio lo encarga al PC · te avisa cuando esté" });
+      pasos.push({ clave: "acabado", titulo: "Subtítulos y título", estado: "sistema", detalle: "Antonio lo encarga al Editor · te avisa cuando esté" });
       pasos.push({ clave: "revisar", titulo: "Revisar el acabado", estado: "pendiente" });
     } else if (p.estado === "acabado_listo") {
       pasos.push({
@@ -137,7 +137,7 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
 
   // 6 · Publicar
   if (/publicado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicado", estado: "hecho" });
-  else if (p.estado === "exportacion_pendiente") pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "El PC deja el vídeo final en Drive" });
+  else if (p.estado === "exportacion_pendiente") pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "El Editor deja el vídeo final en Drive" });
   else if (/aprobado|exportado/.test(p.estado)) pasos.push({ clave: "publicar", titulo: "Publicar", estado: "sistema", detalle: "Aprobado, falta publicarlo" });
   else pasos.push({ clave: "publicar", titulo: "Publicar", estado: "pendiente" });
 

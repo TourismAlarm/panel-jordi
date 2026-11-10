@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { CalendarCheck, FileText, HeartPulse, Inbox, Settings, Truck, Wallet } from "lucide-react";
+import { Bot, CalendarCheck, FileText, HeartPulse, Inbox, Settings, Truck, Wallet } from "lucide-react";
 
 // ÚNICO sitio donde se registran los módulos. Para añadir uno: una entrada aquí y su carpeta en app/(panel)/<id>/.
 // Las tablas de cada módulo llevan su prefijo (fin_, sal_, elsa_, doc_) con user_id y RLS.
@@ -23,6 +23,7 @@ export const MODULOS: Modulo[] = [
 
 // Páginas del sistema (no son módulos): salen en el lateral y en la cabecera del móvil.
 export const SISTEMA: Pick<Modulo, "id" | "nombre" | "href" | "icono" | "descripcion">[] = [
+  { id: "antonio", nombre: "Antonio", href: "/antonio", icono: Bot, descripcion: "Lo que tiene a medias y lo que te toca" },
   { id: "bandeja", nombre: "Bandeja", href: "/bandeja", icono: Inbox, descripcion: "Avisos y preguntas" },
   { id: "ajustes", nombre: "Ajustes", href: "/ajustes", icono: Settings, descripcion: "Tema y cuenta" },
 ];
