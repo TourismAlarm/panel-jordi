@@ -448,6 +448,7 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/hoy/resumen   -H "Authoriza
 ```
 
 - **`nivel`:** `urgente` · `importante` · `futuro`.
+- **Cuántas:** las que el día pida (hasta 20), no hay un número fijo. En Hoy salen todas como «Tus cosas de hoy», en tu orden, y Jordi las tacha; las de `futuro` van aparte en «Más adelante». El `resumen` queda plegado debajo.
 - **`enlace`:** opcional; una ruta del panel (`/finanzas`) o una web `https`.
 - **`senales`:** opcional. Si no la mandas, se quedan las que había.
 

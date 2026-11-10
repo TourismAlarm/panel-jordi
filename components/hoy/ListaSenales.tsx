@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 
 const ROTULO = { documentos: "Documentos", elsa: "ELSA", finanzas: "Finanzas", salud: "Salud", agenda: "Agenda", correo: "Correo", sistema: "Sistema" } as const;
 
+const COLOR: Partial<Record<Senal["modulo"], string>> = { salud: "var(--mod-salud)", finanzas: "var(--mod-finanzas)", elsa: "var(--mod-elsa)", documentos: "var(--mod-documentos)" };
+
 function Fila({ s, urgente }: { s: Senal; urgente?: boolean }) {
   const cuerpo = (
     <div className="flex min-h-14 items-center gap-3">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-muted-foreground">{ROTULO[s.modulo]}</p>
+        <p className="text-sm font-bold text-muted-foreground" style={COLOR[s.modulo] ? { color: COLOR[s.modulo] } : undefined}>{ROTULO[s.modulo]}</p>
         <p className={cn("text-lg font-semibold leading-snug", urgente && "text-destructive")}>{s.titulo}</p>
         {s.detalle && <p className="text-muted-foreground">{s.detalle}</p>}
       </div>
@@ -18,7 +20,7 @@ function Fila({ s, urgente }: { s: Senal; urgente?: boolean }) {
     </div>
   );
   return s.href ? (
-    <Link href={s.href} className="block rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+    <Link href={s.href} className="block rounded-md text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
       {cuerpo}
     </Link>
   ) : (

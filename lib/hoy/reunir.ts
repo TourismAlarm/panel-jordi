@@ -23,6 +23,14 @@ export type Foto = {
   guardado: { resumen: string; prioridades: unknown; generado_en: string | null; origen: string | null } | null;
   fallos: string[]; // módulos que no se han podido leer, para decirlo en vez de callarlo
   salud: string[]; // líneas de resumen de salud (para el resumen escrito)
+  azulejos?: Azulejos; // el número clave de cada módulo, para la portada. null = sin dato o no se ha podido leer
+};
+
+export type Azulejos = {
+  salud: { nombre: string; valor: string; detalle: string } | null;
+  finanzas: { restante: number; porDia: number | null; diasNomina: number | null } | null;
+  elsa: number | null; // proyectos que te tocan a ti
+  documentos: number | null; // vencen en menos de 30 días (o ya vencidos)
 };
 
 async function intentar<T>(fallos: string[], que: string, f: () => Promise<T>): Promise<T | null> {
@@ -81,7 +89,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
         })
         .filter((x) => teToca(x.pasos))
         .map((x) => ({ id: x.id, titulo: x.titulo, fecha_trabajo: x.fecha_trabajo, pasoTuyo: pasoActual(x.pasos)?.titulo ?? "Te toca" }));
-      return senalesElsa({ hoy, ahora, proyectos, reglasPorDecidir: rg.count ?? 0, pcUltimoOk: sy.data?.ultimo_ok ?? null, ideasNuevas: id.count ?? 0, guionesPorAprobar: gu.count ?? 0, revisionesConFallos: rv.count ?? 0 });
+      return { teTocan: proyectos.length, senales: senalesElsa({ hoy, ahora, proyectos, reglasPorDecidir: rg.count ?? 0, pcUltimoOk: sy.data?.ultimo_ok ?? null, ideasNuevas: id.count ?? 0, guionesPorAprobar: gu.count ?? 0, revisionesConFallos: rv.count ?? 0 }) };
     }),
 
     intentar(fallos, "Finanzas", async () => {
@@ -92,7 +100,8 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
       ]);
       if (links.error) throw new Error(links.error.message);
       if (loans.error) throw new Error(loans.error.message);
-      return senalesFinanzas({
+      const azulejo = r.remaining === null ? null : { restante: r.remaining, porDia: r.perDay, diasNomina: r.payday?.daysLeft ?? null };
+      return { azulejo, senales: senalesFinanzas({
         hoy,
         enlaces: ((links.data ?? []) as { aspsp_name: string; status: string; valid_until: string | null; last_error: string | null }[]).map((x) => ({ banco: x.aspsp_name, estado: x.status, valido_hasta: x.valid_until, error: x.last_error })),
         prestamos: ((loans.data ?? []) as { contact_name: string; monthly_payment: number | string | null; payment_day: number | null }[]).filter((l) => l.payment_day && Number(l.monthly_payment) > 0).map((l) => ({ nombre: l.contact_name, importe: Number(l.monthly_payment), dia: Number(l.payment_day) })),
@@ -100,13 +109,14 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
         restante: r.remaining,
         porDia: r.perDay,
         diasNomina: r.payday?.daysLeft ?? null,
-      });
+      }) };
     }),
 
     intentar(fallos, "Salud", async () => {
       const d = await leerSalud(supabase, 30, userId);
       const r = construirResumen({ hoy: d.hoy, series: d.series, registros: d.registros, entrenos: d.entrenos });
-      return { senales: senalesSalud({ hoy, ultimoDato: r.datosDe, lineas: r.lineas, avisoMedico: r.avisoMedico }), lineas: r.lineas };
+      const t = r.tarjetas?.find((x) => x.id === "sueno_horas") ?? r.tarjetas?.[0] ?? null;
+      return { senales: senalesSalud({ hoy, ultimoDato: r.datosDe, lineas: r.lineas, avisoMedico: r.avisoMedico }), lineas: r.lineas, azulejo: t && { nombre: t.nombre, valor: t.valor, detalle: t.detalle } };
     }),
 
     intentar(fallos, "Bandeja", async () => {
@@ -119,11 +129,11 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
       const { data, error } = await supabase.from("doc_fichas").select("documento_id, vencimiento").eq("user_id", userId).not("vencimiento", "is", null).lte("vencimiento", sumarDias(hoy, 29));
       if (error) throw new Error(error.message);
       const ids = (data ?? []).map((x) => x.documento_id);
-      if (!ids.length) return [];
+      if (!ids.length) return { vencen: 0, senales: [] };
       const n = await supabase.from("doc_documentos").select("id, nombre").eq("user_id", userId).in("id", ids);
       if (n.error) throw new Error(n.error.message);
       const nombre = new Map((n.data ?? []).map((x) => [x.id, x.nombre]));
-      return senalesDocumentos({ hoy, docs: (data ?? []).map((x) => ({ id: x.documento_id, nombre: nombre.get(x.documento_id) ?? "Documento", vencimiento: x.vencimiento as string })) });
+      return { vencen: ids.length, senales: senalesDocumentos({ hoy, docs: (data ?? []).map((x) => ({ id: x.documento_id, nombre: nombre.get(x.documento_id) ?? "Documento", vencimiento: x.vencimiento as string })) }) };
     }),
 
     // La fila del día: resumen, y agenda y correo que publica Antonio. Hoy no consulta Google.
@@ -137,11 +147,11 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
   const correos: Correo[] = leerCorreos(dia?.correos);
 
   const senales = ordenar([
-    ...(elsa ?? []),
-    ...(finanzas ?? []),
+    ...(elsa?.senales ?? []),
+    ...(finanzas?.senales ?? []),
     ...(salud?.senales ?? []),
     ...(nuevos ?? []),
-    ...(documentos ?? []),
+    ...(documentos?.senales ?? []),
     ...senalesAgenda(eventos, hora),
   ]);
   return {
@@ -155,6 +165,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     guardado: dia?.resumen ? { resumen: dia.resumen, prioridades: dia.prioridades, generado_en: dia.generado_en, origen: dia.origen } : null,
     fallos,
     salud: salud?.lineas ?? [],
+    azulejos: { salud: salud?.azulejo ?? null, finanzas: finanzas?.azulejo ?? null, elsa: elsa?.teTocan ?? null, documentos: documentos?.vencen ?? null },
   };
 }
 
