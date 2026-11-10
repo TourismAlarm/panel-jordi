@@ -144,8 +144,8 @@ export function calcularPendientes(d: DatosPanel): Pendiente[] {
     const que = `${video(d, e.video_id)} · ${e.fase} v${e.version}`;
     const enlace = `/elsa/videos/${e.video_id}#montaje`;
     if (e.estado === "listo") {
-      const revisado = !!e.revisado_en;
-      p.push({ id: `encargo-${e.id}`, agente: "editor", que, detalle: revisado ? "Listo y revisado: te toca aprobarlo" : "Listo: Antonio lo tiene que revisar", desde: e.revisado_en ?? e.terminado_en ?? e.creado, quien: revisado ? "jordi" : "antonio", enlace });
+      // En cuanto el PC entrega, revisa Jordi: no espera a Antonio (su revisión es opcional).
+      p.push({ id: `encargo-${e.id}`, agente: "editor", que, detalle: e.fase === "corte" ? "Corte listo: te toca revisarlo" : "Acabado listo: te toca aprobarlo", desde: e.terminado_en ?? e.creado, quien: "jordi", enlace });
     } else {
       p.push({ id: `encargo-${e.id}`, agente: "editor", que, detalle: `${e.estado === "bloqueado" ? "Bloqueado" : "Fallido"}${e.error ? `: ${e.error}` : ""}`, desde: e.terminado_en ?? e.creado, quien: "antonio", enlace });
     }

@@ -148,7 +148,7 @@ Solo Antonio. Contesta todas las `preguntas` de un encargo `bloqueado` y vuelve 
 curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/<id>/responder   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"respuestas":[{"n":1,"respuesta":"VID_0012 es el del estabilizador"}]}'
 ```
 
-La revisión sigue por `POST /api/bots/revisiones`. `corte` ok da el corte por bueno; `acabado` ok pasa el vídeo a `acabado_listo` y le toca a Jordi; `cambios` deja el encargo en `cambios` para que crees la versión siguiente. El «Aprobar» o «Pedir cambios» de Jordi se aplica al momento y llega por el webhook como `montaje_revisado`.
+En cuanto el PC entrega, el vídeo sale a Jordi como «Te toca revisar» (`corte_listo` o `acabado_listo`) con el enlace de Drive: no espera a tu revisión. Tu revisión por `POST /api/bots/revisiones` es opcional: `corte` ok da el corte por bueno (encarga el acabado); `acabado` ok solo apunta que lo viste; `cambios` deja el encargo en `cambios` y lo quita de la lista de Jordi para que crees la versión siguiente. El «Corte OK», «Aprobar» o «Pedir cambios» de Jordi se aplica al momento y llega por el webhook como `montaje_revisado` (`peticion_id` null). Tras su «Corte OK», encarga el acabado; tras «Pedir cambios», la versión siguiente con su texto.
 
 ## `POST /api/bots/edicion/tomar` (PC)
 
@@ -168,7 +168,7 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/edicion/<id>/informar   -H 
 
 ## `GET /api/bots/videos`
 
-Lo que está por revisar; con `?id=GE_012`, ese vídeo. Trae `montaje_url` (Drive en el corte, ChatCut en el acabado) y `guion_md` sin cabecera y con los datos reconocibles tachados.
+Lo que está por revisar; con `?id=GE_012`, ese vídeo. Trae `montaje_url` (el enlace de Drive de lo último entregado) y `guion_md` sin cabecera y con los datos reconocibles tachados.
 
 ```bash
 curl "https://panel-jordi.vercel.app/api/bots/videos"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"

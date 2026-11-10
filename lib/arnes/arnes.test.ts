@@ -174,7 +174,7 @@ describe("pendientes calculados", () => {
         { video_id: "GE_031", respondida_en: null, recogida_en: null },
         { video_id: "GE_031", respondida_en: "2026-11-09T10:00:00Z", recogida_en: null },
       ],
-      encargos: [{ id: "e1", video_id: "GE_031", version: 2, fase: "corte", estado: "listo", revisado_en: "2026-11-10T08:00:00Z", terminado_en: null, creado: "2026-11-09T00:00:00Z", error: null }],
+      encargos: [{ id: "e1", video_id: "GE_031", version: 2, fase: "corte", estado: "listo", revisado_en: null, terminado_en: "2026-11-10T08:00:00Z", creado: "2026-11-09T00:00:00Z", error: null }],
       peticiones: [{ id: "p1", tipo: "material_listo", video_id: "GE_031", estado: "pendiente", creada_en: "2026-11-09T00:00:00Z" }],
       saludUltima: "2026-11-07",
       resumenHoy: false,
@@ -183,7 +183,7 @@ describe("pendientes calculados", () => {
     const de = (id: string) => p.find((x) => x.id === id);
     expect(de("preguntas-GE_031")).toMatchObject({ agente: "guionista", quien: "jordi", enlace: "/elsa/videos/GE_031#preguntas" });
     expect(de("recoger-GE_031")).toMatchObject({ agente: "guionista", quien: "agente" });
-    expect(de("encargo-e1")).toMatchObject({ agente: "editor", quien: "jordi", enlace: "/elsa/videos/GE_031#montaje" });
+    expect(de("encargo-e1")).toMatchObject({ agente: "editor", quien: "jordi", detalle: "Corte listo: te toca revisarlo", enlace: "/elsa/videos/GE_031#montaje" }); // sin esperar a Antonio
     expect(de("peticion-p1")).toMatchObject({ agente: "antonio", quien: "antonio", enlace: "/elsa/videos/GE_031" });
     expect(de("salud-metricas")).toMatchObject({ que: "2 días sin métricas de salud", enlace: "/salud" });
     expect(de("dia-resumen")).toMatchObject({ agente: "dia", enlace: "/" });
