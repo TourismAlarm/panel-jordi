@@ -8,6 +8,7 @@ import { pasosDe, pasoActual, teToca } from "@/lib/pasos";
 import { faseVideo } from "@/lib/estados";
 import { construirResumen } from "@/lib/salud/resumen";
 import { leerCorreos, leerEventos } from "./contexto";
+import type { Abierto } from "./prioridades";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
 import { senalesAgenda, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
@@ -24,6 +25,7 @@ export type Foto = {
   fallos: string[]; // módulos que no se han podido leer, para decirlo en vez de callarlo
   salud: string[]; // líneas de resumen de salud (para el resumen escrito)
   azulejos?: Azulejos; // el número clave de cada módulo, para la portada. null = sin dato o no se ha podido leer
+  abierto?: Abierto; // lo que aún te espera, para tachar solas las cosas de hoy que ya has resuelto en su página
 };
 
 export type Azulejos = {
@@ -89,7 +91,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
         })
         .filter((x) => teToca(x.pasos))
         .map((x) => ({ id: x.id, titulo: x.titulo, fecha_trabajo: x.fecha_trabajo, pasoTuyo: pasoActual(x.pasos)?.titulo ?? "Te toca" }));
-      return { teTocan: proyectos.length, senales: senalesElsa({ hoy, ahora, proyectos, reglasPorDecidir: rg.count ?? 0, pcUltimoOk: sy.data?.ultimo_ok ?? null, ideasNuevas: id.count ?? 0, guionesPorAprobar: gu.count ?? 0, revisionesConFallos: rv.count ?? 0 }) };
+      return { teTocan: proyectos.length, videos: proyectos.map((x) => x.id), senales: senalesElsa({ hoy, ahora, proyectos, reglasPorDecidir: rg.count ?? 0, pcUltimoOk: sy.data?.ultimo_ok ?? null, ideasNuevas: id.count ?? 0, guionesPorAprobar: gu.count ?? 0, revisionesConFallos: rv.count ?? 0 }) };
     }),
 
     intentar(fallos, "Finanzas", async () => {
@@ -122,18 +124,18 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     intentar(fallos, "Bandeja", async () => {
       const { count, error } = await supabase.from("bandeja").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("estado", "nuevo");
       if (error) throw new Error(error.message);
-      return senalesBandeja(count ?? 0);
+      return { sinLeer: count ?? 0, senales: senalesBandeja(count ?? 0) };
     }),
 
     intentar(fallos, "Documentos", async () => {
       const { data, error } = await supabase.from("doc_fichas").select("documento_id, vencimiento").eq("user_id", userId).not("vencimiento", "is", null).lte("vencimiento", sumarDias(hoy, 29));
       if (error) throw new Error(error.message);
       const ids = (data ?? []).map((x) => x.documento_id);
-      if (!ids.length) return { vencen: 0, senales: [] };
+      if (!ids.length) return { vencen: 0, ids, senales: [] };
       const n = await supabase.from("doc_documentos").select("id, nombre").eq("user_id", userId).in("id", ids);
       if (n.error) throw new Error(n.error.message);
       const nombre = new Map((n.data ?? []).map((x) => [x.id, x.nombre]));
-      return { vencen: ids.length, senales: senalesDocumentos({ hoy, docs: (data ?? []).map((x) => ({ id: x.documento_id, nombre: nombre.get(x.documento_id) ?? "Documento", vencimiento: x.vencimiento as string })) }) };
+      return { vencen: ids.length, ids, senales: senalesDocumentos({ hoy, docs: (data ?? []).map((x) => ({ id: x.documento_id, nombre: nombre.get(x.documento_id) ?? "Documento", vencimiento: x.vencimiento as string })) }) };
     }),
 
     // La fila del día: resumen, y agenda y correo que publica Antonio. Hoy no consulta Google.
@@ -150,7 +152,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     ...(elsa?.senales ?? []),
     ...(finanzas?.senales ?? []),
     ...(salud?.senales ?? []),
-    ...(nuevos ?? []),
+    ...(nuevos?.senales ?? []),
     ...(documentos?.senales ?? []),
     ...senalesAgenda(eventos, hora),
   ]);
@@ -166,6 +168,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     fallos,
     salud: salud?.lineas ?? [],
     azulejos: { salud: salud?.azulejo ?? null, finanzas: finanzas?.azulejo ?? null, elsa: elsa?.teTocan ?? null, documentos: documentos?.vencen ?? null },
+    abierto: { videos: elsa?.videos ?? null, bandeja: nuevos?.sinLeer ?? null, documentos: documentos?.ids ?? null },
   };
 }
 

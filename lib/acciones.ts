@@ -52,6 +52,7 @@ export async function responder(_prev: Resultado, form: FormData): Promise<Resul
 
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
+  revalidatePath("/"); // Hoy: la cosa enlazada a este vídeo se tacha sola
   return { ok: true };
 }
 
@@ -117,6 +118,7 @@ export async function revisarMontaje(_prev: Resultado, form: FormData): Promise<
   avisarAntonio({ evento: "montaje_revisado", video_id: videoId, decision: tipo, texto: tipo === "cambios" ? texto : null, peticion_id: peticion });
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
+  revalidatePath("/"); // Hoy: la cosa enlazada a este vídeo se tacha sola
   return { ok: true };
 }
 
@@ -129,6 +131,7 @@ export async function materialListo(_prev: Resultado, form: FormData): Promise<R
   avisarAntonio({ evento: "material_listo", video_id: videoId, peticion_id: peticion });
   revalidatePath(`/elsa/videos/${videoId}`);
   revalidatePath("/elsa");
+  revalidatePath("/"); // Hoy: la cosa enlazada a este vídeo se tacha sola
   return { ok: true };
 }
 

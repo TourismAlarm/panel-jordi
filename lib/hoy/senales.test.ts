@@ -73,3 +73,25 @@ describe("senalesDocumentos", () => {
     expect(s.map((x) => [x.titulo, x.nivel])).toEqual([["ITV", "urgente"], ["Seguro", "urgente"], ["Permiso", "saber"]]);
   });
 });
+
+import { resueltaSola } from "./prioridades";
+
+describe("cosas de hoy que se tachan solas", () => {
+  const abierto = { videos: ["GE_045"], bandeja: 0, documentos: ["11111111-1111-1111-1111-111111111111"] };
+  it("un vídeo: resuelta cuando ya no te espera", () => {
+    expect(resueltaSola("/elsa/videos/GE_045", abierto)).toBe(false);
+    expect(resueltaSola("/elsa/videos/GE_031#montaje", abierto)).toBe(true);
+    expect(resueltaSola("/elsa/videos/GE_031/guion?ver=notas", abierto)).toBe(true);
+  });
+  it("bandeja y documentos", () => {
+    expect(resueltaSola("/bandeja", abierto)).toBe(true);
+    expect(resueltaSola("/bandeja", { ...abierto, bandeja: 2 })).toBe(false);
+    expect(resueltaSola("/documentos/11111111-1111-1111-1111-111111111111", abierto)).toBe(false);
+    expect(resueltaSola("/documentos/22222222-2222-2222-2222-222222222222", abierto)).toBe(true);
+  });
+  it("lo que el panel no puede saber se deja para tachar a mano", () => {
+    for (const e of [undefined, "/salud", "/elsa", "/antonio", "https://example.com"]) expect(resueltaSola(e, abierto)).toBeNull();
+    expect(resueltaSola("/elsa/videos/GE_031", { videos: null, bandeja: null, documentos: null })).toBeNull();
+    expect(resueltaSola("/elsa/videos/GE_031", undefined)).toBeNull();
+  });
+});

@@ -17,3 +17,19 @@ export function leerPrioridades(guardadas: unknown): Prioridad[] {
 export function enlaceValido(enlace: string) {
   return /^\/(?!\/)/.test(enlace) || /^https:\/\//.test(enlace);
 }
+
+// Lo que todavía te espera en cada módulo. null = no se ha podido leer: entonces no se tacha nada solo.
+export type Abierto = { videos: string[] | null; bandeja: number | null; documentos: string[] | null };
+
+// ¿Está ya resuelta la cosa a la que lleva el enlace? Sirve para tachar sola una cosa de hoy cuando la haces en su página
+// (aprobar un montaje, contestar las preguntas, leer la bandeja). null = el panel no lo puede saber: se tacha a mano.
+export function resueltaSola(enlace: string | undefined, a: Abierto | undefined): boolean | null {
+  if (!enlace || !a) return null;
+  const ruta = enlace.split(/[?#]/)[0].replace(/\/$/, "");
+  const video = ruta.match(/^\/elsa\/videos\/(GE_\d+)(?:\/guion)?$/);
+  if (video) return a.videos ? !a.videos.includes(video[1]) : null;
+  if (ruta === "/bandeja") return a.bandeja === null ? null : a.bandeja === 0;
+  const doc = ruta.match(/^\/documentos\/([0-9a-f-]{36})$/i);
+  if (doc) return a.documentos ? !a.documentos.includes(doc[1]) : null;
+  return null;
+}

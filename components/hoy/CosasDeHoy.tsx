@@ -6,24 +6,29 @@ import { Check, ChevronRight } from "lucide-react";
 import type { Prioridad } from "@/lib/hoy/prioridades";
 import { cn } from "@/lib/utils";
 
-// Las cosas de hoy que decide Antonio: las que hagan falta, sin tope. Se tachan al tocar el círculo.
-// Lo tachado se recuerda en este móvil y solo para ese día (no se guarda en el panel).
-export function CosasDeHoy({ fecha, cosas, resumen, pie }: { fecha: string; cosas: Prioridad[]; resumen: string; pie?: string | null }) {
-  const clave = `hoy-hechas-${fecha}`;
-  const [hechas, setHechas] = useState<string[]>([]);
+// `resuelta`: lo que el panel sabe de la cosa enlazada (true = ya la has hecho en su página, null = no lo puede saber).
+export type Cosa = Prioridad & { resuelta: boolean | null };
+
+// Las cosas de hoy que decide Antonio: las que hagan falta, sin tope.
+// Se tachan solas cuando resuelves lo enlazado en su página (aprobar un montaje, contestar preguntas, leer la bandeja).
+// También a mano, tocando el círculo: eso manda sobre lo automático y se recuerda en este móvil, solo para ese día.
+export function CosasDeHoy({ fecha, cosas, resumen, pie }: { fecha: string; cosas: Cosa[]; resumen: string; pie?: string | null }) {
+  const clave = `hoy-marcas-${fecha}`;
+  const [marcas, setMarcas] = useState<Record<string, boolean>>({});
+  const estaHecha = (c: Cosa) => marcas[c.texto] ?? c.resuelta === true;
 
   useEffect(() => {
     try {
-      const guardadas = JSON.parse(localStorage.getItem(clave) ?? "[]");
-      if (Array.isArray(guardadas)) setHechas(guardadas.filter((x) => typeof x === "string"));
+      const guardadas = JSON.parse(localStorage.getItem(clave) ?? "{}");
+      if (guardadas && typeof guardadas === "object" && !Array.isArray(guardadas)) setMarcas(Object.fromEntries(Object.entries(guardadas).filter(([, v]) => typeof v === "boolean")) as Record<string, boolean>);
     } catch {
       // Sin almacenamiento (modo privado): se tacha igual, solo que no se recuerda.
     }
   }, [clave]);
 
-  function alternar(texto: string) {
-    setHechas((antes) => {
-      const ahora = antes.includes(texto) ? antes.filter((x) => x !== texto) : [...antes, texto];
+  function alternar(c: Cosa) {
+    setMarcas((antes) => {
+      const ahora = { ...antes, [c.texto]: !(antes[c.texto] ?? c.resuelta === true) };
       try {
         localStorage.setItem(clave, JSON.stringify(ahora));
       } catch {}
@@ -33,22 +38,24 @@ export function CosasDeHoy({ fecha, cosas, resumen, pie }: { fecha: string; cosa
 
   const deHoy = cosas.filter((c) => c.nivel !== "futuro");
   const luego = cosas.filter((c) => c.nivel === "futuro");
-  const quedan = deHoy.filter((c) => !hechas.includes(c.texto)).length;
+  const quedan = deHoy.filter((c) => !estaHecha(c)).length;
 
-  const fila = (c: Prioridad, i: number) => {
-    const hecha = hechas.includes(c.texto);
+  const fila = (c: Cosa, i: number) => {
+    const hecha = estaHecha(c);
+    const sola = hecha && c.resuelta === true && marcas[c.texto] === undefined;
     const texto = (
       <span className={cn("text-lg font-semibold leading-snug", hecha && "line-through opacity-50")}>
         {c.nivel === "urgente" && !hecha && <span className="mr-2 rounded-full bg-destructive px-2 py-0.5 align-middle text-xs font-bold uppercase tracking-wide text-white">Urgente</span>}
         {c.texto}
         {c.enlace && <ChevronRight size={18} className="ml-1 inline align-[-3px] opacity-60" aria-hidden />}
+        {sola && <span className="ml-2 inline-block text-sm font-semibold no-underline">Hecho en su página</span>}
       </span>
     );
     return (
       <li key={`${i}-${c.texto}`} className="flex items-start gap-3">
         <button
           type="button"
-          onClick={() => alternar(c.texto)}
+          onClick={() => alternar(c)}
           aria-pressed={hecha}
           aria-label={hecha ? `Desmarcar: ${c.texto}` : `Marcar como hecho: ${c.texto}`}
           className="-m-2 flex size-11 shrink-0 items-center justify-center"

@@ -9,7 +9,7 @@ import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
 import { estadoBloque } from "@/lib/hoy/contexto";
-import { leerPrioridades } from "@/lib/hoy/prioridades";
+import { leerPrioridades, resueltaSola } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
 
@@ -27,7 +27,7 @@ export default async function Hoy() {
   const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar, calendario: e.calendario }));
   const estadoAgenda = foto.contexto === "error" ? "error" : estadoBloque(foto.agendaEn, agenda);
   const estadoCorreo = foto.contexto === "error" ? "error" : estadoBloque(foto.correosEn, foto.correos);
-  const prioridades = leerPrioridades(guardado?.prioridades);
+  const prioridades = leerPrioridades(guardado?.prioridades).map((p) => ({ ...p, resuelta: resueltaSola(p.enlace, foto.abierto) }));
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
   const saber = foto.senales.filter((s) => s.nivel === "saber");
