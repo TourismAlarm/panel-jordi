@@ -7,7 +7,7 @@ Cada llamada dice para quién trabaja con el campo `bot` (`antonio`, `ideas` o `
 
 - **Dirección:** `https://panel-jordi.vercel.app` (las previews de Vercel están protegidas y no responden a los bots).
 - **Clave:** cabecera `Authorization: Bearer <clave>`. Variable en Vercel: `BOTS_API_KEY_ANTONIO` (mínimo 16 caracteres). `BOTS_API_KEY_IDEAS` y `BOTS_API_KEY_GUIONISTA` son opcionales: esas claves solo pueden firmar como su bot. `BOTS_API_KEY_EDITOR` es la del Editor (el PC o Claude Code en el ordenador de Antonio): toma encargos, los entrega, entrega montajes hechos fuera de la cola (`videos/{id}/entrega`) y lee reglas. Ya está creada en Vercel.
-- **Límite:** 60 llamadas por minuto y bot. Cada llamada con clave válida queda en `bots_llamadas`.
+- **Límite:** 60 llamadas por minuto y bot. Cada llamada con clave válida queda en `bots_llamadas`. Si se rechaza, queda también el motivo.
 - **Respuestas:** `201`/`200` bien · `400` datos no válidos (`detalle` dice qué) · `401` clave mala · `403` ese bot no hace eso · `404` no existe (también una ruta que no existe: siempre JSON, nunca una página) · `409` conflicto (`error` dice cuál) · `422` lleva datos de clientes (`detalle` dice dónde) · `429` espera 60 s · `500`/`503` reintenta más tarde.
 - **Nada de borrar:** ninguna ruta borra.
 
@@ -323,6 +323,8 @@ Todo lo que Antonio tiene entre manos, en un sitio. Así, si se corta el uso o s
 Lo que el panel ya sabe no se escribe: se calcula. Preguntas sin contestar o sin recoger, peticiones abiertas, ediciones listas, bloqueadas o fallidas, guiones por aprobar, vídeos sin material, días sin métricas de salud, vencimientos y fallos del registro de Actividad. Lo único que escribe Antonio son sus **rutinas** y sus **tareas a medias**.
 
 **Al arrancar cada turno o rutina, lee `GET /api/bots/arnes`.**
+
+**`rechazos_recientes`:** lo que el panel te ha rechazado en las últimas 24 h, agrupado: `metodo`, `ruta` (sin ids), `estado`, `por_que` (el mismo motivo que recibiste), `veces` y `ultima`. Lo más repetido va primero. **Si algo sale aquí con `veces` mayor que 1, estás mandando lo mismo mal: corrige el formato antes de volver a llamar.** Una ruta con `404` no existe: no la pruebes otra vez, mira este documento. Los `429` no salen.
 
 ### `POST /api/bots/arnes/rutinas`
 
