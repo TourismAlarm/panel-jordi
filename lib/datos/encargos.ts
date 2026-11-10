@@ -13,6 +13,13 @@ export const encargosDeVideo = cache(async (videoId: string): Promise<Encargo[]>
   return comprobar(r, "los encargos de edición");
 });
 
+// Lo que el Editor tiene entre manos ahora mismo (cola, montando, con una pregunta o fallado), para la franja de la portada.
+export const encargosAbiertos = cache(async () => {
+  const supabase = await supabaseServidor();
+  const r = await supabase.from("encargos_edicion").select("video_id, fase, version, estado, tomado_en, creado").in("estado", ["pendiente", "en_curso", "bloqueado", "fallido"]).order("creado", { ascending: true });
+  return comprobar(r, "la cola de edición");
+});
+
 // true = decidido al momento · false = este vídeo no tiene nada entregado de la cola por decidir.
 export async function decidirEncargo(videoId: string, tipo: "aprobar" | "cambios" | "corte_ok", texto: string, siempre: boolean): Promise<boolean | "error"> {
   const supabase = await supabaseServidor();

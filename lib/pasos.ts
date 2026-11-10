@@ -152,3 +152,28 @@ export function pasoActual(pasos: Paso[]) {
 export function teToca(pasos: Paso[]) {
   return pasos.some((x) => x.estado === "tuyo");
 }
+
+// En qué etapa está un proyecto abierto, según su paso actual. Es lo que cuenta el embudo de la portada.
+export const ETAPAS = [
+  { id: "guion", nombre: "Guion" },
+  { id: "grabar", nombre: "Grabar" },
+  { id: "montaje", nombre: "Montaje" },
+  { id: "revisar", nombre: "Revisar" },
+  { id: "publicar", nombre: "Publicar" },
+] as const;
+export type Etapa = (typeof ETAPAS)[number]["id"];
+
+const ETAPA_DE_PASO: Record<string, Etapa> = { guion: "guion", preguntas: "guion", grabar: "grabar", subir: "grabar", montaje: "montaje", corte: "montaje", acabado: "montaje", revisar: "revisar", publicar: "publicar" };
+
+export function etapaDe(pasos: Paso[]): Etapa | null {
+  const actual = pasoActual(pasos);
+  return actual ? (ETAPA_DE_PASO[actual.clave] ?? null) : null;
+}
+
+// Cuántos proyectos hay en cada etapa y en cuáles hay algo tuyo.
+export function embudo(proyectos: { pasos: Paso[] }[]) {
+  return ETAPAS.map((e) => {
+    const suyos = proyectos.filter((x) => etapaDe(x.pasos) === e.id);
+    return { ...e, cuantos: suyos.length, teToca: suyos.some((x) => teToca(x.pasos)) };
+  });
+}

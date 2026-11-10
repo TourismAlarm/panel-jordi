@@ -108,3 +108,19 @@ describe("preguntas de un vídeo del panel", () => {
     expect(paso("pc")).toBe("Enviadas · esperando a Antonio");
   });
 });
+
+import { embudo, etapaDe, type Paso } from "./pasos";
+
+describe("embudo de la portada", () => {
+  const paso = (clave: string, estado: Paso["estado"]): Paso => ({ clave, titulo: clave, estado });
+  it("la etapa es la del paso actual: lo tuyo manda sobre lo primero sin hacer", () => {
+    expect(etapaDe([paso("guion", "hecho"), paso("grabar", "tuyo"), paso("montaje", "pendiente")])).toBe("grabar");
+    expect(etapaDe([paso("guion", "sistema"), paso("preguntas", "tuyo")])).toBe("guion");
+    expect(etapaDe([paso("guion", "hecho"), paso("grabar", "hecho"), paso("montaje", "hecho"), paso("corte", "hecho"), paso("acabado", "sistema")])).toBe("montaje");
+    expect(etapaDe([paso("archivado", "hecho")])).toBeNull();
+  });
+  it("cuenta por etapa y marca dónde te toca", () => {
+    const e = embudo([{ pasos: [paso("revisar", "tuyo")] }, { pasos: [paso("revisar", "tuyo")] }, { pasos: [paso("montaje", "sistema")] }]);
+    expect(e.map((x) => [x.id, x.cuantos, x.teToca])).toEqual([["guion", 0, false], ["grabar", 0, false], ["montaje", 1, false], ["revisar", 2, true], ["publicar", 0, false]]);
+  });
+});
