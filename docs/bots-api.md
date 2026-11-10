@@ -477,6 +477,26 @@ Las citas también salen como señales de agenda, pero no se repiten en «Para h
 | `GET /api/bots/finanzas/prestamos` | Los activos, con `pagos` y `proxima_cuota`. |
 | `GET /api/bots/finanzas/resumen?mes=YYYY-MM` | El mes financiero, de cobro a cobro: `queda`, `por_dia`, `proximo_cobro`, `ingresos`, `gastado`, `gasto`, `cobros_previstos` y `cobros_deducidos`. |
 | `POST /api/bots/finanzas/informe` | Deja un informe. Sale en Finanzas, en «Último informe». |
+| `GET /api/bots/finanzas/propuestas` | Lo que hay por categorizar: `movimientos` sin categoría (`id, fecha, tipo, importe, descripcion, counterparty, cuenta, propuesta`) y las `categorias` entre las que elegir (`id, nombre, tipo`). |
+| `POST /api/bots/finanzas/propuestas` | Propones categoría para movimientos sin categoría. **No cambia ningún movimiento:** Jordi dice sí o no en Finanzas. |
+
+### Proponer categorías
+
+Es lo único que el bot de Finanzas escribe además de sus informes. Tú propones; quien pone la categoría es Jordi.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/finanzas/propuestas \
+  -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO" -H "Content-Type: application/json" \
+  -d '{"bot":"finanzas","items":[{"movimiento_id":"<id del GET>","categoria":"Comida","motivo":"Supermercado, como los anteriores"}]}'
+```
+
+- **`categoria`:** el `id` o el nombre tal cual sale en `categorias`. Tiene que ser del mismo `tipo` que el movimiento (gasto con gasto).
+- **`motivo`:** opcional, hasta 300 caracteres. Jordi lo lee debajo de la propuesta: que sea corto y diga por qué.
+- **Hasta 200 por llamada.** Responde `guardadas` y `no_guardadas` (con `por_que` cada una): una mala no tumba las demás.
+- **Una propuesta por movimiento.** Proponer otra vez para el mismo sustituye la anterior.
+- **Si Jordi la rechaza,** en el `GET` ese movimiento sale con `propuesta.estado: "rechazada"`: puedes proponer **otra** categoría, la misma no (`no_guardadas`).
+- **Si la acepta,** el panel aprende el comercio: los demás movimientos de ese comercio se categorizan solos y dejan de salir en el `GET`. Por eso basta con proponer bien uno de cada comercio.
+- **Dónde lo ve Jordi:** en Finanzas («Antonio propone N categorías», con «Aceptar todas») y en Hoy, como cosa para hoy. Si lo pones en el resumen de la mañana, enlázalo a `/finanzas?ver=propuestas` y se tachará solo cuando no quede ninguna por decidir.
 
 - **Sin categoría:** muchos movimientos no la tienen. En `gasto` van aparte, en `sin_categoria_por_contraparte`.
 - **Cuándo cobro:** `cobros_previstos` sale de las reglas, hoy vacías. Usa `cobros_deducidos`: lo que entra de la misma contraparte en al menos dos meses, desde 300 €, en los últimos 120 días.

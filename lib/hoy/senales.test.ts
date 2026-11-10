@@ -89,6 +89,12 @@ describe("cosas de hoy que se tachan solas", () => {
     expect(resueltaSola("/documentos/11111111-1111-1111-1111-111111111111", abierto)).toBe(false);
     expect(resueltaSola("/documentos/22222222-2222-2222-2222-222222222222", abierto)).toBe(true);
   });
+  it("categorías propuestas: hecho cuando no queda ninguna por decidir", () => {
+    expect(resueltaSola("/finanzas?ver=propuestas", { ...abierto, propuestas: 3 })).toBe(false);
+    expect(resueltaSola("/finanzas?ver=propuestas", { ...abierto, propuestas: 0 })).toBe(true);
+    expect(resueltaSola("/finanzas?ver=propuestas", abierto)).toBeNull();
+    expect(senalesFinanzas({ hoy, enlaces: [], prestamos: [], sinCategoria: 0, restante: null, porDia: null, diasNomina: null, propuestas: 2 })[0]).toMatchObject({ nivel: "hoy", href: "/finanzas" });
+  });
   it("lo que el panel no puede saber se deja para tachar a mano", () => {
     for (const e of [undefined, "/salud", "/elsa", "/antonio", "https://example.com"]) expect(resueltaSola(e, abierto)).toBeNull();
     expect(resueltaSola("/elsa/videos/GE_031", { videos: null, bandeja: null, documentos: null })).toBeNull();

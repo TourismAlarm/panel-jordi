@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGlobalToast } from '@/components/finanzas/Toaster';
 import { C, Card, Bar, Sheet, money, shortDate, Loading, ErrorBox } from './ui';
+import { Propuestas } from './Propuestas';
 
 type Role = 'daily' | 'debts' | 'savings' | 'home';
 
@@ -180,7 +181,13 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
                   : 'Cuando entre una nómina sabré cuánto te toca por día'}
             </span>
           </div>
-          <div className="h-px bg-[var(--texto-suave)]" />
+          <div className="flex flex-col gap-1.5">
+            <Bar value={data.dayIndex / Math.max(1, data.period.days)} color="var(--mod-finanzas)" track="color-mix(in srgb, var(--fondo) 22%, transparent)" height={8} />
+            <div className="flex justify-between text-xs text-[var(--borde)]">
+              <span>Día {data.dayIndex} de {data.period.days}</span>
+              <span>{data.payday ? `Nómina el ${shortDate(data.payday.date)}` : data.period.label}</span>
+            </div>
+          </div>
           <div className="flex justify-between items-baseline gap-3 text-sm">
             <span className="text-[var(--borde)]">Gastado este mes</span>
             <span className="font-semibold tabular-nums">{money(flow.spent)}</span>
@@ -198,6 +205,27 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
           </span>
         </Card>
       )}
+
+      <Propuestas />
+
+      <Card className="flex flex-col gap-3">
+        <span className="text-[15px] font-semibold">En qué se va tu dinero</span>
+        {data.topCategories.length === 0 ? (
+          <span className="text-sm text-[var(--texto-suave)]">Aún no hay gastos este mes.</span>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {data.topCategories.map((c) => (
+              <div key={c.name} className="flex flex-col gap-1">
+                <div className="flex justify-between text-sm">
+                  <span>{c.name}</span>
+                  <span className="font-semibold tabular-nums">{money(c.amount)}</span>
+                </div>
+                <Bar value={c.amount / maxCat} color="var(--mod-finanzas)" height={8} />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <section className="flex flex-col gap-2" aria-label="Tus cuentas">
         <div className="flex justify-between items-baseline">
@@ -333,25 +361,6 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
           )}
         </Card>
       )}
-
-      <Card className="flex flex-col gap-3">
-        <span className="text-[15px] font-semibold">En qué se va tu dinero</span>
-        {data.topCategories.length === 0 ? (
-          <span className="text-sm text-[var(--texto-suave)]">Aún no hay gastos este mes.</span>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {data.topCategories.map((c) => (
-              <div key={c.name} className="flex flex-col gap-1">
-                <div className="flex justify-between text-sm">
-                  <span>{c.name}</span>
-                  <span className="font-semibold tabular-nums">{money(c.amount)}</span>
-                </div>
-                <Bar value={c.amount / maxCat} />
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
 
       {data.nextPayment && (
         <button onClick={() => onGoto('debts')} className="bg-card rounded-2xl px-4 py-3.5 flex justify-between items-center text-left">

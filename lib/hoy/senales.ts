@@ -72,6 +72,7 @@ export function senalesFinanzas(p: {
   restante: number | null; // saldo de la cuenta del día a día
   porDia: number | null; // lo que toca gastar por día hasta la nómina
   diasNomina: number | null;
+  propuestas?: number; // categorías que propone el bot y esperan tu sí o tu no
 }): Senal[] {
   const s: Senal[] = [];
   for (const e of p.enlaces) {
@@ -97,6 +98,9 @@ export function senalesFinanzas(p: {
         href: "/finanzas?tab=debts",
       });
     }
+  }
+  if (p.propuestas) {
+    s.push({ id: "fin-propuestas", modulo: "finanzas", nivel: "hoy", titulo: `Antonio propone categoría para ${plural(p.propuestas, "movimiento")}`, detalle: "Solo tienes que decir sí o no", href: "/finanzas" });
   }
   if (p.sinCategoria > 0) {
     s.push({ id: "fin-sincat", modulo: "finanzas", nivel: "saber", titulo: `${plural(p.sinCategoria, "movimiento")} sin categoría`, href: "/finanzas?tab=movements" });

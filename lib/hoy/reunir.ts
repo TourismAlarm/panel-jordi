@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aISODia, sumarDias } from "@/lib/fechas";
+import { propuestasPendientes } from "@/lib/finanzas/propuestas";
 import { resumenInicio } from "@/lib/finanzas/resumen-inicio";
 import { fichaDeGuion } from "@/lib/guion";
 import { leerSalud } from "@/lib/datos/salud";
@@ -95,19 +96,21 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     }),
 
     intentar(fallos, "Finanzas", async () => {
-      const [r, links, loans] = await Promise.all([
+      const [r, propuestas, links, loans] = await Promise.all([
         resumenInicio(userId, null, { soloLectura: opciones.soloLectura }),
+        propuestasPendientes(userId),
         sinTipos.from("fin_bank_links").select("aspsp_name, status, valid_until, last_error").eq("user_id", userId),
         sinTipos.from("fin_loans").select("contact_name, monthly_payment, payment_day").eq("user_id", userId).eq("status", "active"),
       ]);
       if (links.error) throw new Error(links.error.message);
       if (loans.error) throw new Error(loans.error.message);
       const azulejo = r.remaining === null ? null : { restante: r.remaining, porDia: r.perDay, diasNomina: r.payday?.daysLeft ?? null };
-      return { azulejo, senales: senalesFinanzas({
+      return { azulejo, propuestas: propuestas.length, senales: senalesFinanzas({
         hoy,
         enlaces: ((links.data ?? []) as { aspsp_name: string; status: string; valid_until: string | null; last_error: string | null }[]).map((x) => ({ banco: x.aspsp_name, estado: x.status, valido_hasta: x.valid_until, error: x.last_error })),
         prestamos: ((loans.data ?? []) as { contact_name: string; monthly_payment: number | string | null; payment_day: number | null }[]).filter((l) => l.payment_day && Number(l.monthly_payment) > 0).map((l) => ({ nombre: l.contact_name, importe: Number(l.monthly_payment), dia: Number(l.payment_day) })),
         sinCategoria: r.uncategorized.count,
+        propuestas: propuestas.length,
         restante: r.remaining,
         porDia: r.perDay,
         diasNomina: r.payday?.daysLeft ?? null,
@@ -168,7 +171,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     fallos,
     salud: salud?.lineas ?? [],
     azulejos: { salud: salud?.azulejo ?? null, finanzas: finanzas?.azulejo ?? null, elsa: elsa?.teTocan ?? null, documentos: documentos?.vencen ?? null },
-    abierto: { videos: elsa?.videos ?? null, bandeja: nuevos?.sinLeer ?? null, documentos: documentos?.ids ?? null },
+    abierto: { videos: elsa?.videos ?? null, bandeja: nuevos?.sinLeer ?? null, documentos: documentos?.ids ?? null, propuestas: finanzas?.propuestas ?? null },
   };
 }
 
