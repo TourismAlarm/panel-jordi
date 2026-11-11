@@ -1,3 +1,5 @@
+> **Retirado (10-11-2026):** `/api/salud/ingesta` y `SALUD_INGESTA_SECRET` ya no existen. Los datos de Garmin los deja el bot de Salud por `POST /api/bots/salud/ingesta` (ver `docs/bots-api.md` → Salud). Esto queda como historia.
+
 # Cómo envía el PC los datos de salud al panel
 
 Igual que con ELSA: el PC (tarea de salud + proceso de Windows) recoge los datos y **los deja en el panel**. El panel solo los lee

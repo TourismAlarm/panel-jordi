@@ -119,3 +119,23 @@ describe("señal de vida del sistema", () => {
     expect(s.find((x) => x.id === "elsa-sin-senal")).toBeUndefined();
   });
 });
+
+import { estadoCosas, leerMarcas } from "./prioridades";
+
+describe("cómo va cada cosa de hoy", () => {
+  const abierto = { videos: ["GE_045"], bandeja: 0, documentos: [] };
+  const cosas = [{ texto: "Revisar GE_031", enlace: "/elsa/videos/GE_031" }, { texto: "Contestar GE_045", enlace: "/elsa/videos/GE_045" }, { texto: "Llamar al gestor" }, { texto: "Leer bandeja", enlace: "/bandeja" }];
+  it("lo tachado a mano manda sobre lo automático, en los dos sentidos", () => {
+    const e = estadoCosas(cosas, { "Llamar al gestor": true, "Leer bandeja": false, "Contestar GE_045": true }, abierto);
+    expect(e.map((x) => [x.hecha, x.como])).toEqual([[true, "sola"], [true, "a mano"], [true, "a mano"], [false, null]]);
+  });
+  it("sin marcas, solo lo que el panel sabe resuelto", () => {
+    expect(estadoCosas(cosas, {}, abierto).map((x) => x.hecha)).toEqual([true, false, false, true]);
+    expect(estadoCosas(cosas, {}, undefined).every((x) => !x.hecha)).toBe(true);
+  });
+  it("las marcas guardadas se leen con cuidado", () => {
+    expect(leerMarcas({ a: true, b: "sí", c: false })).toEqual({ a: true, c: false });
+    expect(leerMarcas([true])).toEqual({});
+    expect(leerMarcas(null)).toEqual({});
+  });
+});

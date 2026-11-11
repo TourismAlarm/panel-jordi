@@ -18,6 +18,23 @@ export function enlaceValido(enlace: string) {
   return /^\/(?!\/)/.test(enlace) || /^https:\/\//.test(enlace);
 }
 
+// Lo tachado a mano: { texto: true|false }. Lo que no encaja se ignora.
+export function leerMarcas(guardadas: unknown): Record<string, boolean> {
+  if (!guardadas || typeof guardadas !== "object" || Array.isArray(guardadas)) return {};
+  return Object.fromEntries(Object.entries(guardadas).filter(([, v]) => typeof v === "boolean")) as Record<string, boolean>;
+}
+
+// Cómo va cada cosa de hoy, para la pantalla y para Antonio: hecha o no, y si la tachó Jordi («a mano») o se resolvió en su página («sola»).
+// Lo que Jordi marca a mano manda sobre lo automático, también para destacharlo.
+export function estadoCosas(prioridades: Prioridad[], marcas: Record<string, boolean>, abierto: Abierto | undefined) {
+  return prioridades.map((p) => {
+    const resuelta = resueltaSola(p.enlace, abierto);
+    const aMano = marcas[p.texto];
+    const hecha = aMano ?? resuelta === true;
+    return { ...p, resuelta, hecha, como: !hecha ? null : aMano === true ? ("a mano" as const) : ("sola" as const) };
+  });
+}
+
 // Lo que todavía te espera en cada módulo. null = no se ha podido leer: entonces no se tacha nada solo.
 export type Abierto = { videos: string[] | null; bandeja: number | null; documentos: string[] | null; propuestas?: number | null };
 

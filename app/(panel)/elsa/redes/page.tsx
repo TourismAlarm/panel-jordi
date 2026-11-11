@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Aviso, Desplegable, Pantalla, Seccion, Segmentos, Vacio } from "@/components/ui";
 import { GraficaVistas, Indicador, Indicadores, TarjetaApuesta, TarjetaConclusion, TarjetaPareja, TarjetaReel } from "@/components/redes/Redes";
-import { ColumnasVistas, Comparado, LineaGancho, Meta } from "@/components/redes/Graficas";
+import { ColumnasVistas, Comparado, GanaPorVideo, LineaGancho, Meta } from "@/components/redes/Graficas";
 import { Guion } from "@/components/videos/Guion";
 import { apuestasMd, fotosRecientes, fotosTikTok, infoReels, ultimoInforme } from "@/lib/datos/redes";
 import { dia, hoy, plural } from "@/lib/formato";
@@ -67,13 +67,21 @@ export default async function Redes({ searchParams }: PageProps<"/elsa/redes">) 
           <Indicador
             valor={c.ratio === null ? "–" : `×${coma(c.ratio)}`}
             texto="Vistas TikTok ÷ Instagram"
-            comparacion={`mediana del mismo vídeo · ${plural(c.maduras, "vídeo")} con 7 días o más`}
+            comparacion={`mediana del mismo vídeo · TikTok gana en ${c.ganaTt} de ${c.maduras} con 7 días o más`}
             tono="info"
-          />
-          <Indicador valor={c.vistasIg === null ? "–" : miles(c.vistasIg)} texto="Vistas en Instagram" comparacion="mediana por vídeo" />
-          <Indicador valor={c.vistasTt === null ? "–" : miles(c.vistasTt)} texto="Vistas en TikTok" comparacion="mediana por vídeo" />
+          >
+            {c.maduras > 0 && c.maduras <= 16 && <Meta valor={c.ganaTt} objetivo={c.maduras} />}
+          </Indicador>
+          <Indicador valor={c.vistasTt === null ? "–" : miles(c.vistasTt)} texto="Vistas por vídeo en TikTok" comparacion="mediana, frente a Instagram">
+            <Comparado reciente={c.vistasTt} total={c.vistasIg} formato={miles} nombres={["TikTok", "Instagram"]} />
+          </Indicador>
+          <Indicador valor={c.socialTt === null ? "–" : coma(c.socialTt)} texto="Guardados + compartidos por mil" comparacion="en TikTok, frente a Instagram">
+            <Comparado reciente={c.socialTt} total={c.socialIg} formato={coma} nombres={["TikTok", "Instagram"]} />
+          </Indicador>
           <Indicador valor={`${c.seguidoresTt}`} texto="Seguidores nuevos por TikTok" comparacion="lo que han traído los vídeos (90 días)" tono="bien" />
         </Indicadores>
+
+        <GanaPorVideo parejas={c.parejas} />
 
         <Seccion titulo="Qué dicen las dos juntas">
           {ideas.length ? ideas.map((x) => <TarjetaConclusion key={x.titulo} c={x} />) : <p className="suave">Aún hay pocos vídeos en las dos redes.</p>}

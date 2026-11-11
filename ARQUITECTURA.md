@@ -1,10 +1,14 @@
 # Cómo está montado el panel
 
+> Puesto al día el 10-11-2026. El panel tiene cinco módulos (Hoy, Finanzas, Salud, ELSA, Documentos) más Antonio, Bandeja y Ajustes.
+> Quién hace qué: **Antonio y los bots de Grok Bot llevan el día a día** (leen y escriben por `/api/bots/*`, contrato en `docs/bots-api.md`);
+> **Claude Code mantiene el código**. Ningún bot toca Supabase directamente.
+
 La app está hecha por capas. Cada capa solo usa las de debajo, así que para añadir algo
 nuevo casi nunca hay que tocar lo que ya funciona.
 
 ```
-  app/            4 · PANTALLAS   qué se ve en cada dirección (/, /videos, …)
+  app/            4 · PANTALLAS   qué se ve en cada dirección (/, /elsa, /finanzas, …) y las puertas /api/*
   components/     3 · PIEZAS      cómo se ve cada cosa
   lib/            2 · REGLAS      qué significa cada estado, fechas, acciones
   lib/datos/      1 · DATOS       lo único que habla con Supabase
@@ -17,6 +21,7 @@ nuevo casi nunca hay que tocar lo que ya funciona.
 | ----------- | -------- |
 | `config.ts` | Lee `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Avisa claro si faltan. |
 | `server.ts` | Cliente con la sesión de Jordi (clave pública + RLS). Nunca la service_role. |
+| `admin.ts`  | Cliente con la service_role, **solo servidor**: crons, `/api/bots/*` y Finanzas. Salta RLS: toda consulta filtra por `user_id`. |
 | `tipos.ts`  | Tipos generados de las tablas. `Fila<"videos">` es una fila de `videos`. |
 
 Si cambia una tabla en Supabase, se regeneran los tipos (`supabase gen types typescript` o
@@ -90,31 +95,55 @@ Combinan piezas de `ui/` con datos reales: `TarjetaProyecto` (cuándo, dónde, c
 
 ### `components/app/` — el armazón
 
-`MarcoApp` (pantalla + barra de pestañas), `BarraPestanas`, `PantallaError`, `PantallaNoEncontrada`.
+`MarcoApp` (lateral en escritorio; cabecera y barra inferior en móvil), `NavLateral`, `NavInferior`, `Buscador`, `SubNavElsa`, `PantallaError`, `PantallaNoEncontrada`.
+Los módulos se registran en **`config/modulos.ts`** (único sitio): de ahí salen el menú, la barra inferior y el buscador.
+
+### Piezas por módulo
+
+| Carpeta | Qué hay |
+| ------- | ------- |
+| `components/hoy/` | `CosasDeHoy` (lo que Antonio pone para hoy; se tacha a mano o solo), `Azulejos` (un número por módulo), `ListaSenales`, `BotonResumen`. |
+| `components/salud/` | `Visuales` (anillo, barras de la semana y línea de cada medida, en SVG), `GraficaMetrica` (histórico), `FormRegistro`, `AvisoMedico`. |
+| `components/finanzas/` | La app de Finanzas (React Query). En `v2/`: `HomeScreen`, `Consejos` («Lo que ve Antonio»), `Propuestas` (categorías que propone el bot), `MovementsScreen`, `DebtsScreen`. |
+| `components/proyectos/` | ELSA: `Embudo` (vídeos por etapa), `TarjetaProyecto`, `ListaPasos`, `LoQueFalta`, formularios de pedir y descartar. |
+| `components/redes/` | `Graficas` (vistas y gancho vídeo a vídeo, comparación de redes) y `Redes` (indicadores, fichas de vídeo, conclusiones). |
+| `components/bots/`, `actividad/`, `aprendizaje/`, `documentos/` | Lo que dejan los bots (ideas, guiones, encargos, informes), su registro, las reglas y el archivo de documentos. |
+
+**Un color por módulo** (`--mod-salud`, `--mod-finanzas`, `--mod-elsa`, `--mod-documentos` en `app/globals.css`): solo dice de dónde viene cada cosa. Los estados siguen usando los tonos (`bien`, `ojo`, `mal`, `info`).
 
 ## 4 · Pantallas — `app/`
 
 ```
 app/
   layout.tsx              raíz: <html>, colores del sistema, metadatos
-  login/                  entrar (sin barra de pestañas)
-  (panel)/                todo lo de dentro, con barra de pestañas
+  login/                  entrar (sin menú)
+  (panel)/                todo lo de dentro, con el menú
     layout.tsx            MarcoApp
-    loading.tsx           esqueleto mientras carga
-    error.tsx             «Algo ha fallado» + Reintentar
-    page.tsx              Proyectos: todos por fecha, con rótulo por día; filtro «Me toca» (?ver=mios)
-    videos/[id]/          ficha del proyecto (/videos/GE_008)
-    videos/[id]/guion/    modo lectura del guion (?ver=lectura|indicaciones|notas)
-    nuevo/                pedir guion para otro trabajo, o «Ya lo he grabado» (?que=grabado: edición sin guion)
-    redes/                cómo van los reels en Instagram y qué cambiar
-    actividad/            agentes y registro
-    mas/                  sincronización, cuenta, salir
-    piezas/               catálogo de la base
-proxy.ts                  sin sesión → /login
+    page.tsx              Hoy: cosas de hoy, un azulejo por módulo, agenda, Antonio, señales y correo
+    antonio/              el arnés: lo que Antonio tiene a medias, rutinas y memoria
+    finanzas/             inicio (lo que queda, consejos, propuestas), movimientos, deudas · ajustes/
+    salud/                hoy · historico/ · registrar/
+    elsa/                 proyectos (embudo + te toca) · ideas/ · redes/ · aprendizaje/ · actividad/ · videos/[id]/ · nuevo/ · piezas/
+    documentos/           archivo con vencimientos · nuevo/ · [id]/
+    bandeja/, ajustes/
+  api/
+    bots/                 la única puerta de los bots (clave + permiso + límite + registro): ver docs/bots-api.md
+    cron/                 lo que lanza Vercel cada mañana (bancos y resumen sencillo), con CRON_SECRET
+    finanzas/, google/    lo que llama el navegador con la sesión de Jordi
+proxy.ts                  sin sesión → /login · otro correo → /acceso-denegado · /api/bots y /api/cron validan su propia clave
 ```
 
-Una pantalla solo hace tres cosas: **pide datos** a `lib/datos`, **decide** con `lib/estados` y
+Una pantalla solo hace tres cosas: **pide datos** a `lib/datos` (o a la `lib/<módulo>` que toque), **decide** con las reglas de `lib/` y
 **pinta** con piezas. Si una pantalla empieza a tener mucho CSS o lógica propia, eso va a una pieza.
+
+### Las conexiones entre pantallas
+
+El estado no se apunta dos veces: se calcula de donde vive.
+
+- **Hoy lee de todos**: `lib/hoy/reunir.ts` junta ELSA, Finanzas, Salud, Documentos, Bandeja y la fila del día (resumen, agenda y correo que publica Antonio). `lib/hoy/senales.ts` lo convierte en «Urgente / Para hoy / Para saber».
+- **Una cosa de hoy se tacha sola** si su enlace lleva a algo concreto que ya está resuelto (`resueltaSola` en `lib/hoy/prioridades.ts`): un vídeo, la bandeja, un documento, las propuestas de categoría.
+- **Los pasos de un vídeo** se calculan en `lib/pasos.ts` con sus datos reales; de ahí salen el embudo de ELSA, «Te toca» y lo que Hoy enseña.
+- **Lo que decides llega a Antonio al momento** por el webhook (`lib/bots/aviso.ts`); su rutina de cada hora es la red de seguridad.
 
 ## Recetas
 
@@ -136,7 +165,7 @@ Una pantalla solo hace tres cosas: **pide datos** a `lib/datos`, **decide** con 
      );
    }
    ```
-2. Si debe salir abajo, añadir una línea en `PESTANAS` de `components/app/BarraPestanas.tsx`.
+2. Si es un módulo nuevo o debe salir en el menú, añadir una línea en `config/modulos.ts`.
 
 ### Enseñar un dato nuevo que ya sube el PC
 
@@ -148,9 +177,17 @@ Una pantalla solo hace tres cosas: **pide datos** a `lib/datos`, **decide** con 
 
 `lib/estados.ts` (`estadoVideo`, `faseVideo`) y, si cambia qué falta, `lib/pasos.ts`. Todas las pantallas lo recogen solas.
 
+### Dar a un bot algo nuevo que hacer
+
+1. La ruta va en `app/api/bots/…`, siempre dentro de `conBot(request, "permiso", …)` (`lib/bots/entrada.ts`).
+2. El permiso se añade en `lib/bots/catalogo.ts` y se da solo al bot que lo necesita.
+3. El cuerpo se valida con un esquema de zod y el contrato se escribe en `docs/bots-api.md`: es lo que lee Antonio.
+4. Los bots proponen; lo que cambia dinero, salud o documentos lo decide Jordi en el panel. `lib/bots/vida.test.ts` lo vigila.
+
 ## Comprobar antes de subir
 
 ```bash
 npm run typecheck   # tipos de rutas + TypeScript
+npm test            # pruebas (las de RLS se saltan sin SUPABASE_SERVICE_ROLE_KEY)
 npm run build       # compilación completa (necesita .env.local)
 ```

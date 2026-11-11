@@ -23,7 +23,7 @@ export type Foto = {
   agendaEn: string | null; // cuándo publicó Antonio cada bloque; null = aún no ha llegado
   correosEn: string | null;
   contexto: "ok" | "error"; // si no se ha podido leer, la portada lo dice en vez de enseñar «no hay citas»
-  guardado: { resumen: string; prioridades: unknown; generado_en: string | null; origen: string | null } | null;
+  guardado: { resumen: string; prioridades: unknown; marcas?: unknown; generado_en: string | null; origen: string | null } | null;
   fallos: string[]; // módulos que no se han podido leer, para decirlo en vez de callarlo
   salud: string[]; // líneas de resumen de salud (para el resumen escrito)
   azulejos?: Azulejos; // el número clave de cada módulo, para la portada. null = sin dato o no se ha podido leer
@@ -36,6 +36,8 @@ export type Azulejos = {
   elsa: number | null; // proyectos que te tocan a ti
   documentos: number | null; // vencen en menos de 30 días (o ya vencidos)
 };
+
+type FilaDia = { resumen: string | null; prioridades: unknown; marcas?: unknown; generado_en: string | null; origen: string | null; agenda: unknown; correos: unknown; agenda_en: string | null; correos_en: string | null };
 
 async function intentar<T>(fallos: string[], que: string, f: () => Promise<T>): Promise<T | null> {
   try {
@@ -147,9 +149,13 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
 
     // La fila del día: resumen, y agenda y correo que publica Antonio. Hoy no consulta Google.
     intentar(fallos, "Agenda y correo", async () => {
-      const { data, error } = await supabase.from("resumenes_diarios").select("resumen, prioridades, generado_en, origen, agenda, correos, agenda_en, correos_en").eq("user_id", userId).eq("fecha", hoy).maybeSingle();
+      const columnas = "resumen, prioridades, generado_en, origen, agenda, correos, agenda_en, correos_en";
+      const fila = (cols: string) => supabase.from("resumenes_diarios").select(cols).eq("user_id", userId).eq("fecha", hoy).maybeSingle();
+      let { data, error } = await fila(`${columnas}, marcas`);
+      // Sin la columna «marcas» (migración sin aplicar) el día se lee igual, solo que sin lo tachado a mano.
+      if (error && /marcas/.test(error.message)) ({ data, error } = await fila(columnas));
       if (error) throw new Error(error.message);
-      return data;
+      return data as unknown as FilaDia | null;
     }),
   ]);
   const eventos: Evento[] = leerEventos(dia?.agenda);
@@ -171,7 +177,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     agendaEn: dia?.agenda_en ?? null,
     correosEn: dia?.correos_en ?? null,
     contexto: dia === null && fallos.includes("Agenda y correo") ? "error" : "ok",
-    guardado: dia?.resumen ? { resumen: dia.resumen, prioridades: dia.prioridades, generado_en: dia.generado_en, origen: dia.origen } : null,
+    guardado: dia?.resumen ? { resumen: dia.resumen, prioridades: dia.prioridades, marcas: dia.marcas, generado_en: dia.generado_en, origen: dia.origen } : null,
     fallos,
     salud: salud?.lineas ?? [],
     azulejos: { salud: salud?.azulejo ?? null, finanzas: finanzas?.azulejo ?? null, elsa: elsa?.teTocan ?? null, documentos: documentos?.vencen ?? null },
