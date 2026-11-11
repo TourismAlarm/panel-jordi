@@ -51,6 +51,26 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
   const deFase = fase ? abiertos.filter(({ pasos }) => etapaDe(pasos) === fase) : [];
   const enMarcha = abiertos.filter(({ pasos }) => !teToca(pasos));
   const porPublicar = paraPublicar(vivos.map(({ p }) => p), publicaciones);
+  // Un vídeo aprobado ya cuenta como hecho, así que la etapa «Publicar» del embudo se quedaba siempre en 0:
+  // cuenta también lo que espera salir (programado o aprobado sin fecha) y, al tocarla, enseña esa lista.
+  const idsPorPublicar = new Set(porPublicar.map((x) => x.videoId));
+  const otrosDeFase = fase === "publicar" ? deFase.filter(({ p }) => !idsPorPublicar.has(p.id)) : deFase;
+  const tramos = embudo(abiertos).map((t) =>
+    t.id === "publicar" ? { ...t, cuantos: new Set([...idsPorPublicar, ...abiertos.filter(({ pasos }) => etapaDe(pasos) === "publicar").map(({ p }) => p.id)]).size } : t,
+  );
+  const listaPorPublicar = !!porPublicar.length && (
+    <Lista>
+      {porPublicar.map((x) => (
+        <Fila
+          key={`${x.videoId}-${x.red ?? "sin"}`}
+          href={`/elsa/videos/${x.videoId}`}
+          inicio={<Punto tono={x.red ? "info" : "neutro"} />}
+          titulo={x.titulo}
+          detalle={x.red ? `${NOMBRE_RED[x.red]} · ${fecha(x.fecha)}` : "Sin fecha"}
+        />
+      ))}
+    </Lista>
+  );
 
   // Qué hace el Editor ahora: lo que falla o pregunta va primero; si no, lo que monta; si no, lo que espera.
   const idsDe = (estado: string) => cola.filter((e) => e.estado === estado).map((e) => e.video_id);
@@ -85,7 +105,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         </>
       }
     >
-      <Embudo tramos={embudo(abiertos)} activa={fase} />
+      <Embudo tramos={tramos} activa={fase} />
 
       <Lista>
         <Fila href="/elsa/actividad/bots?bot=editor" inicio={<Punto tono={editor.tono} />} titulo={`Editor: ${editor.texto.charAt(0).toLowerCase()}${editor.texto.slice(1)}`} detalle={editor.detalle} />
@@ -130,10 +150,11 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
       )}
 
       {fase ? (
-        <Seccion titulo={ETAPAS.find((e) => e.id === fase)!.nombre} cuenta={deFase.length} extra={{ texto: "Ver todo", href: "/elsa" }}>
-          {deFase.length ? (
-            deFase.map(({ p, pasos }) => <TarjetaProyecto key={p.id} p={p} pasos={pasos} breve />)
-          ) : (
+        <Seccion titulo={ETAPAS.find((e) => e.id === fase)!.nombre} cuenta={tramos.find((t) => t.id === fase)!.cuantos} extra={{ texto: "Ver todo", href: "/elsa" }}>
+          {fase === "publicar" && listaPorPublicar}
+          {otrosDeFase.length ? (
+            otrosDeFase.map(({ p, pasos }) => <TarjetaProyecto key={p.id} p={p} pasos={pasos} breve />)
+          ) : fase === "publicar" && listaPorPublicar ? null : (
             <Vacio icono="videos" tono="neutro" titulo="Ningún vídeo en esta etapa" texto="Toca otra etapa o «Ver todo»." />
           )}
         </Seccion>
@@ -180,17 +201,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
 
       {!soloMios && !fase && !!porPublicar.length && (
         <Seccion titulo="Para publicar" cuenta={porPublicar.length}>
-          <Lista>
-            {porPublicar.map((x) => (
-              <Fila
-                key={`${x.videoId}-${x.red ?? "sin"}`}
-                href={`/elsa/videos/${x.videoId}`}
-                inicio={<Punto tono={x.red ? "info" : "neutro"} />}
-                titulo={x.titulo}
-                detalle={x.red ? `${NOMBRE_RED[x.red]} · ${fecha(x.fecha)}` : "Sin fecha"}
-              />
-            ))}
-          </Lista>
+          {listaPorPublicar}
         </Seccion>
       )}
 
