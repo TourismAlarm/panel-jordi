@@ -207,11 +207,14 @@ describe("pendientes calculados", () => {
     expect(de("revisar-GE_033")).toMatchObject({ agente: "editor", quien: "jordi", enlace: "/elsa/videos/GE_033#montaje" });
     expect(de("desfasado-GE_030")).toMatchObject({ agente: "antonio", quien: "antonio" });
   });
-  it("por agente: todos en orden, con su chat; Finanzas congelado y sin pendientes", () => {
-    const g = porAgente(calcularPendientes({ ...base, fallos: [{ id: 1, bot: "finanzas", tarea: "x", creado: "2026-11-10T00:00:00Z", enlace: null }] }), []);
+  it("por agente: todos en orden, con su chat; Finanzas activo, con lo que falta por proponer y lo que espera a Jordi", () => {
+    const g = porAgente(calcularPendientes({ ...base, finanzas: { sinPropuesta: 12, porDecidir: 3 }, fallos: [{ id: 1, bot: "finanzas", tarea: "x", creado: "2026-11-10T00:00:00Z", enlace: null }] }), []);
     expect(g.map((x) => x.agente)).toEqual(["antonio", "guionista", "editor", "analista", "ideas", "dia", "salud", "documentos", "finanzas", "revisor"]);
     expect(g.find((x) => x.agente === "guionista")?.chat).toBe("grokbot://app/v1/agent?id=19f8baf3-f8b2-45f3-8006-5a4e85b67439");
-    expect(g.find((x) => x.agente === "finanzas")).toMatchObject({ congelado: true, pendientes: [] });
+    const fin = g.find((x) => x.agente === "finanzas")!;
+    expect(fin.congelado).toBe(false);
+    expect(fin.pendientes.map((x) => [x.id, x.quien])).toEqual([["fin-por-decidir", "jordi"], ["fallo-1", "agente"], ["fin-sin-propuesta", "agente"]]);
+    expect(porAgente(calcularPendientes({ ...base, finanzas: { sinPropuesta: 0, porDecidir: 0 } }), []).find((x) => x.agente === "finanzas")?.pendientes).toEqual([]);
   });
 });
 

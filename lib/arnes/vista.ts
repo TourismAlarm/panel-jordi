@@ -91,6 +91,8 @@ export type DatosPanel = {
   vencimientos: { id: string; nombre: string; vencimiento: string }[];
   documentosConError: { id: string; nombre: string; subido_en: string }[];
   fallos: { id: number; bot: string; tarea: string; creado: string; enlace: string | null }[]; // últimas 48 h
+  // Categorías: movimientos sin categoría para los que el bot aún no ha propuesto nada, y propuestas que esperan a Jordi.
+  finanzas?: { sinPropuesta: number; porDecidir: number } | null;
 };
 
 const TIPO_PETICION: Record<string, string> = {
@@ -207,6 +209,14 @@ export function calcularPendientes(d: DatosPanel): Pendiente[] {
     p.push({ id: `doc-error-${x.id}`, agente: "documentos", que: `${x.nombre}: no se ha podido leer`, desde: x.subido_en, quien: "agente", enlace: `/documentos/${x.id}` });
   }
 
+  // Finanzas: lo que falta por proponer (suyo) y lo propuesto que espera el sí o el no de Jordi (tuyo).
+  if (d.finanzas?.sinPropuesta) {
+    p.push({ id: "fin-sin-propuesta", agente: "finanzas", que: `${plural(d.finanzas.sinPropuesta, "movimiento")} sin categoría y sin propuesta`, detalle: "Propón una categoría para cada comercio: Jordi decide", desde: null, quien: "agente", enlace: "/finanzas?tab=movements" });
+  }
+  if (d.finanzas?.porDecidir) {
+    p.push({ id: "fin-por-decidir", agente: "finanzas", que: `${plural(d.finanzas.porDecidir, "categoría propuesta", "categorías propuestas")} por decidir`, desde: null, quien: "jordi", enlace: "/finanzas?ver=propuestas" });
+  }
+
   // Fallos de los bots en las últimas 48 h, en el registro de Actividad.
   for (const f of d.fallos) {
     const agente = AGENTE_DE_BOT[f.bot] ?? "antonio";
@@ -230,10 +240,10 @@ export function ordenarPendientes(p: Pendiente[]): Pendiente[] {
   return [...p].sort((a, b) => Number(b.quien === "jordi") - Number(a.quien === "jordi") || (a.desde ?? "9").localeCompare(b.desde ?? "9"));
 }
 
-// Un grupo por agente, siempre en el mismo orden. Finanzas sale congelado y sin pendientes.
+// Un grupo por agente, siempre en el mismo orden. Un agente marcado como `congelado` en agentes.ts sale sin pendientes (hoy, ninguno).
 export function porAgente(pendientes: Pendiente[], tareas: TareaVista[]): GrupoAgente[] {
   return AGENTES.map((a) => {
-    const congelado = "congelado" in a && a.congelado;
+    const congelado = (a as { congelado?: boolean }).congelado === true;
     return {
       agente: a.id,
       nombre: nombreAgente(a.id),
