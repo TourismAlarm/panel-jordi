@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, ChevronRight } from "lucide-react";
+import { marcarCosa } from "@/lib/hoy/acciones";
 import type { Prioridad } from "@/lib/hoy/prioridades";
 import { cn } from "@/lib/utils";
 
@@ -11,28 +12,25 @@ export type Cosa = Prioridad & { resuelta: boolean | null };
 
 // Las cosas de hoy que decide Antonio: las que hagan falta, sin tope.
 // Se tachan solas cuando resuelves lo enlazado en su página (aprobar un montaje, contestar preguntas, leer la bandeja).
-// También a mano, tocando el círculo: eso manda sobre lo automático y se recuerda en este móvil, solo para ese día.
-export function CosasDeHoy({ fecha, cosas, resumen, pie }: { fecha: string; cosas: Cosa[]; resumen: string; pie?: string | null }) {
-  const clave = `hoy-marcas-${fecha}`;
-  const [marcas, setMarcas] = useState<Record<string, boolean>>({});
+// También a mano, tocando el círculo: eso manda sobre lo automático y se guarda en el panel (lo ves en cualquier
+// dispositivo y Antonio sabe qué has hecho).
+export function CosasDeHoy({ fecha, cosas, marcasIniciales, resumen, pie }: { fecha: string; cosas: Cosa[]; marcasIniciales: Record<string, boolean>; resumen: string; pie?: string | null }) {
+  const [marcas, setMarcas] = useState(marcasIniciales);
+  const [fallo, setFallo] = useState(false);
+  const [, empezar] = useTransition();
   const estaHecha = (c: Cosa) => marcas[c.texto] ?? c.resuelta === true;
 
-  useEffect(() => {
-    try {
-      const guardadas = JSON.parse(localStorage.getItem(clave) ?? "{}");
-      if (guardadas && typeof guardadas === "object" && !Array.isArray(guardadas)) setMarcas(Object.fromEntries(Object.entries(guardadas).filter(([, v]) => typeof v === "boolean")) as Record<string, boolean>);
-    } catch {
-      // Sin almacenamiento (modo privado): se tacha igual, solo que no se recuerda.
-    }
-  }, [clave]);
-
   function alternar(c: Cosa) {
-    setMarcas((antes) => {
-      const ahora = { ...antes, [c.texto]: !(antes[c.texto] ?? c.resuelta === true) };
-      try {
-        localStorage.setItem(clave, JSON.stringify(ahora));
-      } catch {}
-      return ahora;
+    const antes = marcas;
+    const hecha = !estaHecha(c);
+    setMarcas({ ...antes, [c.texto]: hecha });
+    setFallo(false);
+    empezar(async () => {
+      // Si no se puede guardar, se deshace y se dice: nunca se queda tachado algo que el panel no sabe.
+      if (!(await marcarCosa(fecha, c.texto, hecha))) {
+        setMarcas(antes);
+        setFallo(true);
+      }
     });
   }
 
@@ -83,6 +81,8 @@ export function CosasDeHoy({ fecha, cosas, resumen, pie }: { fecha: string; cosa
         <h2 className="text-xs font-bold uppercase tracking-wider opacity-70">Tus cosas de hoy</h2>
         {deHoy.length > 0 && <p className="text-xs font-semibold tabular-nums opacity-70">{quedan === 0 ? "Todo hecho" : `Quedan ${quedan} de ${deHoy.length}`}</p>}
       </div>
+
+      {fallo && <p role="alert" className="text-sm font-semibold">No se ha podido guardar. Prueba otra vez.</p>}
 
       {deHoy.length > 0 ? <ul className="m-0 flex list-none flex-col gap-2.5 p-0">{deHoy.map(fila)}</ul> : <p className="text-base leading-snug">{resumen}</p>}
 

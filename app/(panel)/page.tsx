@@ -9,7 +9,7 @@ import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
 import { estadoBloque } from "@/lib/hoy/contexto";
-import { leerPrioridades, resueltaSola } from "@/lib/hoy/prioridades";
+import { leerMarcas, leerPrioridades, resueltaSola } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
 
@@ -28,6 +28,7 @@ export default async function Hoy() {
   const estadoAgenda = foto.contexto === "error" ? "error" : estadoBloque(foto.agendaEn, agenda);
   const estadoCorreo = foto.contexto === "error" ? "error" : estadoBloque(foto.correosEn, foto.correos);
   const prioridades = leerPrioridades(guardado?.prioridades).map((p) => ({ ...p, resuelta: resueltaSola(p.enlace, foto.abierto) }));
+  const marcas = leerMarcas(guardado?.marcas);
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
   const saber = foto.senales.filter((s) => s.nivel === "saber");
@@ -60,7 +61,7 @@ export default async function Hoy() {
         </p>
       )}
 
-      {guardado && <CosasDeHoy fecha={foto.fecha} cosas={prioridades} resumen={guardado.resumen} pie={guardado.generado_en ? `Preparado el ${formatearFechaHora(guardado.generado_en)}` : null} />}
+      {guardado && <CosasDeHoy fecha={foto.fecha} cosas={prioridades} marcasIniciales={marcas} resumen={guardado.resumen} pie={guardado.generado_en ? `Preparado el ${formatearFechaHora(guardado.generado_en)}` : null} />}
 
       <ListaSenales titulo="Urgente" senales={urgentes} urgente />
 

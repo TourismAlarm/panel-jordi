@@ -1443,99 +1443,6 @@ export type Database = {
         }
         Relationships: []
       }
-      mig_acct: {
-        Row: {
-          code: string
-          id: string
-          link_id: string
-        }
-        Insert: {
-          code: string
-          id: string
-          link_id: string
-        }
-        Update: {
-          code?: string
-          id?: string
-          link_id?: string
-        }
-        Relationships: []
-      }
-      mig_cat: {
-        Row: {
-          code: string
-          id: string
-        }
-        Insert: {
-          code: string
-          id: string
-        }
-        Update: {
-          code?: string
-          id?: string
-        }
-        Relationships: []
-      }
-      mig_loan: {
-        Row: {
-          code: string
-          id: string
-        }
-        Insert: {
-          code: string
-          id: string
-        }
-        Update: {
-          code?: string
-          id?: string
-        }
-        Relationships: []
-      }
-      mig_tx: {
-        Row: {
-          acct: string | null
-          amount: number | null
-          cat: string | null
-          counterparty: string | null
-          date: string | null
-          description: string | null
-          external_id: string | null
-          id: string
-          kind: string | null
-          loan: string | null
-          refund_of: string | null
-          type: string | null
-        }
-        Insert: {
-          acct?: string | null
-          amount?: number | null
-          cat?: string | null
-          counterparty?: string | null
-          date?: string | null
-          description?: string | null
-          external_id?: string | null
-          id: string
-          kind?: string | null
-          loan?: string | null
-          refund_of?: string | null
-          type?: string | null
-        }
-        Update: {
-          acct?: string | null
-          amount?: number | null
-          cat?: string | null
-          counterparty?: string | null
-          date?: string | null
-          description?: string | null
-          external_id?: string | null
-          id?: string
-          kind?: string | null
-          loan?: string | null
-          refund_of?: string | null
-          type?: string | null
-        }
-        Relationships: []
-      }
       permitidos: {
         Row: {
           user_id: string
@@ -1789,6 +1696,7 @@ export type Database = {
           generado_en: string | null
           id: string
           origen: string | null
+          marcas: Json
           prioridades: Json
           resumen: string | null
           senales: Json
@@ -1805,6 +1713,7 @@ export type Database = {
           generado_en?: string | null
           id?: string
           origen?: string | null
+          marcas?: Json
           prioridades?: Json
           resumen?: string | null
           senales?: Json
@@ -1821,6 +1730,7 @@ export type Database = {
           generado_en?: string | null
           id?: string
           origen?: string | null
+          marcas?: Json
           prioridades?: Json
           resumen?: string | null
           senales?: Json

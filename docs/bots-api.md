@@ -467,6 +467,7 @@ Las citas también salen como señales de agenda, pero no se repiten en «Para h
 ### Cambios para Antonio (6-11-2026)
 
 - **`GET hoy/datos` ya no trae `google`.** `agenda` es lo publicado, no Google.
+- **`cosas_de_hoy`** (en `GET /api/bots/hoy/datos`): lo que pusiste para hoy y cómo va. Cada una con `hecha` y `como`: `"a mano"` si Jordi la tachó, `"sola"` si la resolvió en su página, `null` si sigue pendiente. Úsalo para no repetirle mañana lo que ya hizo y para insistir en lo que no.
 - **`correos_sin_leer` viene siempre vacío:** se mantiene un tiempo solo por compatibilidad. Usa `correos`, `agenda_en` y `correos_en`.
 - **Lo que tienes que ajustar:** cada mañana, y cuando cambien, publica agenda y correo con `hoy/contexto`. Después, el resumen con `hoy/resumen`.
 

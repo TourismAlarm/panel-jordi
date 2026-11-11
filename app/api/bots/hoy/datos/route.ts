@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { conBot, firmanteDeUrl } from "@/lib/bots/entrada";
 import { duenoId } from "@/lib/datos/dueno";
 import { aISODia } from "@/lib/fechas";
+import { estadoCosas, leerMarcas, leerPrioridades } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -22,6 +23,8 @@ export async function GET(request: Request) {
       agenda_en: foto.agendaEn,
       correos_en: foto.correosEn,
       correos_sin_leer: [],
+      // Lo que le pusiste para hoy y cómo va: `hecha`, y `como` («a mano» si la tachó Jordi, «sola» si la resolvió en su página).
+      cosas_de_hoy: estadoCosas(leerPrioridades(foto.guardado?.prioridades), leerMarcas(foto.guardado?.marcas), foto.abierto).map(({ texto, nivel, enlace, hecha, como }) => ({ texto, nivel: nivel ?? null, enlace: enlace ?? null, hecha, como })),
       salud: foto.salud,
       fallos: foto.fallos,
     });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { IDS_METRICAS } from "./metricas";
 
-// Contrato del endpoint /api/salud/ingesta (lo usa el proceso del PC): ver docs/pc-salud.md
+// Formato de los datos de salud que deja el bot de Salud por /api/bots/salud/ingesta: ver docs/bots-api.md
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "fecha AAAA-MM-DD");
 const fuente = z.string().min(1).max(40).refine((f) => f !== "manual", "«manual» está reservada a lo que apuntas en el panel");
 

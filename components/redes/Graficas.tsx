@@ -126,8 +126,8 @@ export function LineaGancho({ reels, red }: { reels: Reel[]; red: "instagram" | 
   );
 }
 
-// Dos barras finas: los últimos 5 contra toda la cuenta. Va dentro de un Indicador.
-export function Comparado({ reciente, total, formato }: { reciente: number | null; total: number | null; formato: (v: number) => string }) {
+// Dos barras finas para comparar dos cifras: por defecto, los últimos 5 contra toda la cuenta. Va dentro de un Indicador.
+export function Comparado({ reciente, total, formato, nombres = ["Últimos 5", "La cuenta"] }: { reciente: number | null; total: number | null; formato: (v: number) => string; nombres?: [string, string] }) {
   if (reciente === null || total === null) return null;
   const max = Math.max(reciente, total, 0.0001);
   const fila = (nombre: string, v: number, color: string) => (
@@ -141,8 +141,8 @@ export function Comparado({ reciente, total, formato }: { reciente: number | nul
   );
   return (
     <div className="mt-1.5 flex flex-col gap-1">
-      {fila("Últimos 5", reciente, COLOR)}
-      {fila("La cuenta", total, GRIS)}
+      {fila(nombres[0], reciente, COLOR)}
+      {fila(nombres[1], total, GRIS)}
     </div>
   );
 }
@@ -173,5 +173,60 @@ export function Medidor({ nombre, texto, valor, normal, max, mejor, sinJuzgar }:
         {normal !== null && <span className="absolute -inset-y-1 w-0.5 rounded-full bg-foreground" style={{ left: parte(normal) }} title="Lo normal de la cuenta" />}
       </span>
     </div>
+  );
+}
+
+// El mismo vídeo en las dos redes: una barra por vídeo, hacia arriba si tuvo más vistas en TikTok y hacia abajo si en Instagram.
+// La altura es cuántas veces más (×2, ×4…), en escala de dobles para que un vídeo disparado no aplaste al resto.
+export function GanaPorVideo({ parejas }: { parejas: { titulo: string; publicado: string; ig: Reel; tt: Reel }[] }) {
+  const lista = [...parejas].filter((p) => p.ig.vistas > 0 && p.tt.vistas > 0).sort((a, b) => a.publicado.localeCompare(b.publicado)).slice(-CUANTOS);
+  if (lista.length < 2) return null;
+  const veces = lista.map((p) => p.tt.vistas / p.ig.vistas);
+  const dobles = veces.map((v) => Math.log2(v));
+  const tope = Math.max(1, ...dobles.map(Math.abs));
+  const W = 320;
+  const H = 170;
+  const MEDIO = H / 2;
+  const ALTO = MEDIO - 26;
+  const paso = W / lista.length;
+  const ancho = Math.min(22, paso - 2);
+  const texto = (v: number) => `×${(v >= 1 ? v : 1 / v).toFixed(1).replace(".", ",")}`;
+  const extremo = dobles.reduce((a, d, i) => (Math.abs(d) > Math.abs(dobles[a]) ? i : a), 0);
+  const ganaTt = veces.filter((v) => v > 1).length;
+
+  return (
+    <figure className={caja} style={{ margin: 0 }}>
+      <figcaption className="flex items-baseline justify-between gap-3">
+        <span className="font-semibold">Dónde funcionó mejor cada vídeo</span>
+        <span className="text-sm text-muted-foreground">últimos {lista.length}</span>
+      </figcaption>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Vistas en TikTok frente a Instagram en los últimos ${lista.length} vídeos: TikTok gana en ${ganaTt}`}>
+        <text x="0" y="11" fontSize="11" fontWeight="600" fill="var(--texto-suave)">↑ más vistas en TikTok</text>
+        <text x="0" y={H - 16} fontSize="11" fontWeight="600" fill="var(--texto-suave)">↓ más vistas en Instagram</text>
+        {lista.map((p, i) => {
+          const x = i * paso + (paso - ancho) / 2;
+          const alto = Math.max(3, (Math.abs(dobles[i]) / tope) * ALTO);
+          const arriba = dobles[i] >= 0;
+          return (
+            <a key={p.tt.permalink} href={p.tt.permalink} target="_blank" rel="noreferrer">
+              <title>{`${p.titulo} · ${dia(p.publicado)} · TikTok ${miles(p.tt.vistas)} · Instagram ${miles(p.ig.vistas)}`}</title>
+              <rect x={i * paso} y="16" width={paso} height={H - 36} fill="transparent" />
+              <rect x={x} y={arriba ? MEDIO - 1 - alto : MEDIO + 1} width={ancho} height={alto} rx="3" fill={arriba ? COLOR : GRIS} />
+              {i === extremo && (
+                <text x={Math.min(W - 14, Math.max(14, x + ancho / 2))} y={arriba ? MEDIO - alto - 6 : MEDIO + alto + 14} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--texto)">
+                  {texto(veces[i])}
+                </text>
+              )}
+            </a>
+          );
+        })}
+        <line x1="0" x2={W} y1={MEDIO} y2={MEDIO} stroke="var(--texto)" strokeWidth="1.5" />
+        <text x="0" y={H - 3} fontSize="11" fill="var(--texto-suave)">{dia(lista[0].publicado)}</text>
+        <text x={W} y={H - 3} fontSize="11" textAnchor="end" fill="var(--texto-suave)">{dia(lista[lista.length - 1].publicado)}</text>
+      </svg>
+      <p className="text-sm text-muted-foreground">
+        TikTok gana en <b className="text-foreground">{ganaTt} de {lista.length}</b>. La línea del centro es «igual en las dos». Los vídeos de menos de 7 días aún se mueven.
+      </p>
+    </figure>
   );
 }
