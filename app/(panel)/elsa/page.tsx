@@ -9,18 +9,21 @@ import { descartesPorVideo, listarPeticiones, materialDeVideo } from "@/lib/dato
 import { contarEnviadas, resumenPreguntas } from "@/lib/datos/preguntas";
 import { contarPorDecidir } from "@/lib/datos/reglas";
 import { estadoSync } from "@/lib/datos/sync";
+import { listarPublicaciones } from "@/lib/datos/publicaciones";
 import { listarProyectos } from "@/lib/datos/videos";
 import { estadoPeticion, faseVideo, textoMotivo } from "@/lib/estados";
 import { PETICIONES_ACTIVAS } from "@/lib/funciones";
-import { agruparPor, dia, diaCercano, hoyLargo, plural } from "@/lib/formato";
+import { agruparPor, dia, diaCercano, fecha, hoyLargo, plural } from "@/lib/formato";
 import { encargosAbiertos } from "@/lib/datos/encargos";
+import { NOMBRE_RED, paraPublicar } from "@/lib/publicaciones";
 import { embudo, etapaDe, ETAPAS, pasoActual, pasosDe, teToca, TONO_PASO } from "@/lib/pasos";
 
 // Portada: arriba, el embudo (cuántos vídeos hay en cada etapa) y qué hace el Editor. Después, solo lo que te toca,
 // con una tarjeta y un botón por vídeo; el resto va en una lista corta («En marcha»).
-// Tocar una etapa del embudo deja solo sus vídeos. Al final, plegados, los hechos y los descartados.
+// Tocar una etapa del embudo deja solo sus vídeos. Después, «Para publicar» (lo programado y lo aprobado sin fecha).
+// Al final, plegados, los hechos y los descartados.
 export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
-  const [{ ver, fase: qFase }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas, cola] = await Promise.all([
+  const [{ ver, fase: qFase }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas, cola, publicaciones] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
@@ -31,6 +34,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
     guionesAbiertos(),
     textosDeReglas(),
     encargosAbiertos(),
+    listarPublicaciones(),
   ]);
   const revisionesGuion = await revisionesDeGuiones(guiones.map((g) => g.id));
 
@@ -46,6 +50,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
   const fase = ETAPAS.find((e) => e.id === qFase)?.id ?? null;
   const deFase = fase ? abiertos.filter(({ pasos }) => etapaDe(pasos) === fase) : [];
   const enMarcha = abiertos.filter(({ pasos }) => !teToca(pasos));
+  const porPublicar = paraPublicar(vivos.map(({ p }) => p), publicaciones);
 
   // Qué hace el Editor ahora: lo que falla o pregunta va primero; si no, lo que monta; si no, lo que espera.
   const idsDe = (estado: string) => cola.filter((e) => e.estado === estado).map((e) => e.video_id);
@@ -171,6 +176,22 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
             </Seccion>
           )}
         </>
+      )}
+
+      {!soloMios && !fase && !!porPublicar.length && (
+        <Seccion titulo="Para publicar" cuenta={porPublicar.length}>
+          <Lista>
+            {porPublicar.map((x) => (
+              <Fila
+                key={`${x.videoId}-${x.red ?? "sin"}`}
+                href={`/elsa/videos/${x.videoId}`}
+                inicio={<Punto tono={x.red ? "info" : "neutro"} />}
+                titulo={x.titulo}
+                detalle={x.red ? `${NOMBRE_RED[x.red]} · ${fecha(x.fecha)}` : "Sin fecha"}
+              />
+            ))}
+          </Lista>
+        </Seccion>
       )}
 
       {!soloMios && !fase && !!hechos.length && (

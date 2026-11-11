@@ -291,3 +291,22 @@ export const ContextoHoyIn = z
       if (!tocaElDia(ev, c.fecha)) ctx.addIssue({ code: "custom", path: ["agenda", i], message: "no cae en esa fecha (Europe/Madrid)" });
     });
   });
+
+// Cuándo sale cada vídeo en cada red. Un programado lleva fecha; la misma pareja vídeo+red, una sola vez por llamada.
+export const PublicacionesIn = z.object({
+  items: z
+    .array(
+      z
+        .object({
+          video_id: codigoVideo,
+          red: z.enum(["instagram", "tiktok", "youtube"]),
+          fecha: instante.nullish(),
+          estado: z.enum(["programado", "publicado"]),
+          enlace: url.nullish(),
+        })
+        .refine((p) => p.estado !== "programado" || !!p.fecha, { path: ["fecha"], message: "un programado lleva fecha" }),
+    )
+    .min(1)
+    .max(200)
+    .refine((items) => new Set(items.map((p) => `${p.video_id} ${p.red}`)).size === items.length, "el mismo vídeo y red, dos veces"),
+});

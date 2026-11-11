@@ -404,6 +404,16 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/redes/informes   -H "Author
 ..."}'
 ```
 
+### `POST /api/bots/publicaciones`
+
+Cuándo sale cada vídeo en cada red: es lo que rellena la tarjeta «Para publicar» de Proyectos. `items` (1 a 200), cada uno con `video_id` (`GE_033`), `red` (`instagram` · `tiktok` · `youtube`), `estado` (`programado` · `publicado`), `fecha` (con zona; obligatoria si es `programado`) y `enlace` (opcional). Una fila por vídeo y red: la misma pareja la sustituye entera, así que para pasar de programado a publicado se manda otra vez con `estado: "publicado"` y el enlace. La misma pareja dos veces en una llamada es `400`; un vídeo que no existe, `404` (no se guarda nada). `GET` devuelve todas por fecha.
+
+La tarjeta enseña lo `programado` por fecha y, al final como «Sin fecha», los vídeos aprobados que no tienen ninguna fila. Lo `publicado` no sale.
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/publicaciones   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"items":[{"video_id":"GE_033","red":"instagram","fecha":"2026-11-12T20:30:00+01:00","estado":"programado"}]}'
+```
+
 ### Avisos a Antonio (webhook)
 
 El panel avisa con un `POST` JSON en cuanto Jordi decide algo. Dispara y olvida: 5 s de espera y sin reintentos. Si falla o faltan las variables, el clic de Jordi funciona igual y el fallo sale en Actividad → Bots. La rutina de cada hora sigue como red de seguridad.

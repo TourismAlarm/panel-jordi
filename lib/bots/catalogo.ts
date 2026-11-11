@@ -40,6 +40,8 @@ export type Permiso =
   | "peticiones:escribir"
   | "redes:leer"
   | "redes:escribir"
+  | "publicaciones:leer"
+  | "publicaciones:escribir" // cuándo sale cada vídeo en cada red: tarjeta «Para publicar»
   | "hoy:leer"
   | "hoy:escribir"
   | "finanzas:resumen" // lo único de dinero que lee Día
@@ -59,7 +61,7 @@ export type Permiso =
 const COMUNES: Permiso[] = ["actividad:escribir", "bandeja:escribir", "bandeja:leer", "reglas:leer", "memoria:escribir", "memoria:leer"];
 
 const PERMISOS: Record<Bot, Permiso[]> = {
-  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer", "peticiones:leer", "peticiones:escribir", "redes:leer", "redes:escribir", "arnes:leer", "arnes:escribir", "edicion:entregar", "edicion:cerrar"],
+  antonio: [...COMUNES, "ideas:leer", "guiones:leer", "revisiones:escribir", "reglas:escribir", "edicion:escribir", "edicion:leer", "videos:leer", "peticiones:leer", "peticiones:escribir", "redes:leer", "redes:escribir", "publicaciones:leer", "publicaciones:escribir", "arnes:leer", "arnes:escribir", "edicion:entregar", "edicion:cerrar"],
   ideas: [...COMUNES, "ideas:escribir", "ideas:leer"],
   guionista: [...COMUNES, "ideas:leer", "guiones:escribir", "guiones:leer"],
   editor: ["edicion:tomar", "edicion:informar", "edicion:entregar", "reglas:leer"],

@@ -1503,6 +1503,44 @@ export type Database = {
         }
         Relationships: []
       }
+      publicaciones: {
+        Row: {
+          actualizado_en: string
+          creado_por: string
+          enlace: string | null
+          estado: string
+          fecha: string | null
+          red: string
+          video_id: string
+        }
+        Insert: {
+          actualizado_en?: string
+          creado_por: string
+          enlace?: string | null
+          estado: string
+          fecha?: string | null
+          red: string
+          video_id: string
+        }
+        Update: {
+          actualizado_en?: string
+          creado_por?: string
+          enlace?: string | null
+          estado?: string
+          fecha?: string | null
+          red?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publicaciones_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preguntas: {
         Row: {
           clave: string
