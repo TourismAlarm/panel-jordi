@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGlobalToast } from '@/components/finanzas/Toaster';
-import { Sheet, money, Loading, ErrorBox } from './ui';
+import { ArrowDownLeft, ArrowLeftRight, Landmark, TrendingUp } from 'lucide-react';
+import { Sheet, money, Loading, ErrorBox, Ficha, MOD } from './ui';
 import { isRefundCategory, isSpecialCategory, isTransferCategory } from '@/lib/finanzas/categorization/special-names';
 
 interface Tx {
@@ -187,6 +188,12 @@ export function MovementsScreen({
     queryClient.invalidateQueries({ queryKey: ['summary'] });
   };
 
+  // Lo que salió y lo que entró de verdad este mes: sin traspasos entre tus cuentas ni inversiones.
+  const reales = all.filter((t) => (t.kind ?? 'regular') === 'regular' || t.kind === 'debt_payment');
+  const devuelto = reales.filter((t) => t.type === 'income' && isRefundCategory(t.category?.name)).reduce((a, t) => a + Number(t.amount), 0);
+  const gastado = reales.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.amount), 0) - devuelto;
+  const entrado = reales.filter((t) => t.type === 'income' && !isRefundCategory(t.category?.name)).reduce((a, t) => a + Number(t.amount), 0);
+
   const chip = (id: Filter, label: string, warn = false) => {
     const active = filter === id;
     const cls = active
@@ -195,7 +202,7 @@ export function MovementsScreen({
         ? 'bg-[color-mix(in_srgb,var(--ojo)_14%,var(--superficie))] text-[var(--ojo)] border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] font-semibold'
         : 'bg-card text-[var(--texto)] border-[var(--borde)]';
     return (
-      <button key={id} onClick={() => setFilter(id)} className={`h-10 px-3.5 rounded-full border text-sm ${cls}`}>
+      <button key={id} onClick={() => setFilter(id)} aria-pressed={active} className={`h-11 px-4 rounded-full border text-base ${cls}`}>
         {label}
       </button>
     );
@@ -212,18 +219,31 @@ export function MovementsScreen({
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Movimientos</h1>
-        <button aria-label="Añadir movimiento a mano" onClick={onAdd} className="w-11 h-11 rounded-xl bg-[var(--texto)] text-[var(--fondo)] flex items-center justify-center">
+        <button aria-label="Añadir movimiento a mano" onClick={onAdd} className="w-11 h-11 rounded-full bg-[var(--texto)] text-[var(--fondo)] flex items-center justify-center">
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
         </button>
       </div>
 
-      <label className="flex items-center gap-2 bg-card border border-[var(--borde)] rounded-xl px-3 h-11">
+      {!txQuery.isLoading && !txQuery.error && all.length > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-[var(--borde)] bg-card p-3">
+            <span className="text-sm font-semibold text-[var(--texto-suave)]">Ha salido</span>
+            <span className="text-2xl font-bold leading-tight tabular-nums">{money(gastado)}</span>
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-[var(--borde)] bg-card p-3">
+            <span className="text-sm font-semibold text-[var(--texto-suave)]">Ha entrado</span>
+            <span className="text-2xl font-bold leading-tight tabular-nums text-[var(--bien)]">{money(entrado)}</span>
+          </div>
+        </div>
+      )}
+
+      <label className="flex items-center gap-2 bg-card border border-[var(--borde)] rounded-lg px-3.5 h-12">
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--texto-suave)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
         <span className="sr-only">Buscar</span>
-        <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar comercio o concepto" className="flex-1 bg-transparent outline-none text-[15px]" />
+        <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar comercio o concepto" className="flex-1 bg-transparent outline-none text-base" />
       </label>
 
-      <div className="flex gap-1.5 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         {chip('all', 'Todos')}
         {chip('expense', 'Gastos')}
         {chip('income', 'Ingresos')}
@@ -239,8 +259,14 @@ export function MovementsScreen({
       ) : (
         groups.map(([date, items]) => (
           <section key={date} className="flex flex-col gap-1.5">
-            <h2 className="text-[13px] font-semibold text-[var(--texto-suave)] px-0.5 py-1 first-letter:uppercase">{dayHeading(date)}</h2>
-            <div className="bg-card rounded-2xl divide-y divide-[var(--superficie-2)]">
+            <div className="flex items-baseline justify-between gap-3 px-0.5 pt-1">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--texto-suave)]">{dayHeading(date)}</h2>
+              {(() => {
+                const delDia = items.filter((t) => t.type === 'expense' && ((t.kind ?? 'regular') === 'regular' || t.kind === 'debt_payment')).reduce((a, t) => a + Number(t.amount), 0);
+                return delDia > 0 ? <span className="text-sm font-semibold tabular-nums text-[var(--texto-suave)]">-{money(delDia, true)}</span> : null;
+              })()}
+            </div>
+            <div className="bg-card border border-[var(--borde)] rounded-lg divide-y divide-[var(--borde)]">
               {items.map((t) => {
                 const kind = t.kind ?? 'regular';
                 const badge = KIND_BADGE[kind];
@@ -273,27 +299,27 @@ export function MovementsScreen({
                     disabled={!editable(kind)}
                     className={`w-full flex items-center gap-3 px-3.5 py-3 text-left ${kind === 'internal_transfer' ? 'opacity-60' : ''}`}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-[13px] font-bold"
-                      style={
-                        badge
-                          ? { background: badge.bg, color: badge.fg }
-                          : needsCategory
-                            ? { background: 'color-mix(in srgb,var(--ojo) 14%,var(--superficie))', color: 'var(--ojo)' }
-                            : { background: t.type === 'income' ? 'color-mix(in srgb,var(--bien) 14%,var(--superficie))' : 'var(--superficie-2)', color: t.type === 'income' ? 'var(--bien)' : 'var(--texto-suave)' }
-                      }
-                    >
-                      {badge ? badge.short : needsCategory ? '?' : (catName || '·').substring(0, 3).toUpperCase()}
-                    </span>
+                    {kind === 'debt_payment' ? (
+                      <Ficha color="var(--texto-suave)"><Landmark size={18} /></Ficha>
+                    ) : kind === 'investment' ? (
+                      <Ficha color="var(--texto-suave)"><TrendingUp size={18} /></Ficha>
+                    ) : kind === 'internal_transfer' ? (
+                      <Ficha color="var(--texto-suave)"><ArrowLeftRight size={18} /></Ficha>
+                    ) : needsCategory ? (
+                      <Ficha color="var(--ojo)">?</Ficha>
+                    ) : t.type === 'income' ? (
+                      <Ficha color="var(--bien)"><ArrowDownLeft size={18} strokeWidth={2.6} /></Ficha>
+                    ) : (
+                      <Ficha color={MOD}>{(catName || '·').charAt(0).toUpperCase()}</Ficha>
+                    )}
                     <span className="flex-1 min-w-0 flex flex-col gap-0.5">
-                      <span className="text-[15px] font-medium truncate">{displayName(t)}</span>
-                      <span className={`text-xs truncate ${needsCategory ? 'text-[var(--ojo)] font-semibold' : 'text-[var(--texto-suave)]'}`}>
+                      <span className="text-base font-semibold truncate">{displayName(t)}</span>
+                      <span className={`text-sm truncate ${needsCategory ? 'text-[var(--ojo)] font-semibold' : 'text-[var(--texto-suave)]'}`}>
                         {sub}{acc && !needsCategory ? ` · ${acc}` : ''}
                       </span>
                     </span>
                     <span
-                      className={`text-[15px] font-semibold tabular-nums shrink-0 ${
+                      className={`text-base font-semibold tabular-nums shrink-0 ${
                         refund ? 'text-[var(--texto-suave)]' : t.type === 'income' ? 'text-[var(--bien)]' : back > 0 && net === 0 ? 'text-[var(--texto-suave)] line-through' : ''
                       }`}
                     >
@@ -310,7 +336,7 @@ export function MovementsScreen({
       {internalCount > 0 && (
         <button
           onClick={() => setShowInternal(!showInternal)}
-          className="flex justify-between items-center border border-dashed border-[var(--borde)] rounded-2xl px-3.5 py-3 text-sm text-[var(--texto-suave)]"
+          className="flex justify-between items-center gap-3 border border-dashed border-[var(--borde)] rounded-lg px-3.5 py-3 text-left text-sm text-[var(--texto-suave)]"
         >
           <span>
             {showInternal
@@ -324,11 +350,11 @@ export function MovementsScreen({
       <Sheet open={editing !== null} onClose={closeSheet} title={refundCategory ? '¿Qué gasto te devuelven?' : 'Categoría'}>
         {editing && refundCategory && (
           <div className="flex flex-col gap-3">
-            <div className="bg-card rounded-xl px-3.5 py-3 flex justify-between gap-3">
+            <div className="bg-card rounded-lg px-3.5 py-3 flex justify-between gap-3">
               <span className="text-sm font-medium truncate">Te devuelven · {displayName(editing)}</span>
               <span className="text-sm font-semibold tabular-nums shrink-0 text-[var(--bien)]">+{money(editing.amount, true)}</span>
             </div>
-            <span className="text-xs text-[var(--texto-suave)] px-0.5">
+            <span className="text-sm text-[var(--texto-suave)] px-0.5">
               Gastos de los últimos 90 días de {money(editing.amount, true)} o más. Ese gasto pasará a contar solo lo que te costó.
             </span>
             {candQuery.isLoading ? (
@@ -336,7 +362,7 @@ export function MovementsScreen({
             ) : candQuery.error ? (
               <ErrorBox text={(candQuery.error as Error).message} />
             ) : (
-              <div className="bg-card rounded-2xl divide-y divide-[var(--superficie-2)]">
+              <div className="bg-card rounded-lg divide-y divide-[var(--superficie-2)]">
                 {(candQuery.data || []).map((c) => {
                   const rest = Math.max(0, c.amount - Number(editing.amount));
                   return (
@@ -346,14 +372,14 @@ export function MovementsScreen({
                       className={`w-full flex items-center gap-3 px-3.5 py-3 text-left ${editing.refund_of === c.id ? 'bg-[var(--fondo)]' : ''}`}
                     >
                       <span className="flex-1 min-w-0 flex flex-col gap-0.5">
-                        <span className="text-[15px] font-medium truncate">{displayName(c)}</span>
-                        <span className="text-xs text-[var(--texto-suave)] truncate">
+                        <span className="text-base font-medium truncate">{displayName(c)}</span>
+                        <span className="text-sm text-[var(--texto-suave)] truncate">
                           {new Date(`${String(c.date).substring(0, 10)}T12:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                           {accountName(c.account_id) ? ` · ${accountName(c.account_id)}` : ''}
                           {c.exact ? ' · mismo importe' : ` · contará ${money(rest, true)}`}
                         </span>
                       </span>
-                      <span className="text-[15px] font-semibold tabular-nums shrink-0">-{money(c.amount, true)}</span>
+                      <span className="text-base font-semibold tabular-nums shrink-0">-{money(c.amount, true)}</span>
                     </button>
                   );
                 })}
@@ -364,10 +390,10 @@ export function MovementsScreen({
             )}
             <button
               onClick={() => categorize(refundCategory, null)}
-              className="rounded-xl border border-dashed border-[var(--borde)] bg-[var(--fondo)] px-3.5 py-2.5 text-left flex flex-col gap-0.5"
+              className="rounded-lg border border-dashed border-[var(--borde)] bg-[var(--fondo)] px-3.5 py-2.5 text-left flex flex-col gap-0.5"
             >
               <span className="text-sm font-semibold">No está en la lista</span>
-              <span className="text-xs text-[var(--texto-suave)]">Resta del gasto del mes, sin tocar ningún gasto concreto.</span>
+              <span className="text-sm text-[var(--texto-suave)]">Resta del gasto del mes, sin tocar ningún gasto concreto.</span>
             </button>
             <button onClick={() => setRefundCategory(null)} className="text-sm font-semibold text-[var(--texto-suave)] py-2">
               Volver a categorías
@@ -376,11 +402,11 @@ export function MovementsScreen({
         )}
         {editing && !refundCategory && (
           <div className="flex flex-col gap-3.5">
-            <div className="bg-card rounded-xl px-3.5 py-3 flex justify-between gap-3">
+            <div className="bg-card rounded-lg px-3.5 py-3 flex justify-between gap-3">
               <span className="text-sm font-medium truncate">{displayName(editing)}</span>
               <span className="text-sm font-semibold tabular-nums shrink-0">{money(editing.amount, true)}</span>
             </div>
-            <label className="flex items-center gap-3 bg-card rounded-xl px-3.5 py-3 text-sm">
+            <label className="flex items-center gap-3 bg-card rounded-lg px-3.5 py-3 text-sm">
               <input type="checkbox" checked={learn} onChange={(e) => setLearn(e.target.checked)} className="w-5 h-5 accent-[var(--texto)]" />
               Aplicar siempre a este comercio
             </label>
@@ -389,7 +415,7 @@ export function MovementsScreen({
                 <button
                   key={c.id}
                   onClick={() => categorize(c.id)}
-                  className={`h-12 rounded-xl border text-sm px-3 text-left ${editing.category_id === c.id ? 'border-[var(--texto)] border-2 font-semibold bg-card' : 'border-[var(--borde)] bg-card'}`}
+                  className={`h-12 rounded-lg border text-sm px-3 text-left ${editing.category_id === c.id ? 'border-[var(--texto)] border-2 font-semibold bg-card' : 'border-[var(--borde)] bg-card'}`}
                 >
                   {c.name}
                 </button>
@@ -397,17 +423,17 @@ export function MovementsScreen({
             </div>
             {specials.length > 0 && (
               <div className="flex flex-col gap-2">
-                <span className="text-[13px] font-semibold text-[var(--texto-suave)] px-0.5">
+                <span className="text-sm font-semibold text-[var(--texto-suave)] px-0.5">
                   {editing.type === 'income' ? 'No es un ingreso de verdad' : 'No es un gasto de verdad'}
                 </span>
                 {specials.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => (isRefundCategory(c.name) ? setRefundCategory(c.id) : categorize(c.id))}
-                    className={`rounded-xl border border-dashed px-3.5 py-2.5 text-left flex flex-col gap-0.5 ${editing.category_id === c.id ? 'border-[var(--texto)] border-2 bg-card' : 'border-[var(--borde)] bg-[var(--fondo)]'}`}
+                    className={`rounded-lg border border-dashed px-3.5 py-2.5 text-left flex flex-col gap-0.5 ${editing.category_id === c.id ? 'border-[var(--texto)] border-2 bg-card' : 'border-[var(--borde)] bg-[var(--fondo)]'}`}
                   >
                     <span className="text-sm font-semibold">{c.name}</span>
-                    <span className="text-xs text-[var(--texto-suave)]">
+                    <span className="text-sm text-[var(--texto-suave)]">
                       {isTransferCategory(c.name)
                         ? 'Dinero de una cuenta tuya a otra. No cuenta como gasto ni ingreso.'
                         : 'Te devuelven algo que pagaste, entero o una parte. Luego eliges qué gasto era y pasa a contar solo lo que te costó.'}

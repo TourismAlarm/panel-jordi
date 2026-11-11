@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGlobalToast } from '@/components/finanzas/Toaster';
-import { C, Card, Bar, Sheet, money, shortDate, Loading, ErrorBox } from './ui';
+import { CreditCard, Home, PiggyBank, Wallet, type LucideIcon } from 'lucide-react';
+import { C, Card, Bar, Sheet, money, shortDate, Loading, ErrorBox, Ficha, Titulo, MOD } from './ui';
 import { Consejos } from './Consejos';
 import { Propuestas } from './Propuestas';
 
@@ -51,6 +52,7 @@ interface Summary {
 }
 
 const ROLE_ORDER: Role[] = ['daily', 'debts', 'savings', 'home'];
+const ROLE_ICON: Record<Role, LucideIcon> = { daily: Wallet, debts: CreditCard, savings: PiggyBank, home: Home };
 const ROLE_INFO: Record<Role, { label: string; hint: string; color: string }> = {
   daily: { label: 'Día a día', hint: 'Cobras la nómina y gastas', color: C.ink },
   debts: { label: 'Deudas', hint: 'Desde aquí se pagan las cuotas', color: C.amber },
@@ -167,10 +169,10 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-[13px] text-[var(--texto-suave)] -mt-1">{syncLabel(data.lastSync)}</div>
+      <div className="text-sm font-semibold text-[var(--texto-suave)] -mt-1">{syncLabel(data.lastSync)}</div>
 
       {data.isCurrent ? (
-        <Card tone="dark" className="!p-5 flex flex-col gap-3 !rounded-[20px]">
+        <Card tone="dark" className="!p-5 flex flex-col gap-3 ">
           <div className="flex flex-col gap-1">
             <span className="text-sm text-[var(--borde)]">Te queda en {dailyName}</span>
             <span className="text-[40px] leading-tight font-bold tracking-tight tabular-nums">{money(data.remaining)}</span>
@@ -184,7 +186,7 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
           </div>
           <div className="flex flex-col gap-1.5">
             <Bar value={data.dayIndex / Math.max(1, data.period.days)} color="var(--mod-finanzas)" track="color-mix(in srgb, var(--fondo) 22%, transparent)" height={8} />
-            <div className="flex justify-between text-xs text-[var(--borde)]">
+            <div className="flex justify-between text-sm text-[var(--borde)]">
               <span>Día {data.dayIndex} de {data.period.days}</span>
               <span>{data.payday ? `Nómina el ${shortDate(data.payday.date)}` : data.period.label}</span>
             </div>
@@ -193,12 +195,12 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
             <span className="text-[var(--borde)]">Gastado este mes</span>
             <span className="font-semibold tabular-nums">{money(flow.spent)}</span>
           </div>
-          <span className="text-[13px] text-[var(--borde)] -mt-2">
+          <span className="text-sm text-[var(--borde)] -mt-2">
             Entró {money(flow.income)}{comparison ? ` · ${comparison} a estas alturas` : ''}
           </span>
         </Card>
       ) : (
-        <Card tone="dark" className="!p-5 flex flex-col gap-1 !rounded-[20px]">
+        <Card tone="dark" className="!p-5 flex flex-col gap-1 ">
           <span className="text-sm text-[var(--borde)]">Gastaste ese mes</span>
           <span className="text-[40px] leading-tight font-bold tracking-tight tabular-nums">{money(flow.spent)}</span>
           <span className="text-sm text-[var(--borde)]">
@@ -211,17 +213,17 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
 
       <Propuestas />
 
-      <Card className="flex flex-col gap-3">
-        <span className="text-[15px] font-semibold">En qué se va tu dinero</span>
+      <Titulo extra={money(flow.spent)}>En qué se va tu dinero</Titulo>
+      <Card className="-mt-2 flex flex-col gap-3">
         {data.topCategories.length === 0 ? (
           <span className="text-sm text-[var(--texto-suave)]">Aún no hay gastos este mes.</span>
         ) : (
           <div className="flex flex-col gap-2.5">
             {data.topCategories.map((c) => (
               <div key={c.name} className="flex flex-col gap-1">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-base">
                   <span>{c.name}</span>
-                  <span className="font-semibold tabular-nums">{money(c.amount)}</span>
+                  <span className="font-bold tabular-nums">{money(c.amount)}</span>
                 </div>
                 <Bar value={c.amount / maxCat} color="var(--mod-finanzas)" height={8} />
               </div>
@@ -231,47 +233,54 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
       </Card>
 
       <section className="flex flex-col gap-2" aria-label="Tus cuentas">
-        <div className="flex justify-between items-baseline">
-          <h2 className="text-[15px] font-semibold">Tus cuentas</h2>
-          <span className="text-[13px] text-[var(--texto-suave)]">saldo actual</span>
-        </div>
+        <Titulo extra="saldo actual">Tus cuentas</Titulo>
         {accounts.length === 0 ? (
-          <Card><p className="text-sm text-[var(--texto-suave)]">Conecta tus bancos en Ajustes y aquí verás el saldo de cada cuenta.</p></Card>
+          <Card><p className="text-base text-[var(--texto-suave)]">Conecta tus bancos en Ajustes y aquí verás el saldo de cada cuenta.</p></Card>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {accounts.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => setRoleFor(a)}
-                className={`rounded-2xl p-3.5 flex flex-col gap-1 text-left ${a.role ? 'bg-card' : 'bg-[color-mix(in_srgb,var(--ojo)_14%,var(--superficie))]'}`}
-                aria-label={`${a.name}: ${money(a.balance)}. ${a.role ? ROLE_INFO[a.role].label : 'Sin papel'}. Cambiar papel`}
-              >
-                <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: a.role ? ROLE_INFO[a.role].color : C.amber }}>
-                  <Dot color={a.role ? ROLE_INFO[a.role].color : C.amber} />
-                  {a.role ? ROLE_INFO[a.role].label : '¿Para qué es?'}
-                </span>
-                <span className="text-[19px] font-bold tabular-nums">{money(a.balance)}</span>
-                <span className="text-xs text-[var(--texto-suave)] truncate">{a.name}{a.linked ? '' : ' · manual'}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-3">
+            {accounts.map((a) => {
+              const Icono = a.role ? ROLE_ICON[a.role] : Wallet;
+              const color = a.role ? MOD : C.amber;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => setRoleFor(a)}
+                  className={`flex min-w-0 flex-col gap-1 rounded-lg border p-3 text-left active:scale-[0.98] ${a.role ? 'border-[var(--borde)] bg-card' : 'border-[color-mix(in_srgb,var(--ojo)_45%,var(--superficie))] bg-card'}`}
+                  aria-label={`${a.name}: ${money(a.balance)}. ${a.role ? ROLE_INFO[a.role].label : 'Sin papel'}. Cambiar papel`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-bold" style={{ color }}>
+                    <Ficha color={color} size={28}><Icono size={16} strokeWidth={2.4} /></Ficha>
+                    {a.role ? ROLE_INFO[a.role].label : '¿Para qué es?'}
+                  </span>
+                  <span className="text-2xl font-bold leading-tight tabular-nums">{money(a.balance)}</span>
+                  <span className="truncate text-sm text-[var(--texto-suave)]">{a.name}{a.linked ? '' : ' · manual'}</span>
+                </button>
+              );
+            })}
           </div>
         )}
         {!data.rolesMigrated ? (
-          <span className="text-xs text-[var(--ojo)]">Para guardar el papel de cada cuenta falta aplicar la migración 013 en Supabase.</span>
+          <span className="text-sm text-[var(--ojo)]">Para guardar el papel de cada cuenta falta aplicar la migración 013 en Supabase.</span>
         ) : unassigned ? (
-          <span className="text-xs text-[var(--texto-suave)]">Toca las cuentas sin papel para decirme para qué las usas.</span>
+          <span className="text-sm text-[var(--texto-suave)]">Toca las cuentas sin papel para decirme para qué las usas.</span>
         ) : anyGuessed ? (
-          <span className="text-xs text-[var(--texto-suave)]">Papeles deducidos por el nombre del banco. Toca una cuenta si alguno no es correcto.</span>
+          <span className="text-sm text-[var(--texto-suave)]">Papeles deducidos por el nombre del banco. Toca una cuenta si alguno no es correcto.</span>
         ) : null}
       </section>
 
-      <Card className="flex flex-col gap-3">
+      <details className="group rounded-lg border border-[var(--borde)] bg-card">
+        <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 text-base font-semibold">
+          Detalle por cuenta y traspasos
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+        </summary>
+        <div className="flex flex-col gap-4 border-t border-[var(--borde)] p-4">
+      <div className="flex flex-col gap-3">
         <div className="flex justify-between items-baseline">
           <span className="flex flex-col">
-            <span className="text-[15px] font-semibold">Gasto por cuenta</span>
-            {data.startDay > 1 && <span className="text-xs text-[var(--texto-suave)]">{data.period.label}</span>}
+            <span className="text-base font-semibold">Gasto por cuenta</span>
+            {data.startDay > 1 && <span className="text-sm text-[var(--texto-suave)]">{data.period.label}</span>}
           </span>
-          <span className="text-[15px] font-semibold tabular-nums">{money(flow.spent)}</span>
+          <span className="text-base font-semibold tabular-nums">{money(flow.spent)}</span>
         </div>
         {flow.byAccount.length === 0 ? (
           <span className="text-sm text-[var(--texto-suave)]">Aún no hay gastos este mes.</span>
@@ -283,32 +292,32 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
                   <span className="flex items-center gap-1.5 min-w-0">
                     <Dot color={accountColor(a.role)} />
                     <span className="truncate">{a.role ? ROLE_INFO[a.role].label : a.name}</span>
-                    <span className="text-xs text-[var(--texto-suave)] truncate">{a.role ? a.name : ''}</span>
+                    <span className="text-sm text-[var(--texto-suave)] truncate">{a.role ? a.name : ''}</span>
                   </span>
                   <span className="font-semibold tabular-nums shrink-0">{money(a.amount)}</span>
                 </div>
                 <Bar value={a.amount / maxAccount} color={accountColor(a.role)} />
                 {a.role === 'home' && a.total !== a.amount && (
-                  <span className="text-xs text-[var(--texto-suave)]">Tu mitad · entre los dos {money(a.total)}</span>
+                  <span className="text-sm text-[var(--texto-suave)]">Tu mitad · entre los dos {money(a.total)}</span>
                 )}
-                {a.debts > 0 && <span className="text-xs text-[var(--texto-suave)]">{money(a.debts)} son cuotas de deudas</span>}
+                {a.debts > 0 && <span className="text-sm text-[var(--texto-suave)]">{money(a.debts)} son cuotas de deudas</span>}
               </button>
             ))}
           </div>
         )}
         {(flow.refunded ?? 0) > 0 && (
-          <span className="text-xs text-[var(--texto-suave)]">Ya descontado lo que te han devuelto: {money(flow.refunded!)}</span>
+          <span className="text-sm text-[var(--texto-suave)]">Ya descontado lo que te han devuelto: {money(flow.refunded!)}</span>
         )}
-      </Card>
+      </div>
 
       {movedRows.length > 0 && (
-        <Card className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 border-t border-[var(--borde)] pt-4">
           <div className="flex justify-between items-baseline">
             <span className="flex flex-col">
-              <span className="text-[15px] font-semibold">Movido entre tus cuentas</span>
-              <span className="text-xs text-[var(--texto-suave)]">Traspasos: no cuentan como gasto</span>
+              <span className="text-base font-semibold">Movido entre tus cuentas</span>
+              <span className="text-sm text-[var(--texto-suave)]">Traspasos: no cuentan como gasto</span>
             </span>
-            <span className="text-[15px] font-semibold tabular-nums">{money(movedTotal)}</span>
+            <span className="text-base font-semibold tabular-nums">{money(movedTotal)}</span>
           </div>
           {movedRows.map((r) => (
             <div key={r.label} className="flex flex-col gap-0.5">
@@ -316,37 +325,40 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
                 <span className="flex items-center gap-1.5"><Dot color={r.role === 'unknown' ? C.muted : ROLE_INFO[r.role].color} />{r.label}</span>
                 <span className="font-semibold tabular-nums">{money(r.value)}</span>
               </div>
-              {r.sub && <span className="text-xs text-[var(--texto-suave)]">{r.sub}</span>}
+              {r.sub && <span className="text-sm text-[var(--texto-suave)]">{r.sub}</span>}
             </div>
           ))}
-        </Card>
+        </div>
       )}
+
+        </div>
+      </details>
 
       {first && (
         <Card tone="amber" className="flex flex-col gap-2.5">
           <div className="flex justify-between items-center">
-            <span className="text-[15px] font-semibold text-[var(--ojo)]">
+            <span className="text-base font-semibold text-[var(--ojo)]">
               {data.uncategorized.count === 1 ? '1 movimiento sin categoría' : `${data.uncategorized.count} movimientos sin categoría`}
             </span>
             <button onClick={() => onGoto('movements', 'uncategorized')} className="text-sm font-semibold text-[var(--ojo)] underline-offset-2 hover:underline">
               Revisar
             </button>
           </div>
-          <div className="flex justify-between items-center bg-card rounded-xl px-3 py-2.5">
+          <div className="flex justify-between items-center bg-card rounded-lg px-3 py-2.5">
             <div className="flex flex-col gap-0.5 min-w-0">
               <span className="text-sm font-medium truncate">{first.description}</span>
-              <span className="text-xs text-[var(--texto-suave)]">{shortDate(first.date)}{first.account ? ` · ${first.account}` : ''}</span>
+              <span className="text-sm text-[var(--texto-suave)]">{shortDate(first.date)}{first.account ? ` · ${first.account}` : ''}</span>
             </div>
             <span className="text-sm font-semibold tabular-nums shrink-0">-{money(first.amount, true)}</span>
           </div>
           {!picking ? (
             <div className="flex gap-1.5 flex-wrap">
               {quick.map((c) => (
-                <button key={c.id} onClick={() => categorize(first.id, c.id)} className="h-9 px-3 rounded-full border border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] bg-card text-[13px]">
+                <button key={c.id} onClick={() => categorize(first.id, c.id)} className="h-9 px-3 rounded-full border border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] bg-card text-sm">
                   {c.name}
                 </button>
               ))}
-              <button onClick={() => setPicking(true)} className="h-9 px-3 rounded-full border border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] bg-card text-[13px]">
+              <button onClick={() => setPicking(true)} className="h-9 px-3 rounded-full border border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] bg-card text-sm">
                 {quick.length ? 'Otra…' : 'Elegir categoría'}
               </button>
             </div>
@@ -355,7 +367,7 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
               autoFocus
               defaultValue=""
               onChange={(e) => e.target.value && categorize(first.id, e.target.value)}
-              className="h-11 rounded-xl border border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] bg-card px-3 text-sm"
+              className="h-11 rounded-lg border border-[color-mix(in_srgb,var(--ojo)_40%,var(--superficie))] bg-card px-3 text-sm"
               aria-label="Categoría"
             >
               <option value="" disabled>Elige categoría</option>
@@ -366,12 +378,12 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
       )}
 
       {data.nextPayment && (
-        <button onClick={() => onGoto('debts')} className="bg-card rounded-2xl px-4 py-3.5 flex justify-between items-center text-left">
+        <button onClick={() => onGoto('debts')} className="bg-card border border-[var(--borde)] rounded-lg px-4 py-3.5 flex justify-between items-center gap-3 text-left">
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-[var(--texto-suave)]">Próxima cuota</span>
-            <span className="text-[15px] font-semibold">{data.nextPayment.name} · {shortDate(data.nextPayment.date)}</span>
+            <span className="text-sm text-[var(--texto-suave)]">Próxima cuota</span>
+            <span className="text-base font-semibold">{data.nextPayment.name} · {shortDate(data.nextPayment.date)}</span>
           </div>
-          <span className="text-[15px] font-semibold tabular-nums">{money(data.nextPayment.amount)}</span>
+          <span className="text-base font-semibold tabular-nums">{money(data.nextPayment.amount)}</span>
         </button>
       )}
 
@@ -386,12 +398,12 @@ export function HomeScreen({ month, onGoto }: { month: string; onGoto: (tab: 'mo
                   key={r}
                   onClick={() => setRole(roleFor, r)}
                   aria-pressed={active}
-                  className={`rounded-2xl px-4 py-3 flex items-center gap-3 text-left border-2 ${active ? 'border-[var(--texto)] bg-card' : 'border-transparent bg-card'}`}
+                  className={`rounded-lg px-4 py-3 flex items-center gap-3 text-left border-2 ${active ? 'border-[var(--texto)] bg-card' : 'border-transparent bg-card'}`}
                 >
                   <Dot color={ROLE_INFO[r].color} />
                   <span className="flex flex-col gap-0.5">
-                    <span className="text-[15px] font-semibold">{ROLE_INFO[r].label}</span>
-                    <span className="text-[13px] text-[var(--texto-suave)]">
+                    <span className="text-base font-semibold">{ROLE_INFO[r].label}</span>
+                    <span className="text-sm text-[var(--texto-suave)]">
                       {ROLE_INFO[r].hint}
                       {taken ? ` · ahora es ${taken.name}` : ''}
                     </span>
