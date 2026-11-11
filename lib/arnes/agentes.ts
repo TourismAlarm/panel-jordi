@@ -9,7 +9,7 @@ export const AGENTES = [
   { id: "dia", nombre: "Día a día", chat: "d1308275-d272-4756-bfc4-1599118a67cb" },
   { id: "salud", nombre: "Salud", chat: "51c0028f-5ba5-44d1-a549-a969fef04c00" },
   { id: "documentos", nombre: "Documentos", chat: "7f953df6-fb33-4d19-b227-3eee3c06aedf" },
-  { id: "finanzas", nombre: "Finanzas", chat: "237513b2-964e-4b8b-bfe5-42c95b764647", congelado: true },
+  { id: "finanzas", nombre: "Finanzas", chat: "237513b2-964e-4b8b-bfe5-42c95b764647" },
   { id: "revisor", nombre: "Revisor de código", chat: "d3c921e4-f8bd-418e-bb13-91aefc16f1af" },
 ] as const;
 

@@ -377,7 +377,7 @@ curl https://panel-jordi.vercel.app/api/bots/arnes -H "Authorization: Bearer $BO
 ```
 
 - `tareas`: solo las abiertas. Primero las que esperan a Jordi y después de la más vieja a la más nueva.
-- `por_agente`: siempre los diez, en el mismo orden. Además de lo de arriba, el panel calcula solo lo que no cuadra entre el vídeo y la cola de edición: vídeos `corte_listo` o `acabado_listo` sin encargo listo (le tocan a Jordi), vídeos `montando` sin ningún encargo abierto (estado desfasado, para Antonio) y encargos con más de 2 h `en_curso` o `pendiente` sin que nadie los tome. `quien` es `jordi`, `antonio` o `agente`. Finanzas sale `congelado` y sin pendientes.
+- `por_agente`: siempre los diez, en el mismo orden. Además de lo de arriba, el panel calcula solo lo que no cuadra entre el vídeo y la cola de edición: vídeos `corte_listo` o `acabado_listo` sin encargo listo (le tocan a Jordi), vídeos `montando` sin ningún encargo abierto (estado desfasado, para Antonio) y encargos con más de 2 h `en_curso` o `pendiente` sin que nadie los tome. `quien` es `jordi`, `antonio` o `agente`. Finanzas está activo: le salen los movimientos sin categoría que aún no tienen propuesta (suyos) y las propuestas que esperan a Jordi.
 - `memoria`: la memoria común entera (hechos, preferencias, decisiones, skills y problemas). Cualquiera que llegue sabe lo mismo.
 - `fallos`: lo que no se ha podido leer. Si sale algo, el resto es bueno, pero ese módulo puede estar incompleto.
 - Los enlaces del panel salen completos (`https://…`).

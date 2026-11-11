@@ -4,6 +4,7 @@ import { faseVideo } from "@/lib/estados";
 import { aISODia, sumarDias } from "@/lib/fechas";
 import { fichaDeGuion } from "@/lib/guion";
 import { pasosDe } from "@/lib/pasos";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
 import { calcularPendientes, type Pendiente } from "./vista";
 
@@ -34,7 +35,7 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
   const hace48h = new Date(ahora.getTime() - 48 * 3_600_000).toISOString();
   const fallos: string[] = [];
 
-  const [elsa, redes, salud, dia, documentos, actividad] = await Promise.all([
+  const [elsa, redes, salud, dia, documentos, actividad, finanzas] = await Promise.all([
     intentar(fallos, "ELSA", null, async () => {
       const [v, q, pe, gu, id, en] = await Promise.all([
         db.from("videos").select("id, titulo, estado, por_revisar, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md, montaje_url"),
@@ -125,6 +126,19 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
       const r = await db.from("actividad_bots").select("id, bot, tarea, creado, enlace").eq("resultado", "fallo").gte("creado", hace48h).order("creado").limit(50);
       return sinError(r, "actividad");
     }),
+
+    // Las propuestas solo las lee el servidor (service_role), siempre por user_id. fin_* aún no está en los tipos.
+    intentar(fallos, "Finanzas", null, async () => {
+      const admin = supabaseAdmin() as unknown as SupabaseClient;
+      const [tx, pr] = await Promise.all([
+        admin.from("fin_transactions").select("id").eq("user_id", userId).is("category_id", null).eq("kind", "regular").limit(2000),
+        admin.from("fin_propuestas_categoria").select("transaction_id, estado").eq("user_id", userId).neq("estado", "aceptada"),
+      ]);
+      const sinCategoria = new Set((sinError(tx, "movimientos") as { id: string }[]).map((x) => x.id));
+      const propuestas = (sinError(pr, "propuestas") as { transaction_id: string; estado: string }[]).filter((x) => sinCategoria.has(x.transaction_id));
+      const conPropuestaViva = new Set(propuestas.filter((x) => x.estado === "propuesta").map((x) => x.transaction_id));
+      return { sinPropuesta: sinCategoria.size - conPropuestaViva.size, porDecidir: conPropuestaViva.size };
+    }),
   ]);
 
   // Un módulo que no se ha podido leer no da pendientes falsos («sin métricas», «sin resumen»…): sale en `fallos`.
@@ -148,6 +162,7 @@ export async function reunirPendientes(db: Db, userId: string): Promise<{ pendie
     vencimientos: documentos?.vencimientos ?? [],
     documentosConError: documentos?.documentosConError ?? [],
     fallos: actividad,
+    finanzas,
   }).filter((p) => !(redes === null && p.agente === "analista") && !(salud === null && fallos.includes("Salud") && p.id === "salud-metricas") && !(dia === null && p.id === "dia-resumen"));
 
   return { pendientes, fallos };
