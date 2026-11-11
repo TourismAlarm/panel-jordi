@@ -50,13 +50,13 @@ export function Propuestas() {
 
   const vistas = todas ? items : items.slice(0, VISIBLES);
   return (
-    <section aria-label="Categorías propuestas" className="flex flex-col gap-3 rounded-2xl bg-card p-4" style={{ boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${COLOR} 45%, transparent)` }}>
+    <section aria-label="Categorías propuestas" className="flex flex-col gap-3 rounded-lg bg-card p-4" style={{ boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${COLOR} 45%, transparent)` }}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col">
-          <h2 className="text-[15px] font-semibold" style={{ color: COLOR }}>
+          <h2 className="text-base font-semibold" style={{ color: COLOR }}>
             {items.length === 1 ? 'Antonio propone 1 categoría' : `Antonio propone ${items.length} categorías`}
           </h2>
-          <span className="text-xs text-[var(--texto-suave)]">Tú decides. Al aceptar, aprendo el comercio.</span>
+          <span className="text-sm text-[var(--texto-suave)]">Tú decides. Al aceptar, aprendo el comercio.</span>
         </div>
         {items.length > 1 && (
           <button disabled={ocupado} onClick={() => decidir(items.map((i) => i.id), [])} className="h-10 shrink-0 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50" style={{ background: COLOR }}>
@@ -70,13 +70,13 @@ export function Propuestas() {
           <li key={p.id} className="flex items-center gap-2 border-t border-[var(--borde)] py-2.5 first:border-t-0 first:pt-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-sm font-medium">{p.descripcion}</span>
-              <span className="text-xs text-[var(--texto-suave)]">
+              <span className="text-sm text-[var(--texto-suave)]">
                 {shortDate(p.fecha)} · {p.tipo === 'expense' ? '-' : '+'}{money(p.importe, true)}
               </span>
-              <span className="mt-0.5 inline-flex w-fit max-w-full items-center rounded-full px-2.5 py-0.5 text-[13px] font-semibold" style={{ color: COLOR, background: `color-mix(in srgb, ${COLOR} 14%, transparent)` }}>
+              <span className="mt-0.5 inline-flex w-fit max-w-full items-center rounded-full px-2.5 py-0.5 text-sm font-semibold" style={{ color: COLOR, background: `color-mix(in srgb, ${COLOR} 14%, transparent)` }}>
                 <span className="truncate">{p.categoria}</span>
               </span>
-              {p.motivo && <span className="text-xs text-[var(--texto-suave)]">{p.motivo}</span>}
+              {p.motivo && <span className="text-sm text-[var(--texto-suave)]">{p.motivo}</span>}
             </div>
             <button disabled={ocupado} onClick={() => decidir([], [p.id])} aria-label={`No es ${p.categoria}: ${p.descripcion}`} className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[var(--borde)] text-[var(--texto-suave)] disabled:opacity-50">
               <X size={20} />

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGlobalToast } from '@/components/finanzas/Toaster';
-import { C, Card, Bar, Sheet, Field, inputClass, primaryButton, money, shortDate, Loading, ErrorBox } from './ui';
+import { C, Card, Bar, Sheet, Field, inputClass, primaryButton, money, shortDate, Loading, ErrorBox, Estado, Titulo, MOD } from './ui';
 
 interface Loan {
   id: string;
@@ -232,16 +232,16 @@ export function DebtsScreen() {
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Deudas</h1>
-        <button aria-label="Añadir deuda" onClick={openNew} className="w-11 h-11 rounded-xl bg-[var(--texto)] text-[var(--fondo)] flex items-center justify-center">
+        <button aria-label="Añadir deuda" onClick={openNew} className="w-11 h-11 rounded-full bg-[var(--texto)] text-[var(--fondo)] flex items-center justify-center">
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
         </button>
       </div>
 
-      <Card className="flex flex-col gap-3 !p-5">
+      <Card tone="dark" className="flex flex-col gap-3 !p-5">
         <div className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--texto-suave)]">Te queda por pagar</span>
-          <span className="text-4xl font-bold tracking-tight tabular-nums">{money(totalLeft)}</span>
-          <span className="text-sm text-[var(--texto-suave)]">
+          <span className="text-sm text-[var(--borde)]">Te queda por pagar</span>
+          <span className="text-[40px] leading-tight font-bold tracking-tight tabular-nums">{money(totalLeft)}</span>
+          <span className="text-sm text-[var(--borde)]">
             {active.length === 0
               ? 'Sin deudas activas'
               : `${money(totalMonthly)} al mes${lastEnd ? ` · libre de deudas en ${monthYear(lastEnd)}` : ''}`}
@@ -249,41 +249,41 @@ export function DebtsScreen() {
         </div>
         {totalOriginal > totalLeft && (
           <div className="flex flex-col gap-1.5">
-            <Bar value={1 - totalLeft / totalOriginal} color={C.green} height={8} />
-            <span className="text-[13px] text-[var(--texto-suave)]">
-              Llevas pagado {money(totalOriginal - totalLeft)} de {money(totalOriginal)} ({Math.round((1 - totalLeft / totalOriginal) * 100)} %)
-            </span>
+            <Bar value={1 - totalLeft / totalOriginal} color={MOD} track="color-mix(in srgb, var(--fondo) 22%, transparent)" height={8} />
+            <div className="flex justify-between text-sm text-[var(--borde)]">
+              <span>Pagado {money(totalOriginal - totalLeft)} de {money(totalOriginal)}</span>
+              <span className="font-semibold text-[var(--fondo)]">{Math.round((1 - totalLeft / totalOriginal) * 100)} %</span>
+            </div>
           </div>
         )}
       </Card>
 
       {data.debtsAccount && active.length > 0 && (
-        data.pendingThisMonth === 0 ? (
-          <div className="flex items-center gap-2 rounded-2xl bg-[color-mix(in_srgb,var(--bien)_14%,var(--superficie))] px-4 py-3 text-sm text-[var(--bien)]">
-            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>
-            Todas las cuotas de este mes están pagadas
-          </div>
-        ) : (
-          <div className={`flex flex-col gap-0.5 rounded-2xl px-4 py-3 text-sm ${covered !== null && covered >= 0 ? 'bg-[color-mix(in_srgb,var(--bien)_14%,var(--superficie))] text-[var(--bien)]' : 'bg-[color-mix(in_srgb,var(--ojo)_14%,var(--superficie))] text-[var(--ojo)]'}`}>
-            <span className="font-semibold">
-              {covered !== null && covered >= 0
-                ? `${data.debtsAccount.name} cubre las cuotas que faltan`
-                : `Faltan ${money(-(covered ?? 0), true)} en ${data.debtsAccount.name}`}
-            </span>
-            <span>
-              Quedan {money(data.pendingThisMonth, true)} en cuotas este mes · saldo {money(data.debtsAccount.balance, true)}
-              {covered !== null && covered < 0 ? ' · pásalo desde tu cuenta del día a día' : ''}
-            </span>
-          </div>
-        )
+        <Card>
+          {data.pendingThisMonth === 0 ? (
+            <Estado ok><span className="text-base font-semibold">Todas las cuotas de este mes están pagadas</span></Estado>
+          ) : (
+            <Estado ok={covered !== null && covered >= 0}>
+              <span className="block text-base font-semibold">
+                {covered !== null && covered >= 0
+                  ? `${data.debtsAccount.name} cubre las cuotas que faltan`
+                  : `Faltan ${money(-(covered ?? 0), true)} en ${data.debtsAccount.name}`}
+              </span>
+              <span className="block text-[var(--texto-suave)]">
+                Quedan {money(data.pendingThisMonth, true)} en cuotas este mes · saldo {money(data.debtsAccount.balance, true)}
+                {covered !== null && covered < 0 ? ' · pásalo desde tu cuenta del día a día' : ''}
+              </span>
+            </Estado>
+          )}
+        </Card>
       )}
 
       {data.suggestions.map((s) => (
         <Card key={s.key} tone="blue" className="flex flex-col gap-2.5">
           <div className="flex gap-2.5 items-start">
-            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={MOD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
             <div className="flex flex-col gap-0.5 text-[var(--texto)]">
-              <span className="text-[15px] font-semibold">Pago que se repite cada mes</span>
+              <span className="text-base font-semibold">Pago que se repite cada mes</span>
               <span className="text-sm">
                 {s.label} · {money(s.amount, true)} · día {s.day}
                 {accountName(s.accountId) ? ` · ${accountName(s.accountId)}` : ''}. ¿Es una deuda?
@@ -303,11 +303,11 @@ export function DebtsScreen() {
                   fromSuggestion: s,
                 })
               }
-              className="flex-1 h-11 rounded-xl bg-[var(--texto)] text-[var(--fondo)] text-sm font-semibold"
+              className="flex-1 h-11 rounded-full bg-[var(--texto)] text-[var(--fondo)] text-base font-semibold"
             >
               Sí, añadir
             </button>
-            <button onClick={() => dismiss(s)} className="flex-1 h-11 rounded-xl border border-[var(--borde)] bg-card text-[var(--texto)] text-sm font-semibold">
+            <button onClick={() => dismiss(s)} className="flex-1 h-11 rounded-full border border-[var(--borde)] bg-card text-[var(--texto)] text-base font-semibold">
               No, ignorar
             </button>
           </div>
@@ -322,42 +322,44 @@ export function DebtsScreen() {
         </Card>
       )}
 
+      {active.length > 0 && <Titulo extra="toca una para editarla">Tus deudas</Titulo>}
+
       {active.map((loan) => (
-        <button key={loan.id} onClick={() => openEdit(loan)} className="text-left bg-card rounded-2xl p-4 flex flex-col gap-3">
+        <button key={loan.id} onClick={() => openEdit(loan)} className="text-left bg-card border border-[var(--borde)] rounded-lg p-4 flex flex-col gap-3">
           <div className="flex justify-between items-baseline gap-3">
             <div className="flex flex-col min-w-0">
-              <span className="text-base font-semibold truncate">{loan.name}</span>
+              <span className="text-lg font-bold truncate">{loan.name}</span>
               {loan.lender && loan.lender.toLowerCase() !== loan.name.toLowerCase() && (
-                <span className="text-xs text-[var(--texto-suave)] truncate">{loan.lender}</span>
+                <span className="text-sm text-[var(--texto-suave)] truncate">{loan.lender}</span>
               )}
             </div>
             <div className="flex flex-col items-end shrink-0">
-              <span className="text-base font-bold tabular-nums">{money(loan.outstanding)}</span>
-              <span className="text-xs text-[var(--texto-suave)]">pendiente</span>
+              <span className="text-lg font-bold tabular-nums">{money(loan.outstanding)}</span>
+              <span className="text-sm text-[var(--texto-suave)]">pendiente</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Bar value={loan.progress} color={C.green} height={8} />
-            <span className="text-[13px] text-[var(--texto-suave)]">
+            <Bar value={loan.progress} color={MOD} height={8} />
+            <span className="text-sm text-[var(--texto-suave)]">
               {loan.paid > 0
                 ? `Pagado ${money(loan.paid)} de ${money(loan.original)} · ${Math.round(loan.progress * 100)} %`
                 : `De ${money(loan.original)} · edítala y pon el importe original para ver el progreso real`}
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-[13px]">
-            <div className="flex flex-col gap-0.5">
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <div className="flex flex-col gap-0.5 rounded-md bg-[var(--superficie-2)] px-2.5 py-2">
               <span className="text-[var(--texto-suave)]">Cuota</span>
               <span className="font-semibold tabular-nums">{loan.monthly_payment ? money(loan.monthly_payment) : '—'}</span>
               {loan.payment_day ? <span className="text-[var(--texto-suave)]">día {loan.payment_day}</span> : null}
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 rounded-md bg-[var(--superficie-2)] px-2.5 py-2">
               <span className="text-[var(--texto-suave)]">Termina</span>
               <span className="font-semibold">{loan.end_date ? `${loan.end_is_estimate ? '≈ ' : ''}${monthYear(loan.end_date)}` : '—'}</span>
               {loan.months_left ? <span className="text-[var(--texto-suave)]">{loan.months_left} {loan.months_left === 1 ? 'cuota' : 'cuotas'}</span> : null}
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 rounded-md bg-[var(--superficie-2)] px-2.5 py-2">
               <span className="text-[var(--texto-suave)]">Intereses</span>
               <span className="font-semibold tabular-nums">
                 {loan.interest_left !== null && !loan.end_is_estimate ? money(loan.interest_left) : loan.interest_rate ? `${toInput(loan.interest_rate)} %` : '—'}
@@ -369,17 +371,11 @@ export function DebtsScreen() {
           </div>
 
           {loan.late ? (
-            <div className="flex items-center gap-2 rounded-xl bg-[color-mix(in_srgb,var(--ojo)_14%,var(--superficie))] px-3 py-2.5 text-[13px] text-[var(--ojo)]">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 8v5M12 16.5v.5" /><circle cx="12" cy="12" r="9" /></svg>
-              El pago del día {loan.payment_day} aún no ha aparecido
-            </div>
+            <Estado ok={false}><span className="font-semibold text-[var(--ojo)]">El pago del día {loan.payment_day} aún no ha aparecido</span></Estado>
           ) : loan.paid_this_month && loan.last_payment ? (
-            <div className="flex items-center gap-2 rounded-xl bg-[color-mix(in_srgb,var(--bien)_14%,var(--superficie))] px-3 py-2.5 text-[13px] text-[var(--bien)]">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>
-              Pagada este mes · {shortDate(loan.last_payment.date)} · {money(loan.last_payment.amount, true)}
-            </div>
+            <Estado ok><span className="font-semibold text-[var(--bien)]">Pagada este mes</span> <span className="text-[var(--texto-suave)]">· {shortDate(loan.last_payment.date)} · {money(loan.last_payment.amount, true)}</span></Estado>
           ) : loan.payment_day ? (
-            <span className="text-[13px] text-[var(--texto-suave)]">
+            <span className="text-sm text-[var(--texto-suave)]">
               Se cobra el día {loan.payment_day}{accountName(loan.account_id) ? ` en ${accountName(loan.account_id)}` : ''}
             </span>
           ) : null}
@@ -399,7 +395,7 @@ export function DebtsScreen() {
         {form && (
           <div className="flex flex-col gap-3.5">
             {form.fromSuggestion && (
-              <div className="rounded-xl bg-[var(--superficie-2)] px-3.5 py-3 text-sm text-[var(--texto)]">
+              <div className="rounded-lg bg-[var(--superficie-2)] px-3.5 py-3 text-sm text-[var(--texto)]">
                 Cuota y día sacados de tu banco. Completa lo que falta y guarda.
               </div>
             )}
@@ -411,7 +407,7 @@ export function DebtsScreen() {
                 <input className={inputClass} value={form.lender} onChange={(e) => setForm({ ...form, lender: e.target.value })} placeholder="Cofidis…" />
               </Field>
             </div>
-            <span className="text-xs text-[var(--texto-suave)] -mt-2">
+            <span className="text-sm text-[var(--texto-suave)] -mt-2">
               Escríbelo como sale en el banco: así sé qué pagos son de esta deuda y la voy bajando sola.
             </span>
 
@@ -453,12 +449,12 @@ export function DebtsScreen() {
               </Field>
             )}
 
-            {preview(form) && <div className="rounded-xl bg-card px-3.5 py-3 text-sm">{preview(form)}</div>}
+            {preview(form) && <div className="rounded-lg bg-card px-3.5 py-3 text-sm">{preview(form)}</div>}
 
             {form.fromSuggestion && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-[13px] font-semibold text-[var(--texto-suave)]">Pagos ya encontrados</span>
-                <div className="bg-card rounded-xl divide-y divide-[var(--superficie-2)]">
+                <span className="text-sm font-semibold text-[var(--texto-suave)]">Pagos ya encontrados</span>
+                <div className="bg-card rounded-lg divide-y divide-[var(--superficie-2)]">
                   {form.fromSuggestion.payments.slice(0, 4).map((p) => (
                     <div key={p.date} className="flex justify-between px-3.5 py-2.5 text-sm">
                       <span>{shortDate(p.date)}</span>
