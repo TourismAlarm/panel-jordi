@@ -21,6 +21,12 @@ const preguntas = (sinContestar: number, enviadas: number, total: number) => ({ 
 const por = (pasos: ReturnType<typeof pasosDe>, clave: string) => pasos.find((x) => x.clave === clave);
 
 describe("pasosDe", () => {
+  it("material_listo (lo creó Antonio sobre una carpeta de Drive): no te pide «Ya he subido todo», espera a Antonio", () => {
+    const pasos = pasosDe({ ...video("material_listo", null), sin_guion: true, origen: "panel" });
+    expect(por(pasos, "subir")).toMatchObject({ titulo: "Material en Drive", estado: "sistema" });
+    expect(pasos.some((x) => x.estado === "tuyo")).toBe(false);
+  });
+
   it("un vídeo archivado tiene un único paso y no inventa nada", () => {
     const pasos = pasosDe(video("archivado"), preguntas(0, 0, 0));
     expect(pasos).toHaveLength(1);

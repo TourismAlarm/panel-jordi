@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Antonio crea el GE sobre la carpeta de Drive que ya existe (2026-11-18)
+- **`POST /api/bots/videos`** (solo con la clave de Antonio): crea el GE de un material que Jordi subió sin guion a `contenido para claude/Nuevos/<carpeta>`, sin crear otra carpeta. La carpeta queda como la de los brutos del vídeo. Una carpeta, un vídeo: repetir la llamada da `409` con el GE que ya tiene. Filtro de datos de cliente (`422`) y se apunta en Actividad.
+- El estado `material_listo` sale como «Material listo» y la ficha no pide «Ya he subido todo»: enseña «Material en Drive» con el enlace a la carpeta.
+- Migración `20261118100000_ge_desde_antonio.sql`: `videos.carpeta_drive_id` (única) y `crear_ge_de_carpeta()`, que numera con `siguiente_ge()` igual que «Ya lo he grabado».
+
 ## Entregas fuera de la cola y el arnés más listo (2026-11-10)
 - **`POST /api/bots/videos/{id}/entrega`** (Antonio o el Editor): un montaje hecho fuera de la cola del PC se registra con una sola llamada. Crea el encargo `listo`, el vídeo sale a Jordi en «Te toca revisar» con el enlace, y «Aprobar», «Corte OK» y «Pedir cambios» funcionan como siempre. La misma versión otra vez actualiza, no duplica.
 - **`POST /api/bots/edicion/{id}/cerrar`** (Antonio): cierra un encargo que ya no cuenta, con su motivo (estado nuevo `cerrado`).

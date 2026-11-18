@@ -150,6 +150,17 @@ export const EncargoIn = z
 
 export const FiltroEncargo = z.enum(["pendiente", "en_curso", "listo", "aprobado", "cambios", "sustituido", "bloqueado", "fallido", "cerrado"]);
 
+// Antonio crea el GE de un material que Jordi ya subió a Drive. La carpeta es la de los brutos: no se crea otra.
+export const VideoNuevoIn = z.object({
+  ...firma,
+  titulo: texto(80),
+  carpeta_drive_id: z.string().trim().regex(/^[\w-]{10,100}$/, "id de carpeta de Drive (no el enlace)"),
+  sin_guion: z.boolean().default(true),
+  estado: z.enum(["material_listo", "esperando_material"]).default("material_listo"),
+  fecha_trabajo: z.iso.date().optional(),
+  nota: z.string().trim().max(2000).optional(),
+});
+
 // Un montaje hecho fuera de la cola del PC (el Editor con Claude Code). La misma `version` otra vez actualiza, no duplica.
 export const EntregaIn = z.object({
   fase: z.enum(["corte", "acabado"]),

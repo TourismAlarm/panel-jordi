@@ -26,6 +26,7 @@ export function estadoVideo(estado: string): Estado {
   if (estado === "acabado_listo") return { texto: "Te toca revisar el acabado", tono: "ojo" };
   if (estado === "exportacion_pendiente") return { texto: "Aprobado · exportando", tono: "bien" };
   if (/respuestas|pregunt/.test(estado)) return { texto: "Faltan tus respuestas", tono: "ojo" };
+  if (estado === "material_listo") return { texto: "Material listo", tono: "info" };
   if (/guion_listo/.test(estado) && /material/.test(estado)) return { texto: "Guion listo · falta grabar", tono: "info" };
   if (/material|grab/.test(estado)) return { texto: "Falta grabar", tono: "neutro" };
   if (estado === "metricas") return { texto: "Publicado · midiendo", tono: "bien" };
