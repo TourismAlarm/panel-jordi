@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Aviso, BotonActualizar, BotonEnlace, Desplegable, Fila, Icono, Lista, Pantalla, Punto, Rotulo, Seccion, Vacio } from "@/components/ui";
-import { Embudo } from "@/components/proyectos/Embudo";
+import { Embudo, VerTodo, VistaEmbudo } from "@/components/proyectos/Embudo";
 import { BotonDeshacer } from "@/components/proyectos/BotonDeshacer";
 import { TarjetaProyecto } from "@/components/proyectos/TarjetaProyecto";
 import { TarjetaGuion } from "@/components/bots/TarjetaGuion";
@@ -16,14 +17,15 @@ import { PETICIONES_ACTIVAS } from "@/lib/funciones";
 import { agruparPor, dia, diaCercano, fecha, hoyLargo, plural } from "@/lib/formato";
 import { encargosAbiertos } from "@/lib/datos/encargos";
 import { NOMBRE_RED, paraPublicar } from "@/lib/publicaciones";
-import { embudo, etapaDe, ETAPAS, pasoActual, pasosDe, teToca, TONO_PASO } from "@/lib/pasos";
+import { embudo, etapaDe, ETAPAS, pasoActual, pasosDe, teToca, TONO_PASO, type Etapa } from "@/lib/pasos";
 
 // Portada: arriba, el embudo (cuántos vídeos hay en cada etapa) y qué hace el Editor. Después, solo lo que te toca,
 // con una tarjeta y un botón por vídeo; el resto va en una lista corta («En marcha»).
 // Tocar una etapa del embudo deja solo sus vídeos. Después, «Para publicar» (lo programado y lo aprobado sin fecha).
+// La vista de cada etapa sale ya hecha del servidor y el embudo cambia entre ellas en el navegador, al instante.
 // Al final, plegados, los hechos y los descartados.
 export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
-  const [{ ver, fase: qFase }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas, cola, publicaciones] = await Promise.all([
+  const [{ ver }, proyectos, preguntas, enviadas, peticiones, sync, reglas, guiones, textosReglas, cola, publicaciones] = await Promise.all([
     searchParams,
     listarProyectos(),
     resumenPreguntas(),
@@ -47,14 +49,11 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
   const mios = abiertos.filter(({ pasos }) => teToca(pasos));
   const hechos = vivos.filter(({ p }) => faseVideo(p.estado) === "hecho").reverse();
   const soloMios = ver === "mios";
-  const fase = ETAPAS.find((e) => e.id === qFase)?.id ?? null;
-  const deFase = fase ? abiertos.filter(({ pasos }) => etapaDe(pasos) === fase) : [];
   const enMarcha = abiertos.filter(({ pasos }) => !teToca(pasos));
   const porPublicar = paraPublicar(vivos.map(({ p }) => p), publicaciones);
   // Un vídeo aprobado ya cuenta como hecho, así que la etapa «Publicar» del embudo se quedaba siempre en 0:
   // cuenta también lo que espera salir (programado o aprobado sin fecha) y, al tocarla, enseña esa lista.
   const idsPorPublicar = new Set(porPublicar.map((x) => x.videoId));
-  const otrosDeFase = fase === "publicar" ? deFase.filter(({ p }) => !idsPorPublicar.has(p.id)) : deFase;
   const tramos = embudo(abiertos).map((t) =>
     t.id === "publicar" ? { ...t, cuantos: new Set([...idsPorPublicar, ...abiertos.filter(({ pasos }) => etapaDe(pasos) === "publicar").map(({ p }) => p.id)]).size } : t,
   );
@@ -71,6 +70,22 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
       ))}
     </Lista>
   );
+
+  // Lo que se ve al tocar una etapa del embudo: sus vídeos (en «Publicar», también lo que espera salir).
+  const vistaEtapa = (fase: Etapa) => {
+    const deFase = abiertos.filter(({ pasos }) => etapaDe(pasos) === fase);
+    const otrosDeFase = fase === "publicar" ? deFase.filter(({ p }) => !idsPorPublicar.has(p.id)) : deFase;
+    return (
+      <Seccion titulo={ETAPAS.find((e) => e.id === fase)!.nombre} cuenta={tramos.find((t) => t.id === fase)!.cuantos} accion={<VerTodo />}>
+        {fase === "publicar" && listaPorPublicar}
+        {otrosDeFase.length ? (
+          otrosDeFase.map(({ p, pasos }) => <TarjetaProyecto key={p.id} p={p} pasos={pasos} breve />)
+        ) : fase === "publicar" && listaPorPublicar ? null : (
+          <Vacio icono="videos" tono="neutro" titulo="Ningún vídeo en esta etapa" texto="Toca otra etapa o «Ver todo»." />
+        )}
+      </Seccion>
+    );
+  };
 
   // Qué hace el Editor ahora: lo que falla o pregunta va primero; si no, lo que monta; si no, lo que espera.
   const idsDe = (estado: string) => cola.filter((e) => e.estado === estado).map((e) => e.video_id);
@@ -105,7 +120,7 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         </>
       }
     >
-      <Embudo tramos={tramos} activa={fase} />
+      <Embudo tramos={tramos} />
 
       <Lista>
         <Fila href="/elsa/actividad/bots?bot=editor" inicio={<Punto tono={editor.tono} />} titulo={`Editor: ${editor.texto.charAt(0).toLowerCase()}${editor.texto.slice(1)}`} detalle={editor.detalle} />
@@ -149,87 +164,81 @@ export default async function Proyectos({ searchParams }: PageProps<"/elsa">) {
         </Seccion>
       )}
 
-      {fase ? (
-        <Seccion titulo={ETAPAS.find((e) => e.id === fase)!.nombre} cuenta={tramos.find((t) => t.id === fase)!.cuantos} extra={{ texto: "Ver todo", href: "/elsa" }}>
-          {fase === "publicar" && listaPorPublicar}
-          {otrosDeFase.length ? (
-            otrosDeFase.map(({ p, pasos }) => <TarjetaProyecto key={p.id} p={p} pasos={pasos} breve />)
-          ) : fase === "publicar" && listaPorPublicar ? null : (
-            <Vacio icono="videos" tono="neutro" titulo="Ningún vídeo en esta etapa" texto="Toca otra etapa o «Ver todo»." />
-          )}
-        </Seccion>
-      ) : (
-        <>
-          {!abiertos.length && <Vacio icono="videos" tono="neutro" titulo="No hay proyectos abiertos" texto="Aparecerán cuando Antonio cree uno." />}
+      <VistaEmbudo
+        etapas={Object.fromEntries(ETAPAS.map((e) => [e.id, vistaEtapa(e.id)])) as Record<Etapa, ReactNode>}
+        todo={
+          <>
+            {!abiertos.length && <Vacio icono="videos" tono="neutro" titulo="No hay proyectos abiertos" texto="Aparecerán cuando Antonio cree uno." />}
 
-          {!!abiertos.length &&
-            (mios.length ? (
-              <Seccion titulo="Te toca" cuenta={mios.length}>
-                {agruparPor(mios, ({ p }) => diaCercano(p.fecha_trabajo)).map((g) => (
-                  <section key={g.etiqueta} style={{ display: "contents" }}>
-                    <Rotulo acento={g.etiqueta === "Hoy" || g.etiqueta === "Mañana"}>{g.etiqueta}</Rotulo>
-                    {g.items.map(({ p, pasos }) => (
-                      <TarjetaProyecto key={p.id} p={p} pasos={pasos} conFecha={false} breve />
-                    ))}
-                  </section>
-                ))}
+            {!!abiertos.length &&
+              (mios.length ? (
+                <Seccion titulo="Te toca" cuenta={mios.length}>
+                  {agruparPor(mios, ({ p }) => diaCercano(p.fecha_trabajo)).map((g) => (
+                    <section key={g.etiqueta} style={{ display: "contents" }}>
+                      <Rotulo acento={g.etiqueta === "Hoy" || g.etiqueta === "Mañana"}>{g.etiqueta}</Rotulo>
+                      {g.items.map(({ p, pasos }) => (
+                        <TarjetaProyecto key={p.id} p={p} pasos={pasos} conFecha={false} breve />
+                      ))}
+                    </section>
+                  ))}
+                </Seccion>
+              ) : (
+                <Vacio titulo="Nada que hacer ahora mismo" texto="El resto lo llevan Antonio y los bots." />
+              ))}
+
+            {!soloMios && !!enMarcha.length && (
+              <Seccion titulo="En marcha" cuenta={enMarcha.length}>
+                <Lista>
+                  {enMarcha.map(({ p, pasos }) => {
+                    const actual = pasoActual(pasos);
+                    return (
+                      <Fila
+                        key={p.id}
+                        href={`/elsa/videos/${p.id}`}
+                        inicio={<Punto tono={actual ? TONO_PASO[actual.estado] : "neutro"} />}
+                        titulo={p.titulo ?? p.id}
+                        detalle={[actual?.titulo, p.fecha_trabajo ? diaCercano(p.fecha_trabajo) : null].filter(Boolean).join(" · ")}
+                      />
+                    );
+                  })}
+                </Lista>
               </Seccion>
-            ) : (
-              <Vacio titulo="Nada que hacer ahora mismo" texto="El resto lo llevan Antonio y los bots." />
-            ))}
+            )}
 
-          {!soloMios && !!enMarcha.length && (
-            <Seccion titulo="En marcha" cuenta={enMarcha.length}>
+          {!soloMios && !!porPublicar.length && (
+            <Seccion titulo="Para publicar" cuenta={porPublicar.length}>
+              {listaPorPublicar}
+            </Seccion>
+          )}
+
+          {!soloMios && !!hechos.length && (
+            <Desplegable titulo={`Hechos (${hechos.length})`}>
+              {hechos.map(({ p, pasos }) => (
+                <TarjetaProyecto key={p.id} p={p} pasos={pasos} />
+              ))}
+            </Desplegable>
+          )}
+
+          {!soloMios && !!descartados.length && (
+            <Desplegable titulo={`Descartados (${descartados.length})`}>
               <Lista>
-                {enMarcha.map(({ p, pasos }) => {
-                  const actual = pasoActual(pasos);
+                {descartados.map(({ p }) => {
+                  const d = descartes.get(p.id)!;
                   return (
                     <Fila
                       key={p.id}
                       href={`/elsa/videos/${p.id}`}
-                      inicio={<Punto tono={actual ? TONO_PASO[actual.estado] : "neutro"} />}
                       titulo={p.titulo ?? p.id}
-                      detalle={[actual?.titulo, p.fecha_trabajo ? diaCercano(p.fecha_trabajo) : null].filter(Boolean).join(" · ")}
+                      detalle={`${textoMotivo(d.motivo)} · ${estadoPeticion(d).texto.toLowerCase()}`}
                     />
                   );
                 })}
               </Lista>
-            </Seccion>
+            </Desplegable>
           )}
-        </>
-      )}
-
-      {!soloMios && !fase && !!porPublicar.length && (
-        <Seccion titulo="Para publicar" cuenta={porPublicar.length}>
-          {listaPorPublicar}
-        </Seccion>
-      )}
-
-      {!soloMios && !fase && !!hechos.length && (
-        <Desplegable titulo={`Hechos (${hechos.length})`}>
-          {hechos.map(({ p, pasos }) => (
-            <TarjetaProyecto key={p.id} p={p} pasos={pasos} />
-          ))}
-        </Desplegable>
-      )}
-
-      {!soloMios && !fase && !!descartados.length && (
-        <Desplegable titulo={`Descartados (${descartados.length})`}>
-          <Lista>
-            {descartados.map(({ p }) => {
-              const d = descartes.get(p.id)!;
-              return (
-                <Fila
-                  key={p.id}
-                  href={`/elsa/videos/${p.id}`}
-                  titulo={p.titulo ?? p.id}
-                  detalle={`${textoMotivo(d.motivo)} · ${estadoPeticion(d).texto.toLowerCase()}`}
-                />
-              );
-            })}
-          </Lista>
-        </Desplegable>
-      )}
+          </>
+        }
+      />
     </Pantalla>
   );
 }

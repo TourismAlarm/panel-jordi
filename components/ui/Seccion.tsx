@@ -7,11 +7,12 @@ type Props = {
   id?: string;
   cuenta?: number; // número pequeño al lado del título
   extra?: { texto: string; href: string }; // enlace a la derecha («Ver todo»)
+  accion?: ReactNode; // o un elemento propio en ese mismo sitio (p. ej. un enlace de cliente)
   children: ReactNode;
 };
 
 // Bloque con título dentro de una pantalla.
-export function Seccion({ titulo, id, cuenta, extra, children }: Props) {
+export function Seccion({ titulo, id, cuenta, extra, accion, children }: Props) {
   return (
     <section className={s.seccion} id={id}>
       <div className={s.cabecera}>
@@ -24,6 +25,7 @@ export function Seccion({ titulo, id, cuenta, extra, children }: Props) {
             {extra.texto}
           </Link>
         )}
+        {accion && <span className={s.extra}>{accion}</span>}
       </div>
       {children}
     </section>
