@@ -406,9 +406,13 @@ export const DEFAULT_RULES: CategorizationRule[] = [
 export function autoCategorize(description: string, rules: CategorizationRule[] = DEFAULT_RULES): string | null {
   const lowerDesc = description.toLowerCase();
 
-  // Trobem totes les regles que encaixen i ordenem per prioritat
+  // Trobem totes les regles que encaixen i ordenem per prioritat.
+  // Una regla guardada a mano sin `keywords` no debe tumbar el resto.
   const matches = rules
-    .filter(rule => rule.keywords.some(keyword => lowerDesc.includes(keyword.toLowerCase())))
+    .filter((rule) => {
+      const keywords = rule?.keywords;
+      return Array.isArray(keywords) && keywords.some((keyword) => lowerDesc.includes(keyword.toLowerCase()));
+    })
     .sort((a, b) => b.priority - a.priority);
 
   return matches.length > 0 && matches[0] ? matches[0].category : null;
@@ -419,8 +423,14 @@ export function saveCustomRules(rules: CategorizationRule[]) {
 }
 
 export function loadCustomRules(): CategorizationRule[] {
-  const saved = localStorage.getItem('customCategorizationRules');
-  return saved ? JSON.parse(saved) : [];
+  try {
+    const saved = localStorage.getItem('customCategorizationRules');
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export function getAllRules(): CategorizationRule[] {
