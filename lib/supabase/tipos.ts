@@ -2113,7 +2113,7 @@ export type Database = {
         Args: {
           p_carpeta: string
           p_estado: string
-          p_fecha: string
+          p_fecha: string | null
           p_sin_guion: boolean
           p_titulo: string
         }
