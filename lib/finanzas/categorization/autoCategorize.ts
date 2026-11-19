@@ -407,11 +407,11 @@ export function autoCategorize(description: string, rules: CategorizationRule[] 
   const lowerDesc = description.toLowerCase();
 
   // Trobem totes les regles que encaixen i ordenem per prioritat.
-  // Una regla guardada a mano sin `keywords` no debe tumbar el resto.
+  // Una regla guardada a mano sin `keywords`, o con una keyword que no es texto, no debe tumbar el resto.
   const matches = rules
     .filter((rule) => {
       const keywords = rule?.keywords;
-      return Array.isArray(keywords) && keywords.some((keyword) => lowerDesc.includes(keyword.toLowerCase()));
+      return Array.isArray(keywords) && keywords.some((keyword) => typeof keyword === "string" && lowerDesc.includes(keyword.toLowerCase()));
     })
     .sort((a, b) => b.priority - a.priority);
 

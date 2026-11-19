@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       p_carpeta: d.carpeta_drive_id,
       p_sin_guion: d.sin_guion,
       p_estado: d.estado,
-      p_fecha: (d.fecha_trabajo ?? null) as string, // el tipo generado no admite null
+      p_fecha: d.fecha_trabajo ?? null,
     });
     if (error) throw new Error(error.message);
     const { id, nuevo } = data as { id: string; nuevo: boolean };

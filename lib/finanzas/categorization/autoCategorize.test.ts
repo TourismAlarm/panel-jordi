@@ -51,4 +51,11 @@ describe("reglas de categorización en localStorage", () => {
     expect(autoCategorize("mercadona", [null as unknown as (typeof DEFAULT_RULES)[number]])).toBeNull();
     expect(autoCategorize("mercadona", [{ keywords: ["mercadona"], category: "Propia", priority: 50 }])).toBe("Propia");
   });
+
+  it("una keyword que no es texto se salta y la regla sigue categorizando", () => {
+    const regla = { keywords: [null, 12, "mercadona"], category: "Propia", priority: 80 } as unknown as (typeof DEFAULT_RULES)[number];
+    expect(autoCategorize("mercadona", [regla])).toBe("Propia");
+    expect(autoCategorize("otro sitio", [regla])).toBeNull();
+    expect(autoCategorize("mercadona", [regla, ...DEFAULT_RULES])).toBe("Propia");
+  });
 });
