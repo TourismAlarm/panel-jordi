@@ -200,6 +200,20 @@ Lo que está por revisar; con `?id=GE_012`, ese vídeo. Trae `montaje_url` (el e
 curl "https://panel-jordi.vercel.app/api/bots/videos"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
 ```
 
+## `POST /api/bots/videos` (solo Antonio)
+
+Crea el GE de un material que Jordi ya subió a Drive sin guion (`contenido para claude/Nuevos/<carpeta>`). **No crea ninguna carpeta:** la que mandas queda como la de los brutos del vídeo. Después encarga el corte con `POST /api/bots/edicion` (en `brutos`, los archivos de esa carpeta).
+
+```bash
+curl -X POST https://panel-jordi.vercel.app/api/bots/videos   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"   -H "Content-Type: application/json"   -d '{"bot":"antonio","titulo":"Arbolar un velero","carpeta_drive_id":"1oYx...","sin_guion":true,"estado":"material_listo","fecha_trabajo":"2026-10-29","nota":"Material del 29/10"}'
+```
+
+- `titulo` (hasta 80) y `carpeta_drive_id` (solo el id, no el enlace) son obligatorios. `sin_guion` es `true` si no se dice. `estado`: `material_listo` (por defecto: ya está todo en Drive) o `esperando_material` (falta subir algo). `fecha_trabajo` (`AAAA-MM-DD`, el día que se grabó) y `nota` son opcionales.
+- Responde `201 {"ok":true,"id":"GE_051","enlace":"/elsa/videos/GE_051"}`. Numera igual que «Ya lo he grabado» del panel.
+- **Una carpeta, un vídeo:** si esa carpeta ya tiene vídeo, `409` con su `id` y `enlace` y no se crea nada. Reintentar no duplica.
+- `titulo` y `nota` con datos de clientes: `422`. Con otra clave que no sea la de Antonio, o firmando como otro bot: `403`.
+- Se apunta solo en Actividad («GE_051 creado por Antonio (sin guion)», con el enlace a la carpeta). En el panel sale como «Material listo» y la ficha no le pide a Jordi «Ya he subido todo».
+
 ## `GET /api/bots/preguntas`
 
 Lo que Jordi ha contestado y nadie ha recogido, también de los vídeos que creó el PC. Con `?video_id=GE_044`, todas las de ese vídeo. Los datos de clientes salen tachados.

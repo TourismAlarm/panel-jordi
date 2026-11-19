@@ -108,7 +108,7 @@ export default async function Proyecto({ params }: PageProps<"/elsa/videos/[id]"
 
       {!descarte && (fase === "guion" || fase === "grabar") && (
         <Seccion titulo="Material grabado" id="material">
-          <MaterialListo videoId={video.id} peticion={material} />
+          <MaterialListo videoId={video.id} peticion={material} enDrive={video.estado === "material_listo"} carpeta={video.carpeta_drive_id} />
         </Seccion>
       )}
 

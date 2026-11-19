@@ -67,6 +67,9 @@ export function pasosDe(p: Entrada, q: ResumenPreguntas = SIN_PREGUNTAS): Paso[]
     pasos.push({ clave: "grabar", titulo: "Grabado y subido", estado: "hecho" });
   } else if (p.materialListo) {
     pasos.push({ clave: "subir", titulo: "Material entregado", estado: "sistema", detalle: "Dijiste que está todo · Antonio encarga el montaje" });
+  } else if (p.estado === "material_listo") {
+    // Lo creó Antonio sobre una carpeta que ya estaba en Drive: no hay que pulsar «Ya he subido todo».
+    pasos.push({ clave: "subir", titulo: "Material en Drive", estado: "sistema", detalle: "Antonio encarga el montaje" });
   } else if (p.sin_guion || (p.fecha_trabajo && p.fecha_trabajo < hoy())) {
     pasos.push({
       clave: "subir",

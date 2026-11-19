@@ -1965,6 +1965,7 @@ export type Database = {
       videos: {
         Row: {
           actualizado_en: string
+          carpeta_drive_id: string | null
           estado: string
           fecha_trabajo: string | null
           guion_md: string | null
@@ -1978,6 +1979,7 @@ export type Database = {
         }
         Insert: {
           actualizado_en?: string
+          carpeta_drive_id?: string | null
           estado: string
           fecha_trabajo?: string | null
           guion_md?: string | null
@@ -1991,6 +1993,7 @@ export type Database = {
         }
         Update: {
           actualizado_en?: string
+          carpeta_drive_id?: string | null
           estado?: string
           fecha_trabajo?: string | null
           guion_md?: string | null
@@ -2105,6 +2108,16 @@ export type Database = {
       crear_ge_de_guion: {
         Args: { p_guion: string; p_guion_md: string }
         Returns: string
+      }
+      crear_ge_de_carpeta: {
+        Args: {
+          p_carpeta: string
+          p_estado: string
+          p_fecha: string
+          p_sin_guion: boolean
+          p_titulo: string
+        }
+        Returns: Json
       }
       crear_ge_urgencia: {
         Args: { p_fecha: string; p_texto: string }
