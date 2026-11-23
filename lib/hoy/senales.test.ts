@@ -120,7 +120,7 @@ describe("señal de vida del sistema", () => {
   });
 });
 
-import { estadoCosas, leerMarcas } from "./prioridades";
+import { claveCosa, estadoCosas, leerMarcas, marcasPorClave, normalizarTitulo, tachadasDe } from "./prioridades";
 
 describe("cómo va cada cosa de hoy", () => {
   const abierto = { videos: ["GE_045"], bandeja: 0, documentos: [] };
@@ -137,5 +137,50 @@ describe("cómo va cada cosa de hoy", () => {
     expect(leerMarcas({ a: true, b: "sí", c: false })).toEqual({ a: true, c: false });
     expect(leerMarcas([true])).toEqual({});
     expect(leerMarcas(null)).toEqual({});
+  });
+});
+
+describe("lo tachado a mano, con clave estable", () => {
+  it("la clave es el enlace si lo hay; si no, el título normalizado", () => {
+    expect(claveCosa({ texto: "Revisar GE_031", enlace: "/elsa/videos/GE_031" })).toBe("/elsa/videos/GE_031");
+    expect(claveCosa({ texto: "¡Llamar al  Gestor!" })).toBe(claveCosa({ texto: "llamar al gestor" }));
+    expect(normalizarTitulo("  Renovar el SEGURO de la grúa. ")).toBe("renovar el seguro de la grua");
+    expect(claveCosa({ texto: "!!!" })).toBe("texto:!!!");
+  });
+
+  it("otro resumen el mismo día con otro texto no deshace lo tachado: la clave es la misma", () => {
+    const marcas = { "/bandeja": true, [claveCosa({ texto: "Llamar al gestor" })]: true };
+    const tarde = [{ texto: "Leer la bandeja (3 nuevos)", enlace: "/bandeja" }, { texto: "Llamar al gestor." }];
+    expect(estadoCosas(tarde, marcas, undefined, { fecha: "2026-11-23" }).map((x) => [x.hecha, x.como, x.hecha_el])).toEqual([[true, "a mano", "2026-11-23"], [true, "a mano", "2026-11-23"]]);
+  });
+
+  it("las marcas antiguas (por texto) se traducen a clave con las prioridades del día; la de clave manda", () => {
+    const prios = [{ texto: "Leer bandeja", enlace: "/bandeja" }];
+    expect(marcasPorClave({ "Leer bandeja": true }, prios)).toEqual({ "/bandeja": true });
+    expect(marcasPorClave({ "Leer bandeja": true, "/bandeja": false }, prios)).toEqual({ "/bandeja": false });
+  });
+
+  it("lo tachado otro día vale si vuelve la misma cosa: hecha, «a mano» y el día en que se tachó", () => {
+    const tachadas = tachadasDe([
+      { fecha: "2026-11-20", prioridades: [{ texto: "Llamar al gestor" }], marcas: { "Llamar al gestor": true } },
+      { fecha: "2026-11-21", prioridades: [{ texto: "Contestar GE_045", enlace: "/elsa/videos/GE_045" }], marcas: { "/elsa/videos/GE_045": true } },
+    ]);
+    const hoy = [{ texto: "LLAMAR al gestor" }, { texto: "Contesta las preguntas de GE_045", enlace: "/elsa/videos/GE_045" }, { texto: "Otra cosa" }];
+    const e = estadoCosas(hoy, {}, undefined, { fecha: "2026-11-23", tachadas });
+    expect(e.map((x) => [x.hecha, x.como, x.hecha_el])).toEqual([[true, "a mano", "2026-11-20"], [true, "a mano", "2026-11-21"], [false, null, null]]);
+  });
+
+  it("destachar hoy manda sobre lo tachado otro día; y una cosa destachada después no se arrastra", () => {
+    const tachadas = { "/bandeja": "2026-11-20" };
+    expect(estadoCosas([{ texto: "Bandeja", enlace: "/bandeja" }], { "/bandeja": false }, undefined, { fecha: "2026-11-23", tachadas })[0]).toMatchObject({ hecha: false, como: null, hecha_el: null });
+    const despues = tachadasDe([
+      { fecha: "2026-11-21", prioridades: [], marcas: { "/bandeja": false } },
+      { fecha: "2026-11-20", prioridades: [], marcas: { "/bandeja": true } },
+    ]);
+    expect(despues).toEqual({});
+  });
+
+  it("lo resuelto en su página sigue siendo «sola», sin día", () => {
+    expect(estadoCosas([{ texto: "Bandeja", enlace: "/bandeja" }], {}, { videos: [], bandeja: 0, documentos: [] }, { fecha: "2026-11-23" })[0]).toMatchObject({ hecha: true, como: "sola", hecha_el: null });
   });
 });

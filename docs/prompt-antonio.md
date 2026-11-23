@@ -531,7 +531,7 @@ Cambiar una cita no obliga a rehacer el resumen, y publicar el resumen no borra 
 
 | Ruta | Qué hace |
 |---|---|
-| `GET /api/bots/hoy/datos` | Lo que reúne Hoy: `senales`, `agenda`, `correos`, `agenda_en`, `correos_en`, `salud` y `fallos`. Sin texto de documentos. |
+| `GET /api/bots/hoy/datos` | Lo que reúne Hoy: `senales`, `agenda`, `correos`, `agenda_en`, `correos_en`, `cosas_de_hoy`, `salud` y `fallos`. Sin texto de documentos. Con `?fecha=` de uno de los 14 días anteriores, solo `fecha` y `cosas_de_hoy` de ese día. |
 | `POST /api/bots/hoy/contexto` | Publica la agenda y/o la selección de correo de un día. No toca el resumen. |
 | `POST /api/bots/hoy/resumen` | Publica el resumen de Día. Sustituye al del cron de ese día. No toca agenda ni correo. No envía nada. |
 | `GET /api/bots/finanzas/resumen` | El resumen del mes. |
@@ -566,6 +566,24 @@ curl -X POST https://panel-jordi.vercel.app/api/bots/hoy/resumen   -H "Authoriza
 - **`enlace`:** opcional; una ruta del panel (`/finanzas`) o una web `https`.
 - **Se tachan solas:** si el `enlace` lleva a algo concreto, Hoy tacha la cosa en cuanto Jordi la resuelve en su página: `/elsa/videos/GE_045` (cuando ese vídeo deja de esperarle: aprobó, contestó, subió el material), `/bandeja` (cuando no queda nada sin leer) y `/documentos/{id}` (cuando deja de vencer). Con un enlace general (`/elsa`, `/salud`) o sin enlace, solo se tacha a mano: **enlaza siempre lo más concreto que puedas.**
 - **`senales`:** opcional. Si no la mandas, se quedan las que había.
+- **Lo tachado no se pierde:** Jordi tacha cada cosa por su **clave**: el `enlace` si lo lleva; si no, el `texto` normalizado (sin mayúsculas, tildes, signos ni espacios de más). Un resumen nuevo del mismo día (el de las 7:30, el de las 15:30) no deshace lo tachado: la cosa con la misma clave sigue tachada aunque cambies el texto. Y si en los 14 días siguientes vuelves a mandar una cosa con la misma clave, sale ya hecha (`como: "a mano"`, `hecha_el`: el día en que la tachó) y Jordi no la ve como pendiente. Jordi la puede destachar en el panel. Si quieres que algo vuelva a salir pendiente, cámbiale el enlace o el texto.
+
+#### `GET /api/bots/hoy/datos`
+
+```bash
+curl "https://panel-jordi.vercel.app/api/bots/hoy/datos?fecha=2026-11-05"   -H "Authorization: Bearer $BOTS_API_KEY_ANTONIO"
+```
+
+- **Sin `fecha` (o con la de hoy en Madrid):** todo lo que reúne Hoy, `cosas_de_hoy` incluido.
+- **`fecha` de uno de los 14 días anteriores** (`AAAA-MM-DD`, calendario de Madrid): solo `{"fecha":"…","cosas_de_hoy":[…]}` de ese día. Si ese día no hubo resumen, `cosas_de_hoy` viene `[]`.
+- **Más atrás, en el futuro o una fecha que no existe:** `400`.
+- **Cada cosa de `cosas_de_hoy`:** `texto`, `nivel`, `enlace` (o `null`), `hecha`, `como` y `hecha_el`.
+  - `como`: `"a mano"` si Jordi la tachó, `"sola"` si está resuelta en su página, `null` si sigue pendiente. En un día pasado, «sola» se mira con cómo está todo ahora.
+  - `hecha_el`: el día (`AAAA-MM-DD`) en que Jordi la tachó si `como` es `"a mano"`; puede ser anterior al de la cosa si ya la había tachado entonces. `null` en los demás casos.
+
+```json
+{"fecha":"2026-11-05","cosas_de_hoy":[{"texto":"Llamar al gestor","nivel":"urgente","enlace":null,"hecha":true,"como":"a mano","hecha_el":"2026-11-03"},{"texto":"Leer la bandeja","nivel":"importante","enlace":"/bandeja","hecha":false,"como":null,"hecha_el":null}]}
+```
 
 #### Cómo se ve en Hoy
 

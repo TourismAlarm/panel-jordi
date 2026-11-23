@@ -4,30 +4,33 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, ChevronRight } from "lucide-react";
 import { marcarCosa } from "@/lib/hoy/acciones";
+import { formatearDiaCorto } from "@/lib/fechas";
 import type { Prioridad } from "@/lib/hoy/prioridades";
 import { cn } from "@/lib/utils";
 
+// `clave`: el enlace o el título normalizado; con ella se guarda lo tachado.
 // `resuelta`: lo que el panel sabe de la cosa enlazada (true = ya la has hecho en su página, null = no lo puede saber).
-export type Cosa = Prioridad & { resuelta: boolean | null };
+// `tachadaEl`: si ya la tachaste a mano otro día de los 14 anteriores, ese día; sale hecha hasta que la destaches.
+export type Cosa = Prioridad & { clave: string; resuelta: boolean | null; tachadaEl: string | null };
 
 // Las cosas de hoy que decide Antonio: las que hagan falta, sin tope.
 // Se tachan solas cuando resuelves lo enlazado en su página (aprobar un montaje, contestar preguntas, leer la bandeja).
 // También a mano, tocando el círculo: eso manda sobre lo automático y se guarda en el panel (lo ves en cualquier
-// dispositivo y Antonio sabe qué has hecho).
+// dispositivo y Antonio sabe qué has hecho). Lo tachado vale también si la misma cosa vuelve en los 14 días siguientes.
 export function CosasDeHoy({ fecha, cosas, marcasIniciales, resumen, pie }: { fecha: string; cosas: Cosa[]; marcasIniciales: Record<string, boolean>; resumen: string; pie?: string | null }) {
   const [marcas, setMarcas] = useState(marcasIniciales);
   const [fallo, setFallo] = useState(false);
   const [, empezar] = useTransition();
-  const estaHecha = (c: Cosa) => marcas[c.texto] ?? c.resuelta === true;
+  const estaHecha = (c: Cosa) => marcas[c.clave] ?? (c.tachadaEl ? true : c.resuelta === true);
 
   function alternar(c: Cosa) {
     const antes = marcas;
     const hecha = !estaHecha(c);
-    setMarcas({ ...antes, [c.texto]: hecha });
+    setMarcas({ ...antes, [c.clave]: hecha });
     setFallo(false);
     empezar(async () => {
       // Si no se puede guardar, se deshace y se dice: nunca se queda tachado algo que el panel no sabe.
-      if (!(await marcarCosa(fecha, c.texto, hecha))) {
+      if (!(await marcarCosa(fecha, c.clave, hecha))) {
         setMarcas(antes);
         setFallo(true);
       }
@@ -40,13 +43,15 @@ export function CosasDeHoy({ fecha, cosas, marcasIniciales, resumen, pie }: { fe
 
   const fila = (c: Cosa, i: number) => {
     const hecha = estaHecha(c);
-    const sola = hecha && c.resuelta === true && marcas[c.texto] === undefined;
+    const antes = hecha && marcas[c.clave] === undefined && c.tachadaEl ? c.tachadaEl : null;
+    const sola = hecha && !antes && c.resuelta === true && marcas[c.clave] === undefined;
     const texto = (
       <span className={cn("text-base font-medium leading-snug", hecha && "line-through opacity-50")}>
         {c.nivel === "urgente" && !hecha && <span className="mr-2 rounded-full bg-destructive px-1.5 py-px align-[1px] text-[0.65rem] font-bold uppercase tracking-wide text-white">Urgente</span>}
         {c.texto}
         {c.enlace && <ChevronRight size={16} className="ml-0.5 inline align-[-3px] opacity-60" aria-hidden />}
         {sola && <span className="ml-2 inline-block text-xs font-semibold no-underline">Hecho en su página</span>}
+        {antes && <span className="ml-2 inline-block text-xs font-semibold no-underline">Tachado el {formatearDiaCorto(antes)}</span>}
       </span>
     );
     return (

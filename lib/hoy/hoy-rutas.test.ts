@@ -78,4 +78,10 @@ describe("POST /api/bots/hoy/resumen", () => {
     expect(upserts[0]).toMatchObject({ senales: { x: 1 } });
     for (const k of ["agenda", "correos", "agenda_en", "correos_en", "enviado_en"]) expect(upserts[0]).not.toHaveProperty(k);
   });
+  it("otro resumen el mismo día (7:30, 15:30) no toca lo tachado: nunca manda marcas", async () => {
+    await pedir(resumen, { ...base, prioridades: [{ nivel: "importante", texto: "Leer bandeja", enlace: "/bandeja" }] });
+    await pedir(resumen, { ...base, prioridades: [{ nivel: "urgente", texto: "Leer la bandeja ya", enlace: "/bandeja" }] });
+    expect(upserts).toHaveLength(2);
+    for (const u of upserts) expect(u).not.toHaveProperty("marcas");
+  });
 });

@@ -11,6 +11,7 @@ import { faseVideo } from "@/lib/estados";
 import { construirResumen } from "@/lib/salud/resumen";
 import { leerCorreos, leerEventos } from "./contexto";
 import type { Abierto } from "./prioridades";
+import { leerTachadas } from "./tachadas";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/tipos";
 import { masReciente, senalesAgenda, senalesBandeja, senalesDocumentos, senalesElsa, senalesFinanzas, senalesSalud, ordenar, type Correo, type Evento, type Senal } from "./senales";
@@ -28,6 +29,7 @@ export type Foto = {
   salud: string[]; // líneas de resumen de salud (para el resumen escrito)
   azulejos?: Azulejos; // el número clave de cada módulo, para la portada. null = sin dato o no se ha podido leer
   abierto?: Abierto; // lo que aún te espera, para tachar solas las cosas de hoy que ya has resuelto en su página
+  tachadas?: Record<string, string>; // lo tachado a mano en los 14 días anteriores (clave → día): si vuelve, sale ya hecho
 };
 
 export type Azulejos = {
@@ -60,7 +62,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
   // fin_* aún no está en los tipos generados. Los enlaces bancarios solo los lee el servidor (service_role), siempre filtrando por user_id.
   const sinTipos = supabaseAdmin() as unknown as SupabaseClient;
 
-  const [elsa, finanzas, salud, nuevos, documentos, dia] = await Promise.all([
+  const [elsa, finanzas, salud, nuevos, documentos, dia, tachadas] = await Promise.all([
     intentar(fallos, "ELSA", async () => {
       const [v, p, q, pe, rg, sy, id, gu, rv, act] = await Promise.all([
         supabase.from("videos").select("id, titulo, estado, siguiente_paso, por_revisar, montaje_url, fecha_trabajo, sin_guion, origen, actualizado_en, guion_md").order("fecha_trabajo", { ascending: true, nullsFirst: false }),
@@ -157,6 +159,9 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
       if (error) throw new Error(error.message);
       return data as unknown as FilaDia | null;
     }),
+
+    // Lo tachado a mano los días anteriores: si Antonio vuelve a poner la misma cosa, sale ya hecha.
+    intentar(fallos, "Lo tachado otros días", () => leerTachadas(supabase, userId, hoy)),
   ]);
   const eventos: Evento[] = leerEventos(dia?.agenda);
   const correos: Correo[] = leerCorreos(dia?.correos);
@@ -181,6 +186,7 @@ export async function reunirHoy(supabase: SupabaseClient<Database>, userId: stri
     fallos,
     salud: salud?.lineas ?? [],
     azulejos: { salud: salud?.azulejo ?? null, finanzas: finanzas?.azulejo ?? null, elsa: elsa?.teTocan ?? null, documentos: documentos?.vencen ?? null },
+    tachadas: tachadas ?? {},
     abierto: { videos: elsa?.videos ?? null, bandeja: nuevos?.sinLeer ?? null, documentos: documentos?.ids ?? null, propuestas: finanzas?.propuestas ?? null },
   };
 }

@@ -9,7 +9,7 @@ import { Card } from "@/components/shadcn/card";
 import { supabaseServidor } from "@/lib/supabase/server";
 import { formatearFechaHora } from "@/lib/fechas";
 import { estadoBloque } from "@/lib/hoy/contexto";
-import { leerMarcas, leerPrioridades, resueltaSola } from "@/lib/hoy/prioridades";
+import { claveCosa, leerPrioridades, marcasPorClave, resueltaSola } from "@/lib/hoy/prioridades";
 import { reunirHoy } from "@/lib/hoy/reunir";
 import { hoyLargo } from "@/lib/formato";
 
@@ -27,8 +27,10 @@ export default async function Hoy() {
   const agenda = foto.eventos.map((e) => ({ titulo: e.titulo, hora: e.todoElDia || !e.inicio ? "Todo el día" : hora(e.inicio), lugar: e.lugar, calendario: e.calendario }));
   const estadoAgenda = foto.contexto === "error" ? "error" : estadoBloque(foto.agendaEn, agenda);
   const estadoCorreo = foto.contexto === "error" ? "error" : estadoBloque(foto.correosEn, foto.correos);
-  const prioridades = leerPrioridades(guardado?.prioridades).map((p) => ({ ...p, resuelta: resueltaSola(p.enlace, foto.abierto) }));
-  const marcas = leerMarcas(guardado?.marcas);
+  // Cada cosa con su clave estable (enlace o título normalizado) y, si Jordi ya la tachó otro día de los 14 anteriores, cuándo.
+  const leidas = leerPrioridades(guardado?.prioridades);
+  const prioridades = leidas.map((p) => ({ ...p, clave: claveCosa(p), resuelta: resueltaSola(p.enlace, foto.abierto), tachadaEl: foto.tachadas?.[claveCosa(p)] ?? null }));
+  const marcas = marcasPorClave(guardado?.marcas, leidas);
   const urgentes = foto.senales.filter((s) => s.nivel === "urgente");
   const deHoy = foto.senales.filter((s) => s.nivel === "hoy" && s.modulo !== "agenda");
   const saber = foto.senales.filter((s) => s.nivel === "saber");

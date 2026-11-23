@@ -8,16 +8,17 @@ vi.mock("@/lib/finanzas/resumen-inicio", () => ({ resumenInicio: async () => ({ 
 vi.mock("@/lib/datos/salud", () => ({ leerSalud: async () => ({ hoy: "2026-11-05", series: {}, registros: [], entrenos: [] }) }));
 vi.mock("@/lib/salud/resumen", () => ({ construirResumen: () => ({ lineas: [], datosDe: null, avisoMedico: false }) }));
 
-// Supabase falso: toda consulta devuelve vacío, salvo la fila del día.
+// Supabase falso: toda consulta devuelve vacío, salvo la fila del día (maybeSingle) y los días anteriores (lista).
 let fila: { data: unknown; error: { message: string } | null };
-function consulta(resultado: unknown): unknown {
+let anteriores: unknown[] = [];
+function consulta(resultado: unknown, lista: unknown = resultado): unknown {
   const q: unknown = new Proxy(() => {}, {
-    get: (_, k) => (k === "then" ? (ok: (v: unknown) => void) => ok(resultado) : k === "maybeSingle" || k === "single" ? async () => resultado : () => q),
+    get: (_, k) => (k === "then" ? (ok: (v: unknown) => void) => ok(lista) : k === "maybeSingle" || k === "single" ? async () => resultado : () => q),
     apply: () => q,
   });
   return q;
 }
-const db = { from: (tabla: string) => consulta(tabla === "resumenes_diarios" ? fila : { data: [], error: null, count: 0 }) };
+const db = { from: (tabla: string) => (tabla === "resumenes_diarios" ? consulta(fila, { data: fila.error ? null : anteriores, error: fila.error }) : consulta({ data: [], error: null, count: 0 })) };
 vi.mock("@/lib/supabase/admin", () => ({ supabaseAdmin: () => db }));
 
 const { reunirHoy } = await import("./reunir");
@@ -25,6 +26,7 @@ const hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).form
 
 beforeEach(() => {
   for (const f of Object.values(google)) f.mockReset();
+  anteriores = [];
   google.token.mockResolvedValue("token-de-google");
 });
 
@@ -43,6 +45,13 @@ describe("Hoy sin Google", () => {
   it("una fila solo con contexto no cuenta como resumen; con resumen, sí", async () => {
     fila = { data: { resumen: "Hoy toca grabar.", prioridades: ["x"], generado_en: `${hoy}T07:00:00Z`, origen: "bot", agenda: [], correos: [], agenda_en: null, correos_en: null }, error: null };
     expect((await reunirHoy(db as never, "jordi")).guardado).toMatchObject({ resumen: "Hoy toca grabar.", origen: "bot" });
+  });
+  it("trae lo tachado a mano los días anteriores, por clave", async () => {
+    fila = { data: null, error: null };
+    anteriores = [{ fecha: "2026-11-20", prioridades: [{ texto: "Leer bandeja", enlace: "/bandeja" }], marcas: { "Leer bandeja": true } }];
+    const f = await reunirHoy(db as never, "jordi");
+    expect(f.tachadas).toEqual({ "/bandeja": "2026-11-20" });
+    expect(f.fallos).toEqual([]);
   });
   it("sin fila del día: nada publicado, sin fallo", async () => {
     fila = { data: null, error: null };

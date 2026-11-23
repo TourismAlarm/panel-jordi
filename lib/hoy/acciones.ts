@@ -18,16 +18,18 @@ export async function desconectarGoogleAccion(): Promise<void> {
   revalidatePath("/", "layout");
 }
 
-// Tachar o destachar a mano una cosa de hoy. Se guarda en la fila del día: lo ves en cualquier dispositivo y Antonio lo lee.
-export async function marcarCosa(fecha: string, texto: string, hecha: boolean): Promise<boolean> {
+// Tachar o destachar a mano una cosa de hoy, por su clave (enlace o título normalizado). Se guarda en la fila del día:
+// lo ves en cualquier dispositivo, Antonio lo lee y, si la misma cosa vuelve en los 14 días siguientes, sale ya hecha.
+// Destachar guarda `false`: así deja de valer también lo tachado en días anteriores.
+export async function marcarCosa(fecha: string, clave: string, hecha: boolean): Promise<boolean> {
   const { data } = await (await supabaseServidor()).auth.getClaims();
   const id = data?.claims?.sub;
   if (!id || !correoPermitido(data?.claims?.email as string | undefined)) return false;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !texto || texto.length > 300 || typeof hecha !== "boolean") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !clave || clave.length > 1100 || typeof hecha !== "boolean") return false;
   const db = supabaseAdmin();
   const fila = await db.from("resumenes_diarios").select("marcas").eq("user_id", id).eq("fecha", fecha).maybeSingle();
   if (fila.error || !fila.data) return false;
-  const marcas = { ...leerMarcas(fila.data.marcas), [texto]: hecha };
+  const marcas = { ...leerMarcas(fila.data.marcas), [clave]: hecha };
   const { error } = await db.from("resumenes_diarios").update({ marcas }).eq("user_id", id).eq("fecha", fecha);
   if (error) console.error("marcarCosa:", error.message);
   return !error;

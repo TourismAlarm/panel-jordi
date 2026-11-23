@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Lo tachado en «Tus cosas de hoy» ya no se pierde (2026-11-23)
+- Lo que Jordi tacha a mano se guarda por **clave**: el enlace si lo hay; si no, el título normalizado. Un resumen nuevo del mismo día (7:30, 15:30) ya no lo deshace aunque cambie el texto.
+- Si en los 14 días siguientes vuelve una cosa con la misma clave, sale ya hecha («Tachado el …», `como: "a mano"`, `hecha_el`). Se puede destachar en el panel: destachar manda también sobre lo tachado otros días.
+- **`GET /api/bots/hoy/datos?fecha=`** acepta los 14 días anteriores y devuelve `cosas_de_hoy` de ese día. `cosas_de_hoy` trae el campo nuevo `hecha_el`.
+- Las marcas antiguas (guardadas con el texto) se siguen leyendo. Sin migración.
+
 ## Antonio crea el GE sobre la carpeta de Drive que ya existe (2026-11-18)
 - **`POST /api/bots/videos`** (solo con la clave de Antonio): crea el GE de un material que Jordi subió sin guion a `contenido para claude/Nuevos/<carpeta>`, sin crear otra carpeta. La carpeta queda como la de los brutos del vídeo. Una carpeta, un vídeo: repetir la llamada da `409` con el GE que ya tiene. Filtro de datos de cliente (`422`) y se apunta en Actividad.
 - El estado `material_listo` sale como «Material listo» y la ficha no pide «Ya he subido todo»: enseña «Material en Drive» con el enlace a la carpeta.
